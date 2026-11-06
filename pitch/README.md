@@ -32,3 +32,11 @@ Pick **Match** or **Drills** with the toggle in the top-left (also in the dashbo
 The original Penalties, Free Kicks and 1v1 Finish challenges are unchanged.
 
 `?mode=drills` opens straight into the drills.
+
+## SCAD Bee Olympics theme
+
+SCAD yellow (`#FFD100`) and black across the pitch, stands, clubhouse and UI. Bees kit is yellow with black numbers, Drones are black with yellow accents, keepers are yellow with black details, and the ball is black and yellow.
+
+- **Intro:** a 5 s full-screen intro (pixel bees with faint trails, "HIVEKEY ARENA" then "SCAD BEE OLYMPICS" with a scan-line / chromatic shimmer) plays on the first load only. Click or press any key to skip. The game loads underneath and the match starts as it fades. `?intro=1` replays it, `?intro=0` skips it; reduced-motion users skip it.
+- **Branding:** a holographic bee + "Bee Olympics" logo in the corner, and the LED boards rotate "HiveKey Arena - Bee Olympics" messages.
+- **Environment:** honeycomb panels on the stands and clubhouse, yellow/black flags, tiny voxel bees and light motes in the air, warm-gold floodlights at night.
