@@ -1,1777 +1,1704 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Hive Style Lock // Three.js r128 Reference Scene</title>
-  <style>
-    :root {
-      --bg-dark: #0a0e17;
-      --panel-bg: rgba(14, 20, 32, 0.88);
-      --panel-border: rgba(99, 140, 200, 0.25);
-      --accent: #2ea043;
-      --accent-glow: rgba(46, 160, 67, 0.4);
-      --accent-cyan: #39b2de;
-      --accent-amber: #f0ab07;
-      --accent-red: #e84d6e;
-      --text: #e6edf3;
-      --text-dim: #8b949e;
-      --font-mono: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Hive Pitch Challenge — HiveKey Arena</title>
+<link rel="icon" href="data:,">
+<style>
+:root{
+  --bg:#090d14;--panel:rgba(14,20,32,.92);--line:rgba(99,140,200,.28);
+  --acc:#2ea043;--acc-glow:rgba(46,160,67,.4);--cy:#39b2de;--gold:#f5b32e;--red:#e04568;
+  --tx:#e6edf3;--dim:#8b949e;--mono:"SF Mono","JetBrains Mono",Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;touch-action:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-user-select: none;
-      user-select: none;
-    }
+/* HUD elements */
+.hud{position:fixed;pointer-events:none;z-index:5;font-family:var(--mono)}
+#score{top:12px;left:50%;transform:translateX(-50%);display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.55)}
+#score span{padding:6px 14px;display:flex;align-items:center;white-space:nowrap}
+#sbFmt{background:#204a8c;color:#fff;font-weight:700;letter-spacing:1px;font-size:11px}
+#sbMain{font-size:18px;font-weight:800;color:var(--gold)}
+#sbSub{color:var(--dim);font-size:11px;border-left:1px solid var(--line)}
+#sbSub.warn{color:var(--red);font-weight:700}
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: var(--bg-dark);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 12px;
-    }
+#stats{bottom:12px;left:50%;transform:translateX(-50%);background:rgba(14,20,32,.85);border:1px solid var(--line);border-radius:6px;padding:6px 14px;font-size:10px;color:var(--dim);white-space:nowrap}
+#stats b{color:var(--tx);font-weight:600}
 
-    #webgl-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
+#feed{left:14px;bottom:14px;list-style:none;width:min(340px,42vw);display:flex;flex-direction:column-reverse;gap:4px}
+#feed li{background:rgba(9,13,20,.85);border-left:3px solid var(--cy);padding:5px 9px;font-size:11px;border-radius:0 4px 4px 0;box-shadow:0 2px 8px rgba(0,0,0,.35);animation:fin .25s ease}
+#feed li.goal{border-color:var(--acc);color:#7ee787;font-weight:700}
+#feed li.save{border-color:var(--gold);color:#fde047}
+#feed li.miss{border-color:var(--red);color:#ff8b94}
+#feed li:nth-child(n+5){display:none}
+@keyframes fin{from{opacity:0;transform:translateX(-10px)}}
 
-    /* Top Left Header HUD */
-    .hud-header {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      pointer-events: auto;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-      z-index: 10;
-      max-width: 320px;
-    }
+#powerWrap{bottom:46px;left:50%;transform:translateX(-50%);width:280px;text-align:center}
+#power{position:relative;height:14px;background:rgba(9,13,20,.9);border:1px solid var(--line);border-radius:4px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+#powerFill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#39b2de,#f5b32e 70%,#e04568);transition:width .02s}
+#sweet{position:absolute;top:0;bottom:0;left:62%;width:18%;border-left:2px solid #7ee787;border-right:2px solid #7ee787;background:rgba(126,231,135,.2)}
+#curlInd{margin-top:4px;font-size:10px;color:var(--dim);text-shadow:0 1px 3px #000}
 
-    .hud-header h1 {
-      font-size: 13px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+#reticle{width:28px;height:28px;margin:-14px 0 0 -14px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.6),inset 0 0 0 2px rgba(0,0,0,.4);display:none;left:0;top:0}
+#reticle::before,#reticle::after{content:"";position:absolute;background:#fff;left:50%;top:50%}
+#reticle::before{width:2px;height:10px;margin:-5px 0 0 -1px}
+#reticle::after{width:10px;height:2px;margin:-1px 0 0 -5px}
+#reticle.charging{border-color:var(--gold)}
 
-    .hud-header h1::before {
-      content: "";
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent);
-    }
+#toast{top:36%;left:50%;transform:translate(-50%,-50%);font-size:52px;font-weight:900;letter-spacing:4px;color:#fff;text-shadow:0 4px 0 #090d14,0 0 24px rgba(0,0,0,.85);opacity:0;white-space:nowrap}
+#toast.show{animation:toast 1.8s ease forwards}
+#toast.goal{color:#7ee787}#toast.save{color:var(--gold)}#toast.miss{color:var(--red)}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}24%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
 
-    .hud-header p {
-      margin-top: 4px;
-      font-size: 11px;
-      color: var(--text-dim);
-      line-height: 1.4;
-    }
+#pausedTag{top:64px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;display:none}
+#hint{top:62px;left:50%;transform:translateX(-50%);font-size:10px;color:#fff;background:rgba(9,13,20,.75);padding:4px 12px;border-radius:4px;white-space:nowrap}
 
-    .hud-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 8px;
-    }
+/* Side controls panel */
+#panel{position:fixed;top:12px;right:12px;width:270px;max-height:calc(100% - 24px);overflow-y:auto;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;padding:12px;z-index:10;box-shadow:0 10px 32px rgba(0,0,0,.6)}
+#panel h1{font:700 13px var(--mono);letter-spacing:1.2px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+#panel h1::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+#panel .sub{color:var(--dim);font-size:10px;margin:3px 0 8px}
+.sec{border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-top:8px}
+.lbl{font:600 9px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;display:flex;justify-content:space-between}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button,.btn{flex:1;min-width:0;padding:6px 4px;font:600 10px var(--mono);color:var(--tx);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.seg button:hover,.btn:hover{background:rgba(255,255,255,.12)}
+.seg button.on,.btn.on{background:var(--acc);border-color:#4cd864;color:#0d1117;box-shadow:0 0 8px var(--acc-glow)}
+.btn.big{display:block;width:100%;padding:9px;font-size:11px;background:#204a8c;border-color:#3774cd;margin-top:4px}
+.btn.big:hover{background:#2a5eac}
+.row{display:flex;gap:4px;margin-top:4px}
+input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
+.keys{font:10px/1.6 var(--mono);color:var(--dim)}
+.keys b{color:var(--tx);background:rgba(255,255,255,.08);padding:0 4px;border-radius:3px;font-weight:600}
 
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      font-size: 9px;
-      font-family: var(--font-mono);
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-dim);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+#menuBtn{display:none;position:fixed;top:10px;right:10px;z-index:11;width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:#fff;font-size:18px;cursor:pointer}
 
-    .badge.active {
-      background: rgba(46, 160, 67, 0.15);
-      color: #7ee787;
-      border-color: rgba(46, 160, 67, 0.35);
-    }
+/* Touch controls */
+#touch{display:none;position:fixed;left:0;right:0;bottom:0;height:0;z-index:6}
+body.touch #touch{display:block}
+#dpad{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));width:132px;height:132px}
+#dpad button,#tbtns button{position:absolute;border:1px solid rgba(255,255,255,.25);background:rgba(14,20,32,.75);color:#fff;font:700 14px var(--mono);border-radius:10px;touch-action:none}
+#dpad button{width:44px;height:44px}
+#dpad [data-k=up]{left:44px;top:0}#dpad [data-k=down]{left:44px;top:88px}#dpad [data-k=left]{left:0;top:44px}#dpad [data-k=right]{left:88px;top:44px}
+#tbtns{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));width:150px;height:132px}
+#tShoot{right:0;bottom:0;width:84px;height:84px;border-radius:50%!important;background:rgba(46,160,67,.65)!important;font-size:12px!important}
+#tShoot.held{background:rgba(245,179,46,.9)!important}
+#tCurl{left:0;bottom:46px;width:58px;height:38px;font-size:10px!important}
+#tCam{left:0;bottom:0;width:58px;height:38px;font-size:10px!important}
 
-    /* Main Right Controls Dock */
-    .controls-dock {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 290px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 14px;
-      pointer-events: auto;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-      z-index: 10;
-      max-height: calc(100vh - 32px);
-      overflow-y: auto;
-    }
+/* Game over modal */
+#over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:20}
+#over .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px 28px;text-align:center;min-width:280px;max-width:90vw;box-shadow:0 12px 36px rgba(0,0,0,.8)}
+#over h2{font:800 20px var(--mono);letter-spacing:2px;color:var(--gold)}
+#over p{color:var(--dim);margin:10px 0 16px;line-height:1.6;font-family:var(--mono);font-size:11px}
+#over .stars{font-size:28px;color:var(--gold);letter-spacing:4px;margin-bottom:6px}
 
-    .control-section {
-      margin-bottom: 14px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
-    .control-section:last-child {
-      margin-bottom: 0;
-      padding-bottom: 0;
-      border-bottom: none;
-    }
-
-    .section-title {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      font-weight: 600;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 6px 8px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 5px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-align: center;
-    }
-
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.25);
-    }
-
-    .btn.active {
-      background: var(--accent);
-      border-color: #4cd864;
-      color: #0d1117;
-      box-shadow: 0 0 10px var(--accent-glow);
-    }
-
-    .btn-secondary {
-      background: rgba(57, 178, 222, 0.15);
-      border-color: rgba(57, 178, 222, 0.35);
-      color: var(--accent-cyan);
-    }
-    .btn-secondary:hover {
-      background: rgba(57, 178, 222, 0.25);
-    }
-
-    .slider-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin: 6px 0;
-    }
-
-    .slider-label {
-      font-size: 11px;
-      color: var(--text);
-      flex: 1;
-    }
-
-    .slider-val {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-dim);
-      min-width: 38px;
-      text-align: right;
-    }
-
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 2px;
-      outline: none;
-      margin: 6px 0;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--text);
-      cursor: pointer;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-      transition: transform 0.1s ease;
-    }
-
-    input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-      background: #fff;
-    }
-
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 4px 0;
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    .toggle-switch {
-      position: relative;
-      width: 32px;
-      height: 18px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 9px;
-      transition: background 0.2s ease;
-    }
-
-    .toggle-switch::after {
-      content: "";
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #fff;
-      transition: transform 0.2s ease;
-    }
-
-    input[type="checkbox"] {
-      display: none;
-    }
-
-    input[type="checkbox"]:checked + .toggle-switch {
-      background: var(--accent);
-    }
-
-    input[type="checkbox"]:checked + .toggle-switch::after {
-      transform: translateX(14px);
-    }
-
-    /* Bottom Telemetry Bar */
-    .hud-telemetry {
-      position: absolute;
-      bottom: 16px;
-      left: 16px;
-      right: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(14, 20, 32, 0.75);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      border: 1px solid var(--panel-border);
-      border-radius: 6px;
-      padding: 6px 14px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-dim);
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    .telemetry-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .telemetry-item span {
-      color: var(--text);
-    }
-
-    /* Palette Modal */
-    #palette-modal {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-
-    .palette-card {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 10px;
-      padding: 20px;
-      width: 580px;
-      max-width: 90vw;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
-    }
-
-    .palette-grid {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 4px;
-      margin: 16px 0;
-    }
-
-    .palette-swatch {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 3px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.1s ease;
-    }
-
-    .palette-swatch:hover {
-      transform: scale(1.2);
-      z-index: 2;
-      border-color: #fff;
-    }
-
-    @media (max-width: 768px) {
-      .controls-dock {
-        width: 250px;
-        right: 8px;
-        top: 8px;
-      }
-      .hud-header {
-        max-width: 220px;
-        left: 8px;
-        top: 8px;
-      }
-      .hud-telemetry {
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
-        font-size: 8px;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-    }
-  </style>
-  <!-- Three.js r128 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <!-- Three.js OrbitControls -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+@media (max-width:768px){
+  #menuBtn{display:block}
+  #panel{top:auto;bottom:0;right:0;left:0;width:auto;max-height:64%;border-radius:12px 12px 0 0;transform:translateY(105%);transition:transform .25s;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  #panel.open{transform:none}
+  #score{top:8px;left:8px;transform:none;max-width:calc(100% - 64px)}
+  #score span{padding:5px 8px}#sbMain{font-size:15px}#sbFmt{font-size:9px}#sbSub{font-size:10px}
+  #stats{top:48px;bottom:auto;left:8px;transform:none;font-size:9px;padding:3px 8px;max-width:calc(100% - 16px);white-space:normal}
+  #feed{top:74px;bottom:auto;left:8px;width:calc(100% - 16px);flex-direction:column}
+  #feed li:nth-child(n+3){display:none}
+  #feed li{font-size:10px}
+  #powerWrap{bottom:calc(150px + env(safe-area-inset-bottom));width:220px}
+  #toast{font-size:36px}
+  #hint{display:none}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-  <canvas id="webgl-canvas"></canvas>
+<canvas id="c"></canvas>
 
-  <!-- Top Left Branding & Info HUD -->
-  <div class="hud-header">
-    <h1>Hive Style Lock</h1>
-    <p>HiveKey Arena Sports visual reference baseline. 2.4 m modular voxel column island with DoubleSide watertight manifold.</p>
-    <div class="hud-badges">
-      <span class="badge active">three.js r128</span>
-      <span class="badge">Iso 850m</span>
-      <span class="badge">Far 1700</span>
-      <span class="badge">90-OKLab</span>
-      <span class="badge">Bayer 4×4</span>
-    </div>
+<!-- Top HUD Scoreboard -->
+<div id="score" class="hud"><span id="sbFmt">PENALTIES</span><span id="sbMain">0</span><span id="sbSub">Kick 1/5</span></div>
+<div id="hint" class="hud">Aim ←↑→↓ / Click goal · Hold SPACE to power, release to shoot · Q/E curl · C camera</div>
+<div id="stats" class="hud"></div>
+<ul id="feed" class="hud"></ul>
+
+<!-- Power & Reticle -->
+<div id="powerWrap" class="hud"><div id="power"><i id="powerFill"></i><b id="sweet"></b></div><div id="curlInd">Curl: none</div></div>
+<div id="reticle" class="hud"></div>
+<div id="toast" class="hud"></div>
+<div id="pausedTag" class="hud">PAUSED</div>
+<button id="menuBtn" aria-label="Menu">☰</button>
+
+<!-- Side Control Dock -->
+<aside id="panel">
+  <h1>Hive Pitch Challenge</h1>
+  <div class="sub">HiveKey Arena · Hive Style Lock baseline</div>
+  
+  <div class="sec"><div class="lbl">Challenge Format</div>
+    <div class="seg" data-g="format"><button data-v="pen" class="on">Penalties</button><button data-v="fk">Free Kicks</button><button data-v="ovo">1v1 Finish</button></div></div>
+  
+  <div class="sec"><div class="lbl">Goalkeeper AI</div>
+    <div class="seg" data-g="keeper"><button data-v="rookie">Rookie</button><button data-v="pro" class="on">Pro</button><button data-v="elite">Elite</button></div></div>
+  
+  <div class="sec"><div class="lbl">Pitch Surface</div>
+    <div class="seg" data-g="surface"><button data-v="grass" class="on">Grass</button><button data-v="clay">Clay</button><button data-v="hard">Hard</button><button data-v="carpet">Carpet</button></div></div>
+  
+  <div class="sec"><div class="lbl">Lighting & Time</div>
+    <div class="seg" data-g="tod"><button data-v="day" class="on">Day</button><button data-v="dusk">Dusk</button><button data-v="night">Night</button></div></div>
+  
+  <div class="sec">
+    <button class="btn big" id="bNew">▶ New Challenge</button>
+    <div class="row"><button class="btn" id="bPause">Pause</button><button class="btn" id="bSound">Sound: On</button></div>
+    <div class="lbl" style="margin-top:8px">Game Speed</div>
+    <div class="seg" data-g="speed"><button data-v="0.5">0.5×</button><button data-v="1" class="on">1×</button><button data-v="2">2×</button></div></div>
+  
+  <div class="sec"><div class="lbl">Broadcast Camera</div>
+    <div class="seg" data-g="cam"><button data-v="tv" class="on">TV Follow</button><button data-v="island">Island (850m)</button><button data-v="close">Close-up</button></div></div>
+  
+  <div class="sec"><div class="lbl">Doll's-House Lift</div>
+    <div class="seg" data-g="lift" data-multi="1"><button data-v="stands">Stands</button><button data-v="club">Clubhouse</button><button data-v="goals">Goals</button></div></div>
+  
+  <div class="sec"><div class="lbl"><span>Pixel Grid Post-Process</span><span id="pxVal">2 px</span></div>
+    <input type="range" id="pxSize" min="1" max="6" step="1" value="2">
+    <div class="row"><button class="btn on" id="bOutline">Depth Outlines</button><button class="btn on" id="bDither">OKLab+Dither</button></div></div>
+  
+  <div class="sec keys">
+    <b>←↑→↓</b>/<b>WASD</b> aim (1v1: move)<br><b>Space</b> hold power · release shoot<br><b>Q</b>/<b>E</b> curl · <b>Click</b> goal to aim<br><b>C</b> camera · <b>P</b> pause · <b>N</b> new challenge<br><b>1 2 3</b> format · <b>K</b> keeper · <b>G</b> surface<br><b>T</b> time · <b>L</b> lift all · <b>M</b> sound toggle
   </div>
+</aside>
 
-  <!-- Right Controls Dock -->
-  <div class="controls-dock">
-    <!-- Render Target & Pixelation -->
-    <div class="control-section">
-      <div class="section-title">
-        <span>Pixel Grid Post-Process</span>
-        <span class="badge" id="rt-label">2×</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Pixel Size:</span>
-        <span class="slider-val" id="pixel-size-val">2 px</span>
-      </div>
-      <input type="range" id="pixel-size" min="1" max="8" step="1" value="2" />
-    </div>
+<!-- Touch controls for mobile -->
+<div id="touch">
+  <div id="dpad"><button data-k="up">▲</button><button data-k="left">◀</button><button data-k="right">▶</button><button data-k="down">▼</button></div>
+  <div id="tbtns"><button id="tCurl">CURL</button><button id="tCam">CAM</button><button id="tShoot">SHOOT</button></div>
+</div>
 
-    <!-- Depth Outlines -->
-    <div class="control-section">
-      <div class="section-title">Depth Edge Outlines</div>
-      <label class="toggle-row">
-        <span>Enable Depth Outlines</span>
-        <input type="checkbox" id="outline-toggle" checked />
-        <div class="toggle-switch"></div>
-      </label>
-      <div class="slider-row">
-        <span class="slider-label">Edge Threshold:</span>
-        <span class="slider-val" id="outline-thresh-val">0.45</span>
-      </div>
-      <input type="range" id="outline-thresh" min="0.1" max="1.5" step="0.05" value="0.45" />
-      <div class="slider-row">
-        <span class="slider-label">Ink Strength:</span>
-        <span class="slider-val" id="outline-str-val">0.90</span>
-      </div>
-      <input type="range" id="outline-str" min="0.1" max="1.0" step="0.05" value="0.90" />
-    </div>
+<!-- Modal Dialog -->
+<div id="over"><div class="card"><h2 id="ovTitle">CHALLENGE COMPLETE</h2><div class="stars" id="ovStars">★★★</div><p id="ovBody"></p><button class="btn big" id="ovNew">▶ Play Again</button></div></div>
 
-    <!-- OKLab 90-Color Snap + Bayer Dither -->
-    <div class="control-section">
-      <div class="section-title">
-        <span>90-Color OKLab & Dither</span>
-        <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 8px;" id="open-palette-btn">Palette</button>
-      </div>
-      <label class="toggle-row">
-        <span>90-Color OKLab Snap</span>
-        <input type="checkbox" id="snap-toggle" checked />
-        <div class="toggle-switch"></div>
-      </label>
-      <label class="toggle-row">
-        <span>Bayer 4×4 Dithering</span>
-        <input type="checkbox" id="dither-toggle" checked />
-        <div class="toggle-switch"></div>
-      </label>
-      <div class="slider-row">
-        <span class="slider-label">Dither Weight:</span>
-        <span class="slider-val" id="dither-str-val">0.85</span>
-      </div>
-      <input type="range" id="dither-str" min="0.0" max="2.0" step="0.05" value="0.85" />
-    </div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const V3 = THREE.Vector3;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const rnd = (a, b) => a + Math.random() * (b - a);
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283185 * v); }
 
-    <!-- Doll's-House Lift -->
-    <div class="control-section">
-      <div class="section-title">Test Stand Doll's-House Lift</div>
-      <div class="btn-group">
-        <button class="btn" id="lift-down-btn">Closed</button>
-        <button class="btn" id="lift-up-btn">Fully Lifted</button>
-        <button class="btn active" id="lift-auto-btn">Hover Auto</button>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Lift Elevation:</span>
-        <span class="slider-val" id="lift-val">10.0 m</span>
-      </div>
-      <input type="range" id="lift-slider" min="0" max="12" step="0.2" value="10.0" />
-    </div>
+/* ============================ CONSTANTS ============================ */
+const VOX = 2.4;                 // voxel column (m)
+const GX = 52.5, HW = 34;        // goal line x, touchline z (105 x 68 m)
+const GHW = 3.66, BAR = 2.44, NETD = 2.2, POSTR = 0.08, BALL_R = 0.11;
+const BOARD_X = 57, BOARD_Z = 37.5, BOARD_H = 0.95;
+const GRAV = 9.81, KDRAG = 0.0115, KMAG = 0.0055;
+const RX0 = -31, RX1 = 30, RZ0 = -26, RZ1 = 17;   // painted ground rect in voxel cells
+const PX0 = RX0 * VOX, PX1 = (RX1 + 1) * VOX, PZ0 = RZ0 * VOX, PZ1 = (RZ1 + 1) * VOX;
+const ISO_DIST = 850, CAM_FAR = 1700, CAM_NEAR = 1;
 
-    <!-- Day / Dusk / Night Lighting -->
-    <div class="control-section">
-      <div class="section-title">Stadium Lighting Time</div>
-      <div class="btn-group">
-        <button class="btn active" id="time-day-btn">Day</button>
-        <button class="btn" id="time-dusk-btn">Dusk</button>
-        <button class="btn" id="time-night-btn">Night</button>
-      </div>
-      <div class="slider-row">
-        <span class="slider-label">Sun Cycle:</span>
-        <span class="slider-val" id="time-val">14:00</span>
-      </div>
-      <input type="range" id="time-slider" min="0" max="24" step="0.1" value="14.0" />
-    </div>
+const SURF = {
+  grass:  { label: 'Grass',  e: 0.58, bf: 0.22, roll: 0.9,  grip: 1.0,  err: 1.0 },
+  clay:   { label: 'Clay',   e: 0.44, bf: 0.32, roll: 1.4,  grip: 0.80, err: 1.15 },
+  hard:   { label: 'Hard',   e: 0.78, bf: 0.14, roll: 0.5,  grip: 0.92, err: 0.98 },
+  carpet: { label: 'Carpet', e: 0.65, bf: 0.18, roll: 0.65, grip: 1.06, err: 0.95 }
+};
+const KEEPER = {
+  rookie: { label: 'Rookie', react: 0.35, dive: 4.2, guess: 0.35, catchV: 9,  rush: 4.4, reach: 1.9 },
+  pro:    { label: 'Pro',    react: 0.24, dive: 5.4, guess: 0.24, catchV: 13, rush: 5.5, reach: 2.2 },
+  elite:  { label: 'Elite',  react: 0.16, dive: 6.4, guess: 0.15, catchV: 17, rush: 6.2, reach: 2.45 }
+};
+const FORMATS = { pen: { label: 'PENALTIES', kicks: 5 }, fk: { label: 'FREE KICKS', time: 60 }, ovo: { label: '1v1 FINISH', time: 30 } };
+const TOD = {
+  day:   { bg: '#8ec0f8', sun: 0xfff4e0, sunI: 1.15, sunDir: [-0.35, 1, 0.5],  sky: 0xbfd8ff, gnd: 0x3d4a36, hemiI: 0.55, flood: 0,   lamp: '#5c6d8f', win: 0.0, hour: 14 },
+  dusk:  { bg: '#371247', sun: 0xf06810, sunI: 0.95, sunDir: [-1, 0.32, 0.3],  sky: 0x8d37aa, gnd: 0x382415, hemiI: 0.45, flood: 0.9, lamp: '#ffeed1', win: 0.75, hour: 18.6 },
+  night: { bg: '#061124', sun: 0x6ba4f8, sunI: 0.35, sunDir: [0.4, 1, -0.3],   sky: 0x18396e, gnd: 0x090d14, hemiI: 0.3,  flood: 2.0, lamp: '#ffffff', win: 1.0, hour: 21.5 }
+};
 
-    <!-- Camera Reset & Inspection -->
-    <div class="control-section">
-      <div class="section-title">Camera & View</div>
-      <div class="btn-group">
-        <button class="btn" id="cam-reset-btn" style="flex: 2;">Isometric Lock (850m)</button>
-        <button class="btn" id="rotate-toggle-btn">Orbit</button>
-      </div>
-    </div>
-  </div>
+/* ============ 90-COLOUR HIVEKEY OKLAB PALETTE ============ */
+const PAL90 = [
+  "#090d14","#131924","#1e2636","#2c364c","#414e6a","#5c6d8f","#7f90b3","#a8b8d8","#d1dcf0","#f4f7fc",
+  "#072412","#0d381c","#144f28","#1c6936","#258444","#2ea043","#3ebc56","#56d364","#7ee787","#133827","#1b4d37","#256549","#317f5d","#409b72","#55b98a","#96e3b8",
+  "#27130a","#3d1e10","#582b17","#763a1f","#964b28","#b75c32","#d96f3e","#e88554","#f49f75","#382415","#51351e","#6d4729","#8d5d36","#ae7445","#cf8d56","#ebd0ad",
+  "#061124","#0b1c3a","#112952","#18396e","#204a8c","#2a5eac","#3774cd","#4a8cef","#6ba4f8","#082d3f","#0e425c","#165a7b","#1f749c","#2a90be","#39b2de","#9ce5fb",
+  "#28080f","#400e19","#5c1525","#7c1e33","#9f2742","#c33353","#e04568","#ee6584","#f68da6","#230b2e","#371247","#501c64","#6d2785","#8d37aa","#b04ed0","#e097f5",
+  "#2e1c02","#472c03","#633e05","#825207","#a4690a","#c7810e","#ea9c13","#f5b32e","#fbca5b","#3b1602","#5a2203","#7c2f05","#a13e07","#c8500a","#f06810","#ffeed1"
+];
+function toOklab(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lin = c => (c /= 255) <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const r = lin(n >> 16), g = lin((n >> 8) & 255), b = lin(n & 255);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return new V3(0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+                1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+                0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s);
+}
+const PAL_OK = PAL90.map(toOklab);
 
-  <!-- Bottom Telemetry Bar -->
-  <div class="hud-telemetry">
-    <div class="telemetry-item">VIEWPORT: <span id="telem-viewport">1920×1080</span></div>
-    <div class="telemetry-item">BUFFER: <span id="telem-buffer">960×540</span></div>
-    <div class="telemetry-item">CAMERA DIST: <span>850.0 m (Far 1700)</span></div>
-    <div class="telemetry-item">VOXEL UNIT: <span>2.4 m</span></div>
-    <div class="telemetry-item">CLOCK: <span id="telem-clock">14:00:00</span></div>
-    <div class="telemetry-item">FPS: <span id="telem-fps">60</span></div>
-  </div>
-
-  <!-- 90-Color Palette Modal -->
-  <div id="palette-modal">
-    <div class="palette-card">
-      <div class="section-title" style="margin-bottom: 4px;">
-        <span style="font-size: 13px; color: #fff;">HiveKey 90-Color Calibrated OKLab Palette</span>
-        <button class="btn" id="close-palette-btn" style="padding: 2px 8px;">✕ Close</button>
-      </div>
-      <p style="color: var(--text-dim); font-size: 11px; margin-bottom: 12px;">
-        Perceptually calibrated sports spectrum: pitch greens, clay courts, clubhouse timber, hive cyan, track crimson, and stadium floodlight golds.
-      </p>
-      <div class="palette-grid" id="palette-grid"></div>
-      <div id="palette-swatch-info" style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan); text-align: center; height: 16px;">
-        Hover a swatch to inspect Hex & OKLab values
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /* =========================================================================
-       1. 90-COLOUR HIVEKEY ARENA OKLAB PALETTE SPECIFICATION
-       ========================================================================= */
-    const HEX_PALETTE_90 = [
-      // 10 Basalt & Sideline Monochromes
-      "#090d14", "#131924", "#1e2636", "#2c364c", "#414e6a",
-      "#5c6d8f", "#7f90b3", "#a8b8d8", "#d1dcf0", "#f4f7fc",
-
-      // 16 Match Turf & Pitch Greens
-      "#072412", "#0d381c", "#144f28", "#1c6936", "#258444",
-      "#2ea043", "#3ebc56", "#56d364", "#7ee787", "#133827",
-      "#1b4d37", "#256549", "#317f5d", "#409b72", "#55b98a", "#96e3b8",
-
-      // 16 Court Clay, Clubhouse Oak & Earth
-      "#27130a", "#3d1e10", "#582b17", "#763a1f", "#964b28",
-      "#b75c32", "#d96f3e", "#e88554", "#f49f75", "#382415",
-      "#51351e", "#6d4729", "#8d5d36", "#ae7445", "#cf8d56", "#ebd0ad",
-
-      // 16 Hive Royal Blues, Cyan Markers & Ice
-      "#061124", "#0b1c3a", "#112952", "#18396e", "#204a8c",
-      "#2a5eac", "#3774cd", "#4a8cef", "#6ba4f8", "#082d3f",
-      "#0e425c", "#165a7b", "#1f749c", "#2a90be", "#39b2de", "#9ce5fb",
-
-      // 16 Running Track Crimson, Rose & Dusk Violet
-      "#28080f", "#400e19", "#5c1525", "#7c1e33", "#9f2742",
-      "#c33353", "#e04568", "#ee6584", "#f68da6", "#230b2e",
-      "#371247", "#501c64", "#6d2785", "#8d37aa", "#b04ed0", "#e097f5",
-
-      // 16 Stadium Lighting, Caution Amber & Trophy Gold
-      "#2e1c02", "#472c03", "#633e05", "#825207", "#a4690a",
-      "#c7810e", "#ea9c13", "#f5b32e", "#fbca5b", "#3b1602",
-      "#5a2203", "#7c2f05", "#a13e07", "#c8500a", "#f06810", "#ffeed1"
-    ];
-
-    // OKLab Conversion Helpers
-    function hexToRgb(hex) {
-      const num = parseInt(hex.slice(1), 16);
-      return [(num >> 16) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
-    }
-
-    function srgbToLinear(c) {
-      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    }
-
-    function linearToOklab(r, g, b) {
-      const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
-      const m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
-      const s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
-
-      const l_ = Math.cbrt(Math.max(l, 0.0));
-      const m_ = Math.cbrt(Math.max(m, 0.0));
-      const s_ = Math.cbrt(Math.max(s, 0.0));
-
-      return [
-        0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
-        1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
-        0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
-      ];
-    }
-
-    // Precompute 90 colors in OKLab space for GLSL uniform
-    const OKLAB_VECTORS = HEX_PALETTE_90.map(hex => {
-      const [r, g, b] = hexToRgb(hex);
-      const [lr, lg, lb] = [srgbToLinear(r), srgbToLinear(g), srgbToLinear(b)];
-      const [L, a, b_] = linearToOklab(lr, lg, lb);
-      return new THREE.Vector3(L, a, b_);
+/* ============================ SYNTHESIZER AUDIO ============================ */
+let audioCtx = null, soundOn = true;
+function initAudio() {
+  if (!audioCtx && typeof AudioContext !== 'undefined') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+function playSound(type) {
+  if (!soundOn || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  if (type === 'whistle') {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.frequency.setValueAtTime(2800, t);
+    osc.frequency.exponentialRampToValueAtTime(3200, t + 0.06);
+    osc.frequency.exponentialRampToValueAtTime(2900, t + 0.15);
+    g.gain.setValueAtTime(0.18, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + 0.26);
+  } else if (type === 'kick') {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.frequency.setValueAtTime(160, t);
+    osc.frequency.exponentialRampToValueAtTime(45, t + 0.08);
+    g.gain.setValueAtTime(0.35, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + 0.13);
+  } else if (type === 'clang') {
+    // Metallic post ring
+    [840, 1310, 2140].forEach((f, i) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(0.15 / (i + 1), t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + 0.66);
     });
+  } else if (type === 'net') {
+    // Soft noise burst
+    const b = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.15, audioCtx.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.04));
+    const src = audioCtx.createBufferSource();
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 2.0;
+    src.buffer = b;
+    src.connect(f); f.connect(audioCtx.destination);
+    src.start(t);
+  } else if (type === 'cheer') {
+    // Stadium crowd roar
+    const dur = 1.6;
+    const b = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      const progress = i / d.length;
+      const env = progress < 0.2 ? progress / 0.2 : (1 - progress) / 0.8;
+      d[i] = (Math.random() * 2 - 1) * env * 0.35;
+    }
+    const src = audioCtx.createBufferSource();
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = 1800;
+    src.buffer = b; src.connect(f); f.connect(audioCtx.destination);
+    src.start(t);
+  } else if (type === 'gasp') {
+    // Crowd near miss gasp
+    const dur = 0.7;
+    const b = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      const env = Math.sin((i / d.length) * Math.PI);
+      d[i] = (Math.random() * 2 - 1) * env * 0.22;
+    }
+    const src = audioCtx.createBufferSource();
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 1.0;
+    src.buffer = b; src.connect(f); f.connect(audioCtx.destination);
+    src.start(t);
+  }
+}
 
-    /* =========================================================================
-       2. THREE.JS SYSTEM SETUP (ORTHOGRAPHIC ISOMETRIC ~850M, FAR 1700)
-       ========================================================================= */
-    const canvas = document.getElementById("webgl-canvas");
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-      antialias: false,
-      powerPreference: "high-performance"
+/* ============================ RENDERER & POST PASS ============================ */
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.BasicShadowMap;
+const scene = new THREE.Scene();
+
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, CAM_NEAR, CAM_FAR);
+let pixelSize = 2;
+const rt = new THREE.WebGLRenderTarget(2, 2, {
+  minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat,
+  depthBuffer: true, depthTexture: new THREE.DepthTexture()
+});
+rt.depthTexture.type = THREE.UnsignedShortType;
+
+const postMat = new THREE.ShaderMaterial({
+  uniforms: {
+    tDiffuse: { value: rt.texture }, tDepth: { value: rt.depthTexture },
+    uLowRes: { value: new THREE.Vector2(2, 2) }, uNear: { value: CAM_NEAR }, uFar: { value: CAM_FAR },
+    uThr: { value: 0.5 }, uInk: { value: 0.88 }, uOutline: { value: 1.0 }, uSnap: { value: 1.0 }, uDither: { value: 0.85 },
+    uPal: { value: PAL_OK }
+  },
+  vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D tDiffuse; uniform sampler2D tDepth;
+    uniform vec2 uLowRes; uniform float uNear, uFar, uThr, uInk, uOutline, uSnap, uDither;
+    uniform vec3 uPal[90];
+    varying vec2 vUv;
+    float lz(vec2 uv){ return mix(uNear, uFar, texture2D(tDepth, uv).r); }
+    float bayer4(vec2 p){
+      vec2 m = floor(mod(p, 4.0)); float v;
+      if (m.y < .5) v = m.x < .5 ? 0. : m.x < 1.5 ? 8. : m.x < 2.5 ? 2. : 10.;
+      else if (m.y < 1.5) v = m.x < .5 ? 12. : m.x < 1.5 ? 4. : m.x < 2.5 ? 14. : 6.;
+      else if (m.y < 2.5) v = m.x < .5 ? 3. : m.x < 1.5 ? 11. : m.x < 2.5 ? 1. : 9.;
+      else v = m.x < .5 ? 15. : m.x < 1.5 ? 7. : m.x < 2.5 ? 13. : 5.;
+      return v / 16. - .5;
+    }
+    vec3 toLin(vec3 c){ return mix(c / 12.92, pow((c + .055) / 1.055, vec3(2.4)), step(.04045, c)); }
+    vec3 toSrgb(vec3 c){ c = clamp(c, 0., 1.); return mix(c * 12.92, 1.055 * pow(c, vec3(1. / 2.4)) - .055, step(.0031308, c)); }
+    vec3 lin2ok(vec3 c){
+      float l = pow(max(.4122214708*c.r + .5363325363*c.g + .0514459929*c.b, 0.), 1./3.);
+      float m = pow(max(.2119034982*c.r + .6806995451*c.g + .1073969566*c.b, 0.), 1./3.);
+      float s = pow(max(.0883024619*c.r + .2817188376*c.g + .6299787005*c.b, 0.), 1./3.);
+      return vec3(.2104542553*l + .7936177850*m - .0040720468*s, 1.9779984951*l - 2.4285922050*m + .4505937099*s, .0259040371*l + .7827717662*m - .8086757660*s);
+    }
+    vec3 ok2lin(vec3 c){
+      float l = c.x + .3963377774*c.y + .2158037573*c.z; float m = c.x - .1055613458*c.y - .0638541728*c.z; float s = c.x - .0894841775*c.y - 1.2914855480*c.z;
+      l = l*l*l; m = m*m*m; s = s*s*s;
+      return vec3(4.0767416621*l - 3.3077115913*m + .2309699292*s, -1.2684380046*l + 2.6097574011*m - .3413193965*s, -.0041960863*l - .7034186147*m + 1.7076147010*s);
+    }
+    void main(){
+      vec3 col = texture2D(tDiffuse, vUv).rgb;
+      float edge = 0.;
+      if (uOutline > .5) {
+        vec2 px = 1. / uLowRes; float c = lz(vUv);
+        float s = lz(vUv + vec2(px.x, 0.)) + lz(vUv - vec2(px.x, 0.)) + lz(vUv + vec2(0., px.y)) + lz(vUv - vec2(0., px.y));
+        edge = step(uThr, s - 4. * c);
+      }
+      if (uSnap > .5) {
+        vec3 ok = lin2ok(toLin(col));
+        float b = bayer4(vUv * uLowRes) * uDither;
+        ok += vec3(b * .045, b * .022, b * .022);
+        float best = 1e5; vec3 pick = uPal[0];
+        for (int i = 0; i < 90; i++) { vec3 d = ok - uPal[i]; float e = d.x*d.x*1.35 + d.y*d.y + d.z*d.z; if (e < best) { best = e; pick = uPal[i]; } }
+        col = toSrgb(ok2lin(pick));
+      }
+      if (edge > .5) col = mix(col, vec3(.035, .05, .08), uInk);
+      gl_FragColor = vec4(col, 1.);
+    }`,
+  depthTest: false, depthWrite: false
+});
+const postScene = new THREE.Scene();
+postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
+const postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+let viewW = 1, viewH = 1;
+function resize() {
+  viewW = Math.max(1, window.innerWidth); viewH = Math.max(1, window.innerHeight);
+  renderer.setSize(viewW, viewH, false);
+  canvas.style.width = viewW + 'px'; canvas.style.height = viewH + 'px';
+  const w = Math.max(1, Math.floor(viewW / pixelSize)), h = Math.max(1, Math.floor(viewH / pixelSize));
+  rt.setSize(w, h);
+  postMat.uniforms.uLowRes.value.set(w, h);
+}
+
+/* ============================ MATERIAL & MESH HELPERS ============================ */
+const matCache = {}, geoCache = {};
+function getMat(hex, extra) {
+  const k = hex + (extra ? JSON.stringify(extra) : '');
+  return matCache[k] || (matCache[k] = new THREE.MeshLambertMaterial(Object.assign({ color: hex, side: THREE.DoubleSide }, extra || {})));
+}
+function boxGeo(w, h, d) { const k = w + '_' + h + '_' + d; return geoCache[k] || (geoCache[k] = new THREE.BoxGeometry(w, h, d)); }
+function makeBox(w, h, d, m, x, y, z, parent, shadow = true) {
+  const mesh = new THREE.Mesh(boxGeo(w, h, d), typeof m === 'string' ? getMat(m) : m);
+  mesh.position.set(x, y, z);
+  if (shadow) { mesh.castShadow = true; mesh.receiveShadow = true; }
+  if (parent) parent.add(mesh);
+  return mesh;
+}
+
+/* ============================ 2048px PROCEDURAL GROUND TEXTURE ============================ */
+let currentSurface = 'grass';
+let groundTexCanvas = document.createElement('canvas');
+groundTexCanvas.width = 2048; groundTexCanvas.height = 2048;
+const gctx = groundTexCanvas.getContext('2d');
+let groundTexture = new THREE.CanvasTexture(groundTexCanvas);
+groundTexture.magFilter = THREE.NearestFilter;
+groundTexture.minFilter = THREE.LinearFilter;
+
+function renderGroundTexture(type) {
+  currentSurface = type;
+  const w = 2048, h = 2048;
+  const toU = x => ((x - PX0) / (PX1 - PX0)) * w;
+  const toV = z => ((z - PZ0) / (PZ1 - PZ0)) * h;
+
+  // 1. Base island apron (Stone plaza, gravel run-off, track)
+  gctx.fillStyle = '#2c364c'; // Sideline basalt
+  gctx.fillRect(0, 0, w, h);
+
+  // Plaza around clubhouse
+  gctx.fillStyle = '#414e6a';
+  gctx.fillRect(toU(PX0 + 4), toV(PZ0 + 2), toU(PX1 - 4) - toU(PX0 + 4), toV(-36) - toV(PZ0 + 2));
+
+  // Running track / apron around pitch
+  gctx.fillStyle = type === 'clay' ? '#964b28' : '#763a1f'; // Terracotta track
+  const trackPadX = 5, trackPadZ = 3.5;
+  gctx.fillRect(toU(-GX - trackPadX), toV(-HW - trackPadZ), toU(GX + trackPadX) - toU(-GX - trackPadX), toV(HW + trackPadZ) - toV(-HW - trackPadZ));
+
+  // Technical areas / dugouts
+  gctx.fillStyle = '#39b2de';
+  gctx.fillRect(toU(-15), toV(-HW - 3.2), toU(-3) - toU(-15), toV(-HW - 0.5) - toV(-HW - 3.2));
+  gctx.fillRect(toU(3), toV(-HW - 3.2), toU(15) - toU(3), toV(-HW - 0.5) - toV(-HW - 3.2));
+
+  // Garden beds / green borders near clubhouse
+  gctx.fillStyle = '#1c6936';
+  gctx.fillRect(toU(-45), toV(-48), toU(-25) - toU(-45), toV(-42) - toV(-48));
+  gctx.fillRect(toU(25), toV(-48), toU(45) - toU(25), toV(-42) - toV(-48));
+
+  // 2. Regulation Pitch Surface
+  const pLeft = toU(-GX), pTop = toV(-HW), pW = toU(GX) - toU(-GX), pH = toV(HW) - toV(-HW);
+
+  let cPitch1, cPitch2;
+  if (type === 'grass') {
+    cPitch1 = '#2ea043'; cPitch2 = '#3ebc56'; // Lush turf stripes
+  } else if (type === 'clay') {
+    cPitch1 = '#d96f3e'; cPitch2 = '#b75c32'; // Roland Garros clay
+  } else if (type === 'hard') {
+    cPitch1 = '#2a5eac'; cPitch2 = '#204a8c'; // US Open hard court
+  } else { // carpet
+    cPitch1 = '#258444'; cPitch2 = '#1c6936'; // Indoor rapid turf
+  }
+
+  // Draw 18 alternating stripes along length
+  const stripes = 18;
+  const sW = pW / stripes;
+  for (let i = 0; i < stripes; i++) {
+    gctx.fillStyle = (i % 2 === 0) ? cPitch1 : cPitch2;
+    gctx.fillRect(pLeft + i * sW, pTop, sW + 0.5, pH);
+  }
+
+  // 3. Regulation White Markings
+  gctx.strokeStyle = '#f4f7fc';
+  gctx.fillStyle = '#f4f7fc';
+  gctx.lineWidth = Math.max(2, (0.18 / (PX1 - PX0)) * w);
+
+  // Touchlines & Goal lines
+  gctx.strokeRect(pLeft, pTop, pW, pH);
+
+  // Halfway line
+  const midX = toU(0);
+  gctx.beginPath();
+  gctx.moveTo(midX, pTop);
+  gctx.lineTo(midX, pTop + pH);
+  gctx.stroke();
+
+  // Centre circle (9.15m radius) & Spot
+  const cRadius = (9.15 / (PX1 - PX0)) * w;
+  gctx.beginPath();
+  gctx.arc(midX, toV(0), cRadius, 0, Math.PI * 2);
+  gctx.stroke();
+  gctx.beginPath();
+  gctx.arc(midX, toV(0), 4, 0, Math.PI * 2);
+  gctx.fill();
+
+  // Penalty Boxes (16.5m deep x 40.32m wide) & Goal Areas (5.5m x 18.32m)
+  [-1, 1].forEach(side => {
+    const gLine = toU(side * GX);
+    const boxEdge = toU(side * (GX - 16.5));
+    const boxTop = toV(-20.16), boxBot = toV(20.16);
+
+    // 18-yard box
+    gctx.strokeRect(Math.min(gLine, boxEdge), boxTop, Math.abs(gLine - boxEdge), boxBot - boxTop);
+
+    // 6-yard box
+    const sixEdge = toU(side * (GX - 5.5));
+    const sixTop = toV(-9.16), sixBot = toV(9.16);
+    gctx.strokeRect(Math.min(gLine, sixEdge), sixTop, Math.abs(gLine - sixEdge), sixBot - sixTop);
+
+    // Penalty Spot (11m from goal line)
+    const penSpot = toU(side * (GX - 11.0));
+    gctx.beginPath();
+    gctx.arc(penSpot, toV(0), 3.5, 0, Math.PI * 2);
+    gctx.fill();
+
+    // Penalty Arc (D outside box)
+    gctx.beginPath();
+    const arcAngle = 0.92;
+    if (side === 1) {
+      gctx.arc(penSpot, toV(0), cRadius, Math.PI - arcAngle, Math.PI + arcAngle);
+    } else {
+      gctx.arc(penSpot, toV(0), cRadius, -arcAngle, arcAngle);
+    }
+    gctx.stroke();
+
+    // Corner arcs (1m)
+    [-1, 1].forEach(zSide => {
+      const cZ = toV(zSide * HW);
+      gctx.beginPath();
+      gctx.arc(gLine, cZ, (1.2 / (PX1 - PX0)) * w, 0, Math.PI * 2);
+      gctx.stroke();
     });
-    renderer.setPixelRatio(1.0);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.toneMapping = THREE.LinearToneMapping;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.BasicShadowMap;
+  });
 
-    const scene = new THREE.Scene();
+  groundTexture.needsUpdate = true;
+}
 
-    // Orthographic Isometric Camera Setup
-    const ISO_DIST = 850.0; // Distance ~850 m
-    const ISO_FAR = 1700.0; // Far 1700
-    const ISO_NEAR = 1.0;
-    const FRUSTUM_SIZE = 112.0; // Island ~75m fits cleanly in view
-    let aspect = window.innerWidth / window.innerHeight;
+/* ============================ FLOATING ISLAND GEOMETRY ============================ */
+const islandGroup = new THREE.Group();
 
-    const camera = new THREE.OrthographicCamera(
-      (-FRUSTUM_SIZE * aspect) / 2,
-      (FRUSTUM_SIZE * aspect) / 2,
-      FRUSTUM_SIZE / 2,
-      -FRUSTUM_SIZE / 2,
-      ISO_NEAR,
-      ISO_FAR
-    );
+// Ground plane using 2048px canvas texture
+const groundPlaneGeo = new THREE.PlaneGeometry(PX1 - PX0, PZ1 - PZ0);
+const groundPlaneMat = new THREE.MeshLambertMaterial({ map: groundTexture, side: THREE.DoubleSide });
+const groundMesh = new THREE.Mesh(groundPlaneGeo, groundPlaneMat);
+groundMesh.rotation.x = -Math.PI / 2;
+groundMesh.position.set((PX0 + PX1) / 2, 0, (PZ0 + PZ1) / 2);
+groundMesh.receiveShadow = true;
+islandGroup.add(groundMesh);
 
-    // True Isometric Angles: 45° azimuth, atan(1/sqrt(2)) ~ 35.264° elevation
-    const ISO_PITCH = Math.atan(1 / Math.SQRT2);
-    const ISO_YAW = Math.PI / 4;
+// Banded soil strata & voxel skirt under island
+const bedrockGroup = new THREE.Group();
+const strataColors = ['#1e2636', '#2c364c', '#582b17', '#3d1e10', '#131924'];
+for (let i = 0; i < 5; i++) {
+  const depth = 3.6 + i * 4.2;
+  const inset = i * 2.2;
+  const slab = makeBox(
+    (PX1 - PX0) - inset * 2,
+    4.2,
+    (PZ1 - PZ0) - inset * 2,
+    strataColors[i % strataColors.length],
+    (PX0 + PX1) / 2,
+    -depth,
+    (PZ0 + PZ1) / 2,
+    bedrockGroup
+  );
+}
+// Tapering inverted stalactite points
+[-30, 0, 30].forEach(sx => {
+  [-10, 10].forEach(sz => {
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(8.0, 18.0, 5), getMat('#090d14'));
+    tip.rotation.x = Math.PI;
+    tip.position.set(sx, -26.0, sz);
+    bedrockGroup.add(tip);
+  });
+});
+islandGroup.add(bedrockGroup);
 
-    function resetIsometricCamera() {
-      const y = ISO_DIST * Math.sin(ISO_PITCH);
-      const ground = ISO_DIST * Math.cos(ISO_PITCH);
-      const x = ground * Math.sin(ISO_YAW);
-      const z = ground * Math.cos(ISO_YAW);
-      camera.position.set(x, y, z);
-      camera.lookAt(0, 0, 0);
-      if (controls) {
-        controls.target.set(0, 0, 0);
-        controls.update();
+// Floating satellite rocks
+const rocks = [];
+[[-68, -4, -30], [68, -6, 25], [-62, -8, 28], [64, -5, -28]].forEach(([rx, ry, rz], idx) => {
+  const rock = makeBox(4.8, 3.6, 4.8, '#2c364c', rx, ry, rz, islandGroup);
+  rocks.push({ mesh: rock, baseY: ry, speed: 0.8 + idx * 0.3 });
+});
+
+// Waterfall over south rim with mist particles
+const waterfallMesh = makeBox(14.0, 24.0, 1.2, getMat('#39b2de', { opacity: 0.85, transparent: true }), 0, -12.0, PZ1 + 0.5, islandGroup, false);
+
+const mistCount = 40;
+const mistGeo = new THREE.BufferGeometry();
+const mistPos = new Float32Array(mistCount * 3);
+for (let i = 0; i < mistCount; i++) {
+  mistPos[i * 3] = rnd(-8, 8);
+  mistPos[i * 3 + 1] = rnd(-24, -20);
+  mistPos[i * 3 + 2] = PZ1 + rnd(1, 6);
+}
+mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
+const mistMat = new THREE.PointsMaterial({ color: 0x9ce5fb, size: 2.2, transparent: true, opacity: 0.6 });
+const mistParticles = new THREE.Points(mistGeo, mistMat);
+islandGroup.add(mistParticles);
+
+scene.add(islandGroup);
+
+/* ============================ 3D STADIUM ASSETS & DOLL'S-HOUSE LIFTS ============================ */
+// Doll's House Lift Parents
+const liftStandsGroup = new THREE.Group();
+const liftClubGroup = new THREE.Group();
+const liftGoalsGroup = new THREE.Group();
+
+scene.add(liftStandsGroup);
+scene.add(liftClubGroup);
+scene.add(liftGoalsGroup);
+
+// Hydraulic Piston Bases (Stationary on ground)
+const standPistons = [], clubPistons = [], goalPistons = [];
+function addPistonSet(coords, parentArr) {
+  coords.forEach(([px, pz]) => {
+    const base = makeBox(0.8, 2.4, 0.8, '#1e2636', px, 1.2, pz, islandGroup);
+    const rod = makeBox(0.4, 1.0, 0.4, '#d1dcf0', px, 2.4, pz, islandGroup);
+    parentArr.push(rod);
+  });
+}
+
+// 1. Spectator Stands (South Touchline)
+const standBaseZ = 44.0;
+addPistonSet([[-32, standBaseZ], [32, standBaseZ], [-12, standBaseZ], [12, standBaseZ]], standPistons);
+
+// Stepped Spectator Stands
+const standMesh = new THREE.Group();
+for (let tier = 0; tier < 4; tier++) {
+  const stepH = 1.4, stepD = 2.4;
+  makeBox(68.0, stepH, stepD, '#414e6a', 0, tier * stepH + stepH / 2, standBaseZ - 4.0 + tier * stepD, standMesh);
+  // Spectator voxels
+  const crowdCols = ['#e04568', '#39b2de', '#f5b32e', '#f4f7fc', '#2ea043'];
+  for (let c = -30; c <= 30; c += 2.2) {
+    if (Math.abs(c) % 3 < 2) {
+      makeBox(1.1, 1.2, 1.1, crowdCols[(Math.abs(Math.round(c)) + tier) % crowdCols.length], c, tier * stepH + stepH + 0.6, standBaseZ - 4.0 + tier * stepD, standMesh, false);
+    }
+  }
+}
+// Stand Canopy Roof
+makeBox(72.0, 0.8, 14.0, '#1e2636', 0, 7.8, standBaseZ, standMesh);
+liftStandsGroup.add(standMesh);
+
+// 2. Clubhouse with Clock & Video Screen (North Plaza)
+const clubBaseZ = -46.0;
+addPistonSet([[-16, clubBaseZ - 4], [16, clubBaseZ - 4], [-16, clubBaseZ + 4], [16, clubBaseZ + 4]], clubPistons);
+
+const clubMesh = new THREE.Group();
+// 1st Floor Hall
+makeBox(36.0, 5.0, 14.0, '#51351e', 0, 2.5, clubBaseZ, clubMesh);
+// Porch Pillars
+[-15, -7.5, 0, 7.5, 15].forEach(colX => {
+  makeBox(0.8, 5.0, 0.8, '#f4f7fc', colX, 2.5, clubBaseZ + 7.4, clubMesh);
+});
+// 2nd Floor & Roof
+makeBox(38.0, 4.0, 16.0, '#382415', 0, 7.0, clubBaseZ, clubMesh);
+makeBox(40.0, 0.8, 18.0, '#27130a', 0, 9.4, clubBaseZ, clubMesh);
+
+// Clubhouse Analog Clock
+const clockDisc = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 0.2, 24), getMat('#ffeed1'));
+clockDisc.rotation.x = Math.PI / 2;
+clockDisc.position.set(0, 7.4, clubBaseZ + 8.1);
+clubMesh.add(clockDisc);
+
+const hourHand = makeBox(0.12, 0.8, 0.05, '#090d14', 0, 7.4, clubBaseZ + 8.25, clubMesh, false);
+const minHand  = makeBox(0.08, 1.2, 0.05, '#c8500a', 0, 7.4, clubBaseZ + 8.28, clubMesh, false);
+
+// Jumbotron LED Video Screen on Clubhouse Roof
+const jumbotronCanvas = document.createElement('canvas');
+jumbotronCanvas.width = 512; jumbotronCanvas.height = 128;
+const jctx = jumbotronCanvas.getContext('2d');
+const jumbotronTex = new THREE.CanvasTexture(jumbotronCanvas);
+jumbotronTex.magFilter = THREE.NearestFilter;
+const jumbotronMat = new THREE.MeshBasicMaterial({ map: jumbotronTex });
+const jumbotronMesh = new THREE.Mesh(new THREE.PlaneGeometry(16.0, 4.0), jumbotronMat);
+jumbotronMesh.position.set(0, 12.0, clubBaseZ + 7.0);
+clubMesh.add(jumbotronMesh);
+makeBox(17.0, 4.8, 1.0, '#131924', 0, 12.0, clubBaseZ + 6.5, clubMesh);
+
+liftClubGroup.add(clubMesh);
+
+// 3. Goal Frames & 3D Nets
+addPistonSet([[GX, -GHW], [GX, GHW], [GX + NETD, -GHW], [GX + NETD, GHW]], goalPistons);
+
+const goalNetGroup = new THREE.Group();
+const goalPostMat = getMat('#f4f7fc');
+const netWireMat = getMat('#ffffff', { wireframe: true, transparent: true, opacity: 0.45 });
+
+// Target Goal (East, X = 52.5)
+const targetGoal = new THREE.Group();
+// Left post, right post, crossbar
+makeBox(POSTR * 2, BAR, POSTR * 2, goalPostMat, GX, BAR / 2, -GHW, targetGoal);
+makeBox(POSTR * 2, BAR, POSTR * 2, goalPostMat, GX, BAR / 2,  GHW, targetGoal);
+makeBox(POSTR * 2, POSTR * 2, GHW * 2, goalPostMat, GX, BAR, 0, targetGoal);
+// Back net box / slope
+const netBox = makeBox(NETD, BAR, GHW * 2, netWireMat, GX + NETD / 2, BAR / 2, 0, targetGoal, false);
+targetGoal.position.set(0, 0, 0);
+goalNetGroup.add(targetGoal);
+
+// Opposite Goal (West, X = -52.5)
+const oppGoal = new THREE.Group();
+makeBox(POSTR * 2, BAR, POSTR * 2, goalPostMat, -GX, BAR / 2, -GHW, oppGoal);
+makeBox(POSTR * 2, BAR, POSTR * 2, goalPostMat, -GX, BAR / 2,  GHW, oppGoal);
+makeBox(POSTR * 2, POSTR * 2, GHW * 2, goalPostMat, -GX, BAR, 0, oppGoal);
+makeBox(NETD, BAR, GHW * 2, netWireMat, -GX - NETD / 2, BAR / 2, 0, oppGoal, false);
+goalNetGroup.add(oppGoal);
+
+liftGoalsGroup.add(goalNetGroup);
+
+// LED Sponsor Boards around touchlines
+const ledCanvas = document.createElement('canvas');
+ledCanvas.width = 1024; ledCanvas.height = 64;
+const ledCtx = ledCanvas.getContext('2d');
+const ledTex = new THREE.CanvasTexture(ledCanvas);
+ledTex.wrapS = THREE.RepeatWrapping; ledTex.repeat.set(4, 1);
+const ledBoardMat = new THREE.MeshBasicMaterial({ map: ledTex });
+
+const boardsGroup = new THREE.Group();
+// Touchline boards (Z = +-37.5)
+const bNorth = new THREE.Mesh(new THREE.PlaneGeometry(110.0, BOARD_H), ledBoardMat);
+bNorth.position.set(0, BOARD_H / 2, -BOARD_Z);
+bNorth.rotation.y = 0;
+boardsGroup.add(bNorth);
+
+const bSouth = new THREE.Mesh(new THREE.PlaneGeometry(110.0, BOARD_H), ledBoardMat);
+bSouth.position.set(0, BOARD_H / 2, BOARD_Z);
+bSouth.rotation.y = Math.PI;
+boardsGroup.add(bSouth);
+
+// Goal end run-off boards
+const bEast1 = new THREE.Mesh(new THREE.PlaneGeometry(30.0, BOARD_H), ledBoardMat);
+bEast1.position.set(BOARD_X, BOARD_H / 2, -20.0);
+bEast1.rotation.y = -Math.PI / 2;
+boardsGroup.add(bEast1);
+
+const bEast2 = new THREE.Mesh(new THREE.PlaneGeometry(30.0, BOARD_H), ledBoardMat);
+bEast2.position.set(BOARD_X, BOARD_H / 2, 20.0);
+bEast2.rotation.y = -Math.PI / 2;
+boardsGroup.add(bEast2);
+
+islandGroup.add(boardsGroup);
+
+// Corner Flags
+[[-GX, -HW], [GX, -HW], [-GX, HW], [GX, HW]].forEach(([fx, fz]) => {
+  makeBox(0.08, 1.6, 0.08, '#f4f7fc', fx, 0.8, fz, islandGroup, false);
+  const flag = makeBox(0.5, 0.35, 0.04, '#e04568', fx + (fx > 0 ? -0.25 : 0.25), 1.45, fz, islandGroup, false);
+});
+
+// 4 Corner Stadium Floodlight Masts
+const floodlightSpots = [];
+const mastCoords = [[-58, -38], [58, -38], [-58, 38], [58, 38]];
+mastCoords.forEach(([mx, mz]) => {
+  const mast = new THREE.Group();
+  mast.position.set(mx, 0, mz);
+  makeBox(1.0, 22.0, 1.0, '#2c364c', 0, 11.0, 0, mast);
+  const bank = makeBox(4.0, 2.2, 1.2, '#131924', 0, 21.0, 0, mast);
+  
+  const spot = new THREE.SpotLight(0xd6f6ff, 0.0, 110.0, Math.PI / 3.5, 0.6, 1.0);
+  spot.position.set(0, 21.0, 0);
+  spot.target.position.set(mx > 0 ? 30 : -30, 0, 0);
+  mast.add(spot);
+  mast.add(spot.target);
+  floodlightSpots.push(spot);
+  islandGroup.add(mast);
+});
+
+// Defensive Wall (Free Kicks)
+const defWallGroup = new THREE.Group();
+defWallGroup.visible = false;
+const defWallMeshes = [];
+for (let i = 0; i < 4; i++) {
+  const defender = new THREE.Group();
+  makeBox(0.8, 1.85, 0.6, '#ae2442', 0, 0.92, 0, defender); // Red jersey
+  makeBox(0.4, 0.45, 0.4, '#dcb07b', 0, 1.95, 0, defender);  // Head
+  defender.position.set(0, 0, (i - 1.5) * 0.95);
+  defWallGroup.add(defender);
+  defWallMeshes.push(defender);
+}
+scene.add(defWallGroup);
+
+/* ============================ BALL, PLAYERS & GOALKEEPER ============================ */
+// Soccer Ball
+const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(BALL_R, 12, 12), getMat('#f4f7fc'));
+ballMesh.castShadow = true;
+scene.add(ballMesh);
+
+// Goalkeeper 3D Voxel Rig
+const keeperGroup = new THREE.Group();
+const keeperBody = makeBox(0.9, 1.9, 0.6, '#f5b32e', 0, 0.95, 0, keeperGroup); // Gold jersey
+const keeperHead = makeBox(0.45, 0.45, 0.45, '#dcb07b', 0, 2.05, 0, keeperGroup);
+// Gloves
+const leftGlove = makeBox(0.35, 0.35, 0.35, '#39b2de', 0.55, 1.1, 0, keeperGroup);
+const rightGlove = makeBox(0.35, 0.35, 0.35, '#39b2de', -0.55, 1.1, 0, keeperGroup);
+keeperGroup.position.set(GX - 0.2, 0, 0);
+scene.add(keeperGroup);
+
+// Striker (1v1 mode)
+const strikerGroup = new THREE.Group();
+const strikerBody = makeBox(0.85, 1.85, 0.6, '#204a8c', 0, 0.92, 0, strikerGroup); // Royal blue jersey
+const strikerHead = makeBox(0.42, 0.42, 0.42, '#dcb07b', 0, 1.95, 0, strikerGroup);
+strikerGroup.position.set(25.0, 0, 0);
+strikerGroup.visible = false;
+scene.add(strikerGroup);
+
+/* ============================ LIGHTING SETUP ============================ */
+const sunLight = new THREE.DirectionalLight(0xfff4e0, 1.15);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 1024; sunLight.shadow.mapSize.height = 1024;
+sunLight.shadow.camera.near = 100; sunLight.shadow.camera.far = 1200;
+sunLight.shadow.camera.left = -75; sunLight.shadow.camera.right = 75;
+sunLight.shadow.camera.top = 75; sunLight.shadow.camera.bottom = -75;
+scene.add(sunLight);
+
+const hemiLight = new THREE.HemisphereLight(0xbfd8ff, 0x3d4a36, 0.55);
+scene.add(hemiLight);
+
+let currentTod = 'day';
+function setTimeOfDay(todKey) {
+  currentTod = todKey;
+  const cfg = TOD[todKey];
+  scene.background = new THREE.Color(cfg.bg);
+  sunLight.intensity = cfg.sunI;
+  sunLight.color.setHex(cfg.sun);
+  sunLight.position.set(cfg.sunDir[0] * 500, cfg.sunDir[1] * 500, cfg.sunDir[2] * 500);
+
+  hemiLight.intensity = cfg.hemiI;
+  hemiLight.color.setHex(cfg.sky);
+  hemiLight.groundColor.setHex(cfg.gnd);
+
+  floodlightSpots.forEach(s => s.intensity = cfg.flood);
+}
+
+/* ============================ DOLL'S-HOUSE LIFT LOGIC ============================ */
+const liftState = { stands: false, club: false, goals: false };
+const liftTargets = { stands: 0, club: 0, goals: 0 };
+const liftHeights = { stands: 0, club: 0, goals: 0 };
+
+function updateLifts(dt) {
+  ['stands', 'club', 'goals'].forEach(k => {
+    liftTargets[k] = liftState[k] ? 9.6 : 0.0;
+    liftHeights[k] += (liftTargets[k] - liftHeights[k]) * Math.min(1.0, dt * 6.0);
+  });
+
+  liftStandsGroup.position.y = liftHeights.stands;
+  liftClubGroup.position.y = liftHeights.club;
+  liftGoalsGroup.position.y = liftHeights.goals;
+
+  // Extend pistons
+  standPistons.forEach(rod => { rod.scale.y = 1.0 + liftHeights.stands * 0.8; rod.position.y = 2.4 + liftHeights.stands * 0.4; });
+  clubPistons.forEach(rod => { rod.scale.y = 1.0 + liftHeights.club * 0.8; rod.position.y = 2.4 + liftHeights.club * 0.4; });
+  goalPistons.forEach(rod => { rod.scale.y = 1.0 + liftHeights.goals * 0.8; rod.position.y = 2.4 + liftHeights.goals * 0.4; });
+}
+
+/* ============================ GAME PHYSICS & BALL ENGINE ============================ */
+const ball = {
+  pos: new V3(41.5, BALL_R, 0),
+  vel: new V3(0, 0, 0),
+  spin: new V3(0, 0, 0),
+  inFlight: false,
+  isGoal: false,
+  isSaved: false,
+  touchedPost: false,
+  kickCount: 0,
+  score: 0,
+  targetZ: 0,
+  targetY: 1.2
+};
+
+// Striker player state in 1v1
+const striker = {
+  pos: new V3(25.0, 0, 0),
+  vel: new V3(0, 0, 0),
+  speed: 9.0
+};
+
+// Keeper state
+const keeper = {
+  pos: new V3(GX - 0.2, 0, 0),
+  vel: new V3(0, 0, 0),
+  targetZ: 0,
+  state: 'idle', // idle, diving, rushing, recovered
+  reactionTimer: 0,
+  level: 'pro'
+};
+
+let currentFormat = 'pen';
+let formatTimer = 60.0;
+let isPaused = false;
+let gameSpeed = 1.0;
+let curlValue = 0; // -1 (left), 0 (none), +1 (right)
+let isCharging = false;
+let chargePower = 0;
+let sweetSpotMin = 0.62, sweetSpotMax = 0.80;
+
+function resetBallForShot() {
+  ball.vel.set(0, 0, 0);
+  ball.spin.set(0, 0, 0);
+  ball.inFlight = false;
+  ball.isGoal = false;
+  ball.isSaved = false;
+  ball.touchedPost = false;
+
+  keeper.state = 'idle';
+  keeper.vel.set(0, 0, 0);
+  keeper.pos.set(GX - 0.2, 0, 0);
+  keeperGroup.position.copy(keeper.pos);
+  keeperGroup.rotation.z = 0;
+
+  defWallGroup.position.y = 0;
+
+  if (currentFormat === 'pen') {
+    ball.pos.set(GX - 11.0, BALL_R, 0);
+    strikerGroup.visible = false;
+    defWallGroup.visible = false;
+  } else if (currentFormat === 'fk') {
+    // Variable free-kick position (20m to 28m out)
+    const dist = rnd(21.0, 27.5);
+    const zOffset = rnd(-12.0, 12.0);
+    ball.pos.set(GX - dist, BALL_R, zOffset);
+    strikerGroup.visible = false;
+    defWallGroup.visible = true;
+
+    // Place defensive wall 9.15m toward goal
+    const toGoal = new V3(GX, 0, 0).sub(ball.pos).normalize();
+    const wallPos = ball.pos.clone().addScaledVector(toGoal, 9.15);
+    defWallGroup.position.set(wallPos.x, 0, wallPos.z);
+    defWallGroup.lookAt(ball.pos.x, 0, ball.pos.z);
+  } else if (currentFormat === 'ovo') {
+    // 1v1 finish
+    ball.pos.set(22.0, BALL_R, 0);
+    striker.pos.set(21.0, 0, 0);
+    strikerGroup.position.copy(striker.pos);
+    strikerGroup.visible = true;
+    defWallGroup.visible = false;
+  }
+  ballMesh.position.copy(ball.pos);
+}
+
+function kickBall(aimZ, aimY, powerFrac, curl) {
+  if (ball.inFlight) return;
+  initAudio();
+  playSound('kick');
+
+  ball.inFlight = true;
+  ball.isGoal = false;
+  ball.isSaved = false;
+
+  const surf = SURF[currentSurface];
+  // Calculate base launch trajectory to aim point
+  const target = new V3(GX, aimY, aimZ);
+  
+  // Realism & First-time accuracy (~60-70% sweet spot, error on over/under charge)
+  let accuracyFactor = 1.0;
+  if (powerFrac >= sweetSpotMin && powerFrac <= sweetSpotMax) {
+    accuracyFactor = 0.35; // Pinpoint
+  } else if (powerFrac > 0.88) {
+    accuracyFactor = 1.5; // Likely skied
+  } else {
+    accuracyFactor = 0.9;
+  }
+  
+  target.z += gauss() * 0.45 * accuracyFactor * surf.err;
+  target.y += gauss() * 0.35 * accuracyFactor * surf.err;
+
+  const dx = target.x - ball.pos.x;
+  const dz = target.z - ball.pos.z;
+  const dist = Math.sqrt(dx * dx + dz * dz);
+
+  // Flight time based on power
+  const speed = lerp(18.0, 34.0, powerFrac);
+  const flightTime = dist / speed;
+
+  // Initial velocity
+  ball.vel.x = (dx / dist) * speed;
+  ball.vel.z = (dz / dist) * speed;
+  ball.vel.y = (target.y - ball.pos.y) / flightTime + 0.5 * GRAV * flightTime;
+
+  // Spin for Magnus curl
+  ball.spin.set(0, curl * 26.0 * surf.grip, 0);
+
+  // Trigger defensive wall jump
+  if (currentFormat === 'fk') {
+    defWallGroup.position.y = 0.7; // Wall jumps!
+  }
+
+  // Goalkeeper AI trigger
+  const kCfg = KEEPER[keeper.level];
+  keeper.reactionTimer = kCfg.react + (Math.random() * 0.1 - 0.05);
+  
+  // Keeper prediction
+  let predZ = target.z;
+  if (Math.random() < kCfg.guess) {
+    // Anticipates side
+    predZ += (Math.random() > 0.5 ? 1 : -1) * 1.5;
+  }
+  keeper.targetZ = clamp(predZ, -GHW + 0.3, GHW - 0.3);
+  keeper.state = 'anticipating';
+
+  addFeed(`Shot taken (${(speed * 3.6).toFixed(0)} km/h)`);
+}
+
+/* ============================ SUB-STEPPED BALL PHYSICS LOOP ============================ */
+function updatePhysics(dt) {
+  if (!ball.inFlight) return;
+
+  const surf = SURF[currentSurface];
+  const SUBSTEPS = 8;
+  const sdt = dt / SUBSTEPS;
+
+  for (let s = 0; s < SUBSTEPS; s++) {
+    // 1. Aerodynamic Drag & Magnus Effect
+    const vLen = ball.vel.length();
+    if (vLen > 0.001) {
+      // Drag: F_drag = -k * v * v
+      ball.vel.addScaledVector(ball.vel, -KDRAG * vLen * sdt);
+
+      // Magnus effect: F_mag = k_mag * (spin x v)
+      const magnus = new V3().crossVectors(ball.spin, ball.vel).multiplyScalar(KMAG * sdt);
+      ball.vel.add(magnus);
+    }
+
+    // 2. Gravity
+    ball.vel.y -= GRAV * sdt;
+
+    // 3. Move position
+    ball.pos.addScaledVector(ball.vel, sdt);
+
+    // 4. Ground Collision
+    if (ball.pos.y <= BALL_R) {
+      ball.pos.y = BALL_R;
+      ball.vel.y = -ball.vel.y * surf.e;
+      // Ground friction
+      ball.vel.x *= (1.0 - surf.bf);
+      ball.vel.z *= (1.0 - surf.bf);
+      ball.spin.multiplyScalar(0.75);
+
+      if (Math.abs(ball.vel.y) < 0.25) {
+        ball.vel.y = 0;
+        ball.vel.x *= (1.0 - surf.roll * sdt * 3.0);
+        ball.vel.z *= (1.0 - surf.roll * sdt * 3.0);
       }
     }
 
-    const controls = new THREE.OrbitControls(camera, canvas);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.screenSpacePanning = true;
-    controls.maxPolarAngle = Math.PI / 2 - 0.02; // Keep above floating bottom
-    resetIsometricCamera();
-
-    /* =========================================================================
-       3. LOW-RES RENDER TARGET (PIXEL SIZE SLIDER, DEFAULT 2)
-       ========================================================================= */
-    let pixelScale = 2; // Default 2 as requested
-    let rtWidth = Math.max(1, Math.floor(window.innerWidth / pixelScale));
-    let rtHeight = Math.max(1, Math.floor(window.innerHeight / pixelScale));
-
-    let renderTarget = new THREE.WebGLRenderTarget(rtWidth, rtHeight, {
-      minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter,
-      format: THREE.RGBAFormat,
-      type: THREE.UnsignedByteType,
-      depthBuffer: true,
-      depthTexture: new THREE.DepthTexture()
-    });
-    renderTarget.depthTexture.type = THREE.UnsignedShortType;
-
-    function resizeBuffers() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      aspect = w / h;
-
-      camera.left = (-FRUSTUM_SIZE * aspect) / 2;
-      camera.right = (FRUSTUM_SIZE * aspect) / 2;
-      camera.top = FRUSTUM_SIZE / 2;
-      camera.bottom = -FRUSTUM_SIZE / 2;
-      camera.updateProjectionMatrix();
-
-      renderer.setSize(w, h);
-
-      rtWidth = Math.max(1, Math.floor(w / pixelScale));
-      rtHeight = Math.max(1, Math.floor(h / pixelScale));
-      renderTarget.setSize(rtWidth, rtHeight);
-
-      postMaterial.uniforms.uResolution.value.set(w, h);
-      postMaterial.uniforms.uLowRes.value.set(rtWidth, rtHeight);
-
-      document.getElementById("telem-viewport").textContent = `${w}×${h}`;
-      document.getElementById("telem-buffer").textContent = `${rtWidth}×${rtHeight}`;
+    // 5. Goal Post & Crossbar Collision (Strict capsule/cylinder tests)
+    const goalX = GX;
+    if (Math.abs(ball.pos.x - goalX) < (POSTR + BALL_R)) {
+      // Left Post
+      if (Math.abs(ball.pos.z - (-GHW)) < (POSTR + BALL_R) && ball.pos.y <= (BAR + POSTR)) {
+        ball.vel.x = -Math.abs(ball.vel.x) * 0.75;
+        ball.vel.z -= 4.0;
+        playSound('clang');
+        ball.touchedPost = true;
+        addFeed('Off the post!', 'miss');
+      }
+      // Right Post
+      else if (Math.abs(ball.pos.z - GHW) < (POSTR + BALL_R) && ball.pos.y <= (BAR + POSTR)) {
+        ball.vel.x = -Math.abs(ball.vel.x) * 0.75;
+        ball.vel.z += 4.0;
+        playSound('clang');
+        ball.touchedPost = true;
+        addFeed('Off the post!', 'miss');
+      }
+      // Crossbar
+      else if (Math.abs(ball.pos.z) < GHW && Math.abs(ball.pos.y - BAR) < (POSTR + BALL_R)) {
+        ball.vel.y = -Math.abs(ball.vel.y) * 0.75;
+        ball.vel.x = -Math.abs(ball.vel.x) * 0.6;
+        playSound('clang');
+        ball.touchedPost = true;
+        addFeed('Off the crossbar!', 'miss');
+      }
     }
 
-    /* =========================================================================
-       4. POST-PROCESSING FULLSCREEN PASS:
-          - DEPTH OUTLINES (Sobel Filter on Linear Ortho Depth)
-          - 90-COLOUR OKLAB PERCEPTUAL SNAP + BAYER 4x4 DITHER
-       ========================================================================= */
-    const postVertexShader = `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = vec4(position.xy, 0.0, 1.0);
+    // 6. Defensive Wall Collision (in Free Kick mode)
+    if (currentFormat === 'fk' && defWallGroup.visible) {
+      const wPos = defWallGroup.position;
+      if (Math.abs(ball.pos.x - wPos.x) < 0.6 && Math.abs(ball.pos.z - wPos.z) < 2.0 && ball.pos.y < 2.3) {
+        ball.vel.x = -ball.vel.x * 0.45;
+        ball.vel.z += rnd(-2, 2);
+        ball.vel.y = Math.abs(ball.vel.y) * 0.4;
+        playSound('kick');
+        addFeed('Blocked by the wall!', 'miss');
       }
-    `;
+    }
 
-    const postFragmentShader = `
-      precision highp float;
-
-      uniform sampler2D tDiffuse;
-      uniform sampler2D tDepth;
-      uniform vec2 uResolution;
-      uniform vec2 uLowRes;
-      uniform float uOutlineThreshold;
-      uniform float uOutlineStrength;
-      uniform float uOutlineEnabled;
-      uniform float uSnapEnabled;
-      uniform float uDitherEnabled;
-      uniform float uDitherStrength;
-      uniform vec3 uPaletteOKLab[90];
-
-      varying vec2 vUv;
-
-      // Unrolled Bayer 4x4 Dither Matrix [-0.5, 0.5]
-      float getBayer4(vec2 p) {
-        vec2 m = floor(mod(p, 4.0));
-        float val = 0.0;
-        if (m.y < 0.5) {
-          if (m.x < 0.5) val = 0.0;
-          else if (m.x < 1.5) val = 8.0;
-          else if (m.x < 2.5) val = 2.0;
-          else val = 10.0;
-        } else if (m.y < 1.5) {
-          if (m.x < 0.5) val = 12.0;
-          else if (m.x < 1.5) val = 4.0;
-          else if (m.x < 2.5) val = 14.0;
-          else val = 6.0;
-        } else if (m.y < 2.5) {
-          if (m.x < 0.5) val = 3.0;
-          else if (m.x < 1.5) val = 11.0;
-          else if (m.x < 2.5) val = 1.0;
-          else val = 9.0;
+    // 7. Goalkeeper Glove / Body Collision
+    if (!ball.isGoal && !ball.isSaved) {
+      const kDist = ball.pos.distanceTo(new V3(keeper.pos.x, 1.1, keeper.pos.z));
+      const kCfg = KEEPER[keeper.level];
+      if (kDist < kCfg.reach) {
+        ball.isSaved = true;
+        playSound('kick');
+        if (ball.vel.length() < kCfg.catchV) {
+          // Clean catch
+          ball.vel.set(0, 0, 0);
+          ball.pos.set(keeper.pos.x - 0.4, 1.2, keeper.pos.z);
+          addFeed('WHAT A SAVE! Held by keeper.', 'save');
         } else {
-          if (m.x < 0.5) val = 15.0;
-          else if (m.x < 1.5) val = 7.0;
-          else if (m.x < 2.5) val = 13.0;
-          else val = 5.0;
+          // Parried out
+          ball.vel.x = -Math.abs(ball.vel.x) * 0.55;
+          ball.vel.y += rnd(2.0, 5.0);
+          ball.vel.z += rnd(-4.0, 4.0);
+          addFeed('Tipped over by the keeper!', 'save');
         }
-        return (val / 16.0) - 0.5;
+        showToast('SAVED!', 'save');
+        playSound('gasp');
+        setTimeout(handleShotFinished, 1400);
       }
-
-      vec3 srgbToLinear(vec3 c) {
-        return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
-      }
-
-      vec3 linearToSrgb(vec3 c) {
-        vec3 cl = clamp(c, 0.0, 1.0);
-        return mix(cl * 12.92, 1.055 * pow(cl, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, cl));
-      }
-
-      vec3 linearToOklab(vec3 c) {
-        float l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b;
-        float m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b;
-        float s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b;
-
-        float l_ = pow(max(l, 0.0), 1.0 / 3.0);
-        float m_ = pow(max(m, 0.0), 1.0 / 3.0);
-        float s_ = pow(max(s, 0.0), 1.0 / 3.0);
-
-        return vec3(
-          0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
-          1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
-          0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
-        );
-      }
-
-      vec3 oklabToLinear(vec3 c) {
-        float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
-        float m_ = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
-        float s_ = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;
-
-        float l = l_ * l_ * l_;
-        float m = m_ * m_ * m_;
-        float s = s_ * s_ * s_;
-
-        return vec3(
-          +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-          -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-          -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
-        );
-      }
-
-      void main() {
-        vec3 color = texture2D(tDiffuse, vUv).rgb;
-
-        // --- Depth Outlines Detection ---
-        float edge = 0.0;
-        if (uOutlineEnabled > 0.5) {
-          vec2 inv = 1.0 / uLowRes;
-          // 8-neighbor Sobel stencil
-          float d00 = texture2D(tDepth, vUv + vec2(-inv.x, -inv.y)).r;
-          float d10 = texture2D(tDepth, vUv + vec2( 0.0,   -inv.y)).r;
-          float d20 = texture2D(tDepth, vUv + vec2( inv.x, -inv.y)).r;
-          float d01 = texture2D(tDepth, vUv + vec2(-inv.x,  0.0)).r;
-          float d21 = texture2D(tDepth, vUv + vec2( inv.x,  0.0)).r;
-          float d02 = texture2D(tDepth, vUv + vec2(-inv.x,  inv.y)).r;
-          float d12 = texture2D(tDepth, vUv + vec2( 0.0,    inv.y)).r;
-          float d22 = texture2D(tDepth, vUv + vec2( inv.x,  inv.y)).r;
-
-          float sx = (d20 + 2.0 * d21 + d22) - (d00 + 2.0 * d01 + d02);
-          float sy = (d02 + 2.0 * d12 + d22) - (d00 + 2.0 * d10 + d20);
-          float depthGradient = sqrt(sx * sx + sy * sy) * 1600.0;
-
-          if (depthGradient > uOutlineThreshold) {
-            edge = 1.0;
-          }
-        }
-
-        // --- 90-Color OKLab Snap + Bayer Dither ---
-        if (uSnapEnabled > 0.5) {
-          vec3 lin = srgbToLinear(color);
-          vec3 ok = linearToOklab(lin);
-
-          if (uDitherEnabled > 0.5) {
-            vec2 px = vUv * uLowRes;
-            float bayer = getBayer4(px);
-            ok.x += bayer * (0.045 * uDitherStrength);
-            ok.y += bayer * (0.025 * uDitherStrength);
-            ok.z += bayer * (0.025 * uDitherStrength);
-          }
-
-          // Search closest color in the 90-color OKLab palette
-          float minDst = 1000.0;
-          vec3 bestOk = uPaletteOKLab[0];
-          for (int i = 0; i < 90; i++) {
-            vec3 diff = ok - uPaletteOKLab[i];
-            // Lightness weighted perceptual distance
-            float dst = diff.x * diff.x * 1.35 + (diff.y * diff.y + diff.z * diff.z);
-            if (dst < minDst) {
-              minDst = dst;
-              bestOk = uPaletteOKLab[i];
-            }
-          }
-
-          vec3 snappedLin = oklabToLinear(bestOk);
-          color = linearToSrgb(snappedLin);
-        }
-
-        // Apply dark stylized depth outline
-        if (edge > 0.5) {
-          vec3 inkOutline = vec3(0.04, 0.05, 0.08);
-          color = mix(color, inkOutline, uOutlineStrength);
-        }
-
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `;
-
-    const postMaterial = new THREE.ShaderMaterial({
-      vertexShader: postVertexShader,
-      fragmentShader: postFragmentShader,
-      uniforms: {
-        tDiffuse: { value: null },
-        tDepth: { value: null },
-        uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-        uLowRes: { value: new THREE.Vector2(rtWidth, rtHeight) },
-        uOutlineThreshold: { value: 0.45 },
-        uOutlineStrength: { value: 0.90 },
-        uOutlineEnabled: { value: 1.0 },
-        uSnapEnabled: { value: 1.0 },
-        uDitherEnabled: { value: 1.0 },
-        uDitherStrength: { value: 0.85 },
-        uPaletteOKLab: { value: OKLAB_VECTORS }
-      },
-      depthWrite: false,
-      depthTest: false
-    });
-
-    const postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMaterial);
-    const postScene = new THREE.Scene();
-    postScene.add(postQuad);
-    const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
-    /* =========================================================================
-       5. FLOATING VOXEL ISLAND (2.4M COLUMNS, DOWBLESIDE MATERIAL, NO HOLES)
-       ========================================================================= */
-    const VOXEL_SIZE = 2.4; // 2.4 meter column width as specified
-    const GRID_RADIUS = 15; // 31x31 columns ~ 74.4m wide island
-
-    // Solid watertight procedural mesh generation
-    function createWatertightVoxelIsland() {
-      const positions = [];
-      const normals = [];
-      const colors = [];
-
-      // Grid height lookup maps
-      const grid = new Map();
-
-      function getCellKey(gx, gz) {
-        return `${gx},${gz}`;
-      }
-
-      // Height evaluation function
-      for (let gx = -GRID_RADIUS; gx <= GRID_RADIUS; gx++) {
-        for (let gz = -GRID_RADIUS; gz <= GRID_RADIUS; gz++) {
-          const wx = gx * VOXEL_SIZE;
-          const wz = gz * VOXEL_SIZE;
-          const dist = Math.sqrt(wx * wx + wz * wz);
-
-          // Organic perimeter boundary (mean radius ~ 33m)
-          const angle = Math.atan2(wz, wx);
-          const maxR = 32.5 + Math.cos(angle * 5) * 3.5 + Math.sin(angle * 3) * 2.0;
-
-          if (dist <= maxR) {
-            // Determine top column elevation in steps of 2.4m
-            let topY = 0.0; // Central sports pitch level
-
-            // Central field plateau
-            if (Math.abs(wx) < 18.0 && Math.abs(wz) < 18.0) {
-              topY = 0.0;
-            } else if (dist > 28.0) {
-              topY = -VOXEL_SIZE; // Outer rim stepped down
-            } else if (wz < -16.0 && Math.abs(wx) < 14.0) {
-              topY = VOXEL_SIZE; // Clubhouse foundation ridge
-            } else if (wx > 14.0 && wz > 8.0) {
-              topY = VOXEL_SIZE; // Test Stand terrace
-            } else {
-              topY = 0.0;
-            }
-
-            // Bottom elevation (Floating stalactite bedrock underside, deeper at core)
-            const depthFactor = Math.pow(Math.max(0, 1.0 - (dist / maxR)), 1.3);
-            const noiseUnder = Math.sin(wx * 0.25) * Math.cos(wz * 0.25) * 3.6;
-            let bottomY = -Math.round(((depthFactor * 24.0) + noiseUnder + 3.6) / VOXEL_SIZE) * VOXEL_SIZE;
-            if (bottomY > -VOXEL_SIZE) bottomY = -VOXEL_SIZE;
-
-            grid.set(getCellKey(gx, gz), { gx, gz, wx, wz, topY, bottomY, dist });
-          }
-        }
-      }
-
-      // Voxel surface color palette logic
-      const cPitchGreen = new THREE.Color("#2ea043");
-      const cPitchLight = new THREE.Color("#3ebc56");
-      const cLineWhite  = new THREE.Color("#f4f7fc");
-      const cClayCourt  = new THREE.Color("#d96f3e");
-      const cStonePave  = new THREE.Color("#5c6d8f");
-      const cRockCliff  = new THREE.Color("#2c364c");
-      const cDeepBedrock= new THREE.Color("#131924");
-      const cStrataWarm = new THREE.Color("#582b17");
-
-      function addQuad(p1, p2, p3, p4, norm, col) {
-        // Triangle 1
-        positions.push(...p1, ...p2, ...p3);
-        normals.push(...norm, ...norm, ...norm);
-        colors.push(col.r, col.g, col.b, col.r, col.g, col.b, col.r, col.g, col.b);
-
-        // Triangle 2
-        positions.push(...p1, ...p3, ...p4);
-        normals.push(...norm, ...norm, ...norm);
-        colors.push(col.r, col.g, col.b, col.r, col.g, col.b, col.r, col.g, col.b);
-      }
-
-      const H = VOXEL_SIZE / 2;
-
-      grid.forEach(cell => {
-        const { gx, gz, wx, wz, topY, bottomY, dist } = cell;
-
-        // Choose Top Face Color:
-        let topCol = cPitchGreen;
-        const absX = Math.abs(wx);
-        const absZ = Math.abs(wz);
-
-        // Regulation Pitch Lines
-        if ((absX > 14.0 && absX < 14.8 && absZ <= 14.8) ||
-            (absZ > 14.0 && absZ < 14.8 && absX <= 14.8) ||
-            (absZ < 0.6 && absX <= 14.0) ||
-            (Math.abs(Math.sqrt(wx * wx + wz * wz) - 5.0) < 0.5)) {
-          topCol = cLineWhite;
-        } else if (absX <= 14.0 && absZ <= 14.0) {
-          // Checkerboard mowing pattern on turf
-          topCol = ((gx + gz) % 2 === 0) ? cPitchGreen : cPitchLight;
-        } else if (wz < -16.0 && absX < 14.0) {
-          topCol = cStonePave; // Clubhouse apron
-        } else if (wx > 14.0 && wz > 8.0) {
-          topCol = cClayCourt; // Test stand terrace
-        } else if (dist > 26.0) {
-          topCol = cStonePave; // Perimeter rim path
-        }
-
-        // 1. TOP CAP (Watertight)
-        addQuad(
-          [wx - H, topY, wz - H],
-          [wx - H, topY, wz + H],
-          [wx + H, topY, wz + H],
-          [wx + H, topY, wz - H],
-          [0, 1, 0],
-          topCol
-        );
-
-        // 2. BOTTOM CAP (Watertight underside)
-        addQuad(
-          [wx - H, bottomY, wz - H],
-          [wx + H, bottomY, wz - H],
-          [wx + H, bottomY, wz + H],
-          [wx - H, bottomY, wz + H],
-          [0, -1, 0],
-          cDeepBedrock
-        );
-
-        // 3. FOUR SIDE WALLS (Guaranteed no holes between columns & boundary skirt)
-        const neighbors = [
-          { dx: 0, dz: -1, nx: 0, nz: -1, pL: [wx + H, wz - H], pR: [wx - H, wz - H] }, // North
-          { dx: 0, dz: 1,  nx: 0, nz: 1,  pL: [wx - H, wz + H], pR: [wx + H, wz + H] }, // South
-          { dx: 1, dz: 0,  nx: 1, nz: 0,  pL: [wx + H, wz + H], pR: [wx + H, wz - H] }, // East
-          { dx: -1, dz: 0, nx: -1, nz: 0, pL: [wx - H, wz - H], pR: [wx - H, wz + H] }  // West
-        ];
-
-        neighbors.forEach(n => {
-          const nKey = getCellKey(gx + n.dx, gz + n.dz);
-          const nCell = grid.get(nKey);
-
-          if (!nCell) {
-            // Perimeter cliff skirt: complete quad from topY down to bottomY
-            const wallCol = (topY < 0.0) ? cRockCliff : (topY > 2.0 ? cStrataWarm : cRockCliff);
-            addQuad(
-              [n.pL[0], topY,    n.pL[1]],
-              [n.pR[0], topY,    n.pR[1]],
-              [n.pR[0], bottomY, n.pR[1]],
-              [n.pL[0], bottomY, n.pL[1]],
-              [n.nx, 0, n.nz],
-              wallCol
-            );
-          } else {
-            // Step between top surfaces
-            if (topY > nCell.topY) {
-              addQuad(
-                [n.pL[0], topY,       n.pL[1]],
-                [n.pR[0], topY,       n.pR[1]],
-                [n.pR[0], nCell.topY, n.pR[1]],
-                [n.pL[0], nCell.topY, n.pL[1]],
-                [n.nx, 0, n.nz],
-                cRockCliff
-              );
-            }
-            // Step between bottom bedrock surfaces
-            if (bottomY < nCell.bottomY) {
-              addQuad(
-                [n.pL[0], nCell.bottomY, n.pL[1]],
-                [n.pR[0], nCell.bottomY, n.pR[1]],
-                [n.pR[0], bottomY,       n.pR[1]],
-                [n.pL[0], bottomY,       n.pL[1]],
-                [n.nx, 0, n.nz],
-                cDeepBedrock
-              );
-            }
-          }
-        });
-      });
-
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-      geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-      geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
-      geo.computeVertexNormals();
-
-      // DoubleSide Material as specified
-      const mat = new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.82,
-        metalness: 0.12,
-        side: THREE.DoubleSide
-      });
-
-      const islandMesh = new THREE.Mesh(geo, mat);
-      islandMesh.castShadow = true;
-      islandMesh.receiveShadow = true;
-      return islandMesh;
     }
 
-    const island = createWatertightVoxelIsland();
-    scene.add(island);
-
-    /* =========================================================================
-       6. SIMPLE CLUBHOUSE BOX WITH WORKING CLOCK
-       ========================================================================= */
-    const clubhouseGroup = new THREE.Group();
-
-    // Clubhouse main timber box (12m x 9.6m x 6m)
-    const timberMat = new THREE.MeshStandardMaterial({
-      color: 0x51351e,
-      roughness: 0.7,
-      metalness: 0.05,
-      side: THREE.DoubleSide
-    });
-    const whiteTrimMat = new THREE.MeshStandardMaterial({
-      color: 0xf4f7fc,
-      roughness: 0.6,
-      side: THREE.DoubleSide
-    });
-    const roofMat = new THREE.MeshStandardMaterial({
-      color: 0x27130a,
-      roughness: 0.65,
-      side: THREE.DoubleSide
-    });
-    const windowMat = new THREE.MeshStandardMaterial({
-      color: 0x39b2de,
-      emissive: 0x0a1b2e,
-      emissiveIntensity: 0.2,
-      roughness: 0.2,
-      metalness: 0.8,
-      side: THREE.DoubleSide
-    });
-    const clockFaceMat = new THREE.MeshStandardMaterial({
-      color: 0xffeed1,
-      emissive: 0x472c03,
-      emissiveIntensity: 0.15,
-      roughness: 0.3,
-      side: THREE.DoubleSide
-    });
-    const goldMat = new THREE.MeshStandardMaterial({
-      color: 0xc7810e,
-      metalness: 0.85,
-      roughness: 0.3,
-      side: THREE.DoubleSide
-    });
-
-    // Main hall box
-    const mainBox = new THREE.Mesh(new THREE.BoxGeometry(12.0, 5.2, 8.4), timberMat);
-    mainBox.position.set(0, 5.0, -21.0);
-    mainBox.castShadow = true;
-    mainBox.receiveShadow = true;
-    clubhouseGroup.add(mainBox);
-
-    // Veranda porch overhang
-    const porchRoof = new THREE.Mesh(new THREE.BoxGeometry(13.2, 0.4, 3.6), roofMat);
-    porchRoof.position.set(0, 4.2, -15.2);
-    porchRoof.castShadow = true;
-    clubhouseGroup.add(porchRoof);
-
-    // Porch pillars (Voxel column style)
-    [-5.6, -1.8, 1.8, 5.6].forEach(x => {
-      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.0, 0.5), whiteTrimMat);
-      pillar.position.set(x, 2.2, -13.6);
-      pillar.castShadow = true;
-      clubhouseGroup.add(pillar);
-    });
-
-    // Windows (Warm mullioned panels)
-    [-3.8, 3.8].forEach(x => {
-      const win = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.8, 0.2), windowMat);
-      win.position.set(x, 4.8, -16.7);
-      clubhouseGroup.add(win);
-    });
-
-    // Main Clubhouse Roof
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(9.0, 3.8, 4), roofMat);
-    roof.rotation.y = Math.PI / 4;
-    roof.position.set(0, 9.5, -21.0);
-    roof.castShadow = true;
-    clubhouseGroup.add(roof);
-
-    // Gable Clock Pediment
-    const clockTower = new THREE.Mesh(new THREE.BoxGeometry(3.6, 3.6, 1.2), whiteTrimMat);
-    clockTower.position.set(0, 9.2, -16.7);
-    clockTower.castShadow = true;
-    clubhouseGroup.add(clockTower);
-
-    // Circular Clock Face
-    const clockDisc = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.15, 24), clockFaceMat);
-    clockDisc.rotation.x = Math.PI / 2;
-    clockDisc.position.set(0, 9.2, -16.0);
-    clubhouseGroup.add(clockDisc);
-
-    // Clock Rim
-    const clockRim = new THREE.Mesh(new THREE.TorusGeometry(1.32, 0.08, 8, 24), goldMat);
-    clockRim.position.set(0, 9.2, -15.92);
-    clubhouseGroup.add(clockRim);
-
-    // 12 Clock Hour Ticks
-    for (let i = 0; i < 12; i++) {
-      const tickAngle = (i / 12) * Math.PI * 2;
-      const tick = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.25, 0.05), goldMat);
-      tick.position.set(
-        Math.sin(tickAngle) * 1.05,
-        9.2 + Math.cos(tickAngle) * 1.05,
-        -15.88
-      );
-      tick.rotation.z = -tickAngle;
-      clubhouseGroup.add(tick);
-    }
-
-    // Working Clock Hands
-    const hourHand = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.65, 0.06), goldMat);
-    hourHand.geometry.translate(0, 0.28, 0);
-    hourHand.position.set(0, 9.2, -15.84);
-    clubhouseGroup.add(hourHand);
-
-    const minuteHand = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.95, 0.06), goldMat);
-    minuteHand.geometry.translate(0, 0.42, 0);
-    minuteHand.position.set(0, 9.2, -15.82);
-    clubhouseGroup.add(minuteHand);
-
-    // Warm Clubhouse Interior Glow PointLight
-    const clubLight = new THREE.PointLight(0xffa834, 0.0, 18.0);
-    clubLight.position.set(0, 5.0, -18.0);
-    clubhouseGroup.add(clubLight);
-
-    scene.add(clubhouseGroup);
-
-    /* =========================================================================
-       7. DOLL'S-HOUSE LIFT ON TEST STAND (MECHANICAL CUTAWAY)
-       ========================================================================= */
-    const testStandGroup = new THREE.Group();
-    testStandGroup.position.set(19.2, 2.4, 14.4); // Positioned on South-East terrace
-
-    // Stand Foundation Plinth (Hazard Chevron Concrete)
-    const standBase = new THREE.Mesh(
-      new THREE.BoxGeometry(8.4, 0.8, 8.4),
-      new THREE.MeshStandardMaterial({ color: 0x414e6a, roughness: 0.7, side: THREE.DoubleSide })
-    );
-    standBase.position.y = 0.4;
-    standBase.receiveShadow = true;
-    testStandGroup.add(standBase);
-
-    // Interior Ground Floor (Always visible when lifted - Doll's-House cross section)
-    const standInterior = new THREE.Group();
-    // Tactical playbook whiteboard
-    const whiteBoard = new THREE.Mesh(
-      new THREE.BoxGeometry(3.6, 2.0, 0.1),
-      new THREE.MeshStandardMaterial({ color: 0xf4f7fc, roughness: 0.3, side: THREE.DoubleSide })
-    );
-    whiteBoard.position.set(0, 2.2, -3.2);
-    standInterior.add(whiteBoard);
-
-    // Locker bench & equipment rack
-    const bench = new THREE.Mesh(
-      new THREE.BoxGeometry(5.0, 0.5, 1.2),
-      new THREE.MeshStandardMaterial({ color: 0x763a1f, roughness: 0.6, side: THREE.DoubleSide })
-    );
-    bench.position.set(0, 1.0, -2.4);
-    standInterior.add(bench);
-
-    // Central Arena Holographic / Trophy Pedestal
-    const trophyStand = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.8, 1.0, 1.2, 8),
-      new THREE.MeshStandardMaterial({ color: 0x165a7b, metalness: 0.6, roughness: 0.3, side: THREE.DoubleSide })
-    );
-    trophyStand.position.set(0, 1.4, 0);
-    standInterior.add(trophyStand);
-
-    const trophyBall = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(0.5),
-      new THREE.MeshStandardMaterial({ color: 0xf5b32e, metalness: 0.9, roughness: 0.2, side: THREE.DoubleSide })
-    );
-    trophyBall.position.set(0, 2.3, 0);
-    standInterior.add(trophyBall);
-
-    testStandGroup.add(standInterior);
-
-    // 4 Corner Hydraulic Piston Cylinders (Stationary bases)
-    const cornerOffsets = [
-      [-3.6, -3.6],
-      [ 3.6, -3.6],
-      [-3.6,  3.6],
-      [ 3.6,  3.6]
-    ];
-
-    const cylinderBases = [];
-    const pistonRods = [];
-
-    const cylinderMat = new THREE.MeshStandardMaterial({
-      color: 0x1e2636,
-      metalness: 0.7,
-      roughness: 0.4,
-      side: THREE.DoubleSide
-    });
-    const pistonChromeMat = new THREE.MeshStandardMaterial({
-      color: 0xd1dcf0,
-      metalness: 0.95,
-      roughness: 0.15,
-      side: THREE.DoubleSide
-    });
-
-    cornerOffsets.forEach(([cx, cz]) => {
-      // Cylinder Base
-      const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 2.6, 16), cylinderMat);
-      cyl.position.set(cx, 2.1, cz);
-      cyl.castShadow = true;
-      testStandGroup.add(cyl);
-      cylinderBases.push(cyl);
-
-      // Piston Rod (Slides out)
-      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.0, 16), pistonChromeMat);
-      rod.position.set(cx, 3.4, cz);
-      rod.castShadow = true;
-      testStandGroup.add(rod);
-      pistonRods.push(rod);
-    });
-
-    // Lifted Doll's-House Upper Canopy (Moves vertically)
-    const liftCanopy = new THREE.Group();
-    liftCanopy.position.y = 3.6; // Baseline closed
-
-    // Upper observation room frame & roof
-    const upperRoof = new THREE.Mesh(
-      new THREE.BoxGeometry(8.2, 0.6, 8.2),
-      new THREE.MeshStandardMaterial({ color: 0x2c364c, metalness: 0.4, roughness: 0.5, side: THREE.DoubleSide })
-    );
-    upperRoof.position.y = 3.2;
-    upperRoof.castShadow = true;
-    liftCanopy.add(upperRoof);
-
-    // Roof skylight & stadium beacon
-    const beacon = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.5, 0.7, 0.8, 8),
-      new THREE.MeshStandardMaterial({ color: 0x39b2de, emissive: 0x0e425c, emissiveIntensity: 0.4, side: THREE.DoubleSide })
-    );
-    beacon.position.y = 3.8;
-    liftCanopy.add(beacon);
-
-    // Tactical arena pennant flag
-    const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.2, 8), cylinderMat);
-    flagPole.position.set(3.4, 4.8, 3.4);
-    liftCanopy.add(flagPole);
-
-    const flagBanner = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.6, 0.9),
-      new THREE.MeshStandardMaterial({ color: 0xe04568, side: THREE.DoubleSide })
-    );
-    flagBanner.position.set(2.5, 5.8, 3.4);
-    liftCanopy.add(flagBanner);
-
-    // Interior observation light
-    const liftLight = new THREE.PointLight(0x9ce5fb, 0.0, 14.0);
-    liftLight.position.set(0, 1.8, 0);
-    liftCanopy.add(liftLight);
-
-    testStandGroup.add(liftCanopy);
-    scene.add(testStandGroup);
-
-    // Hydraulic Lift Height Update Logic
-    let currentLift = 10.0; // Default lifted to showcase the feature
-    let targetLift = 10.0;
-    let autoLiftCycle = true;
-
-    function setLiftHeight(h) {
-      currentLift = h;
-      liftCanopy.position.y = 3.6 + currentLift;
-
-      // Extend the 4 chrome piston shafts cleanly between base cylinder and canopy
-      const rodLength = Math.max(0.4, currentLift + 1.2);
-      const rodCenterY = 3.4 + currentLift * 0.5;
-
-      pistonRods.forEach(rod => {
-        rod.scale.y = rodLength;
-        rod.position.y = rodCenterY;
-      });
-    }
-    setLiftHeight(10.0);
-
-    /* =========================================================================
-       8. DAY / DUSK / NIGHT LIGHTING & STADIUM FLOODLIGHTS
-       ========================================================================= */
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.35);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 1024;
-    sunLight.shadow.mapSize.height = 1024;
-    sunLight.shadow.camera.near = 100;
-    sunLight.shadow.camera.far = 1200;
-    sunLight.shadow.camera.left = -60;
-    sunLight.shadow.camera.right = 60;
-    sunLight.shadow.camera.top = 60;
-    sunLight.shadow.camera.bottom = -60;
-    scene.add(sunLight);
-
-    const hemiLight = new THREE.HemisphereLight(0x9ec5f7, 0x3d4a36, 0.65);
-    scene.add(hemiLight);
-
-    // 4 Corner Stadium Floodlight Masts
-    const floodlightMasts = [];
-    const floodlightBeams = [];
-    const floodlightSpots = [];
-
-    const mastPositions = [
-      [-24, -20],
-      [ 24, -20],
-      [-24,  20],
-      [ 24,  20]
-    ];
-
-    mastPositions.forEach(([mx, mz]) => {
-      const mastGroup = new THREE.Group();
-      mastGroup.position.set(mx, 0, mz);
-
-      // Steel lattice pole
-      const mast = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 16.0, 0.8),
-        new THREE.MeshStandardMaterial({ color: 0x2c364c, metalness: 0.8, roughness: 0.3, side: THREE.DoubleSide })
-      );
-      mast.position.y = 8.0;
-      mast.castShadow = true;
-      mastGroup.add(mast);
-
-      // Floodlight Bank
-      const bank = new THREE.Mesh(
-        new THREE.BoxGeometry(2.4, 1.2, 0.6),
-        new THREE.MeshStandardMaterial({ color: 0x131924, metalness: 0.9, roughness: 0.2, side: THREE.DoubleSide })
-      );
-      bank.position.set(0, 15.6, 0);
-      mastGroup.add(bank);
-
-      // Emissive Lamp Lenses
-      const lamps = new THREE.Mesh(
-        new THREE.PlaneGeometry(2.1, 0.9),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
-      );
-      lamps.position.set(0, 15.6, 0.32);
-      lamps.rotation.y = Math.PI;
-      mastGroup.add(lamps);
-      floodlightBeams.push(lamps);
-
-      // SpotLight aimed at arena center
-      const spot = new THREE.SpotLight(0xd6f6ff, 0.0, 80.0, Math.PI / 4, 0.5, 1.0);
-      spot.position.set(0, 15.6, 0);
-      spot.target.position.set(0, 0, 0);
-      mastGroup.add(spot);
-      mastGroup.add(spot.target);
-      floodlightSpots.push(spot);
-
-      scene.add(mastGroup);
-      floodlightMasts.push(mastGroup);
-    });
-
-    // Time of Day Lighting Function [0 to 24 hours]
-    let currentTimeOfDay = 14.0; // 14:00 Day default
-
-    function setTimeOfDay(hour) {
-      currentTimeOfDay = hour;
-
-      // Sun angle calculation
-      const sunRad = ((hour - 6.0) / 24.0) * Math.PI * 2;
-      const sunElevation = Math.sin(sunRad);
-      const sunAzimuth = Math.cos(sunRad);
-
-      const sunDist = 600.0;
-      sunLight.position.set(
-        sunAzimuth * sunDist,
-        Math.max(50.0, sunElevation * sunDist),
-        Math.sin(sunRad * 0.8) * 350.0
-      );
-
-      // Lighting Presets Interpolation: Day (10-16), Dusk (17-20), Night (21-5)
-      let isDay = hour >= 8.0 && hour <= 16.5;
-      let isDusk = (hour > 16.5 && hour <= 20.5) || (hour >= 5.0 && hour < 8.0);
-      let isNight = hour > 20.5 || hour < 5.0;
-
-      if (isDay) {
-        sunLight.intensity = 1.4;
-        sunLight.color.setHex(0xfffaed);
-        hemiLight.intensity = 0.65;
-        hemiLight.color.setHex(0x9ec5f7);
-        hemiLight.groundColor.setHex(0x354b2d);
-        scene.background = new THREE.Color("#8ec0f8");
-
-        clubLight.intensity = 0.0;
-        liftLight.intensity = 0.0;
-        windowMat.emissive.setHex(0x0a1b2e);
-        windowMat.emissiveIntensity = 0.1;
-        clockFaceMat.emissiveIntensity = 0.1;
-
-        floodlightSpots.forEach(s => s.intensity = 0.0);
-        floodlightBeams.forEach(b => b.material.color.setHex(0x5c6d8f));
-      } else if (isDusk) {
-        sunLight.intensity = 0.95;
-        sunLight.color.setHex(0xf06810); // Burning twilight amber
-        hemiLight.intensity = 0.45;
-        hemiLight.color.setHex(0x501c64); // Violet ambient
-        hemiLight.groundColor.setHex(0x382415);
-        scene.background = new THREE.Color("#371247");
-
-        clubLight.intensity = 1.4;
-        clubLight.color.setHex(0xf5b32e);
-        liftLight.intensity = 1.2;
-        windowMat.emissive.setHex(0xf5b32e);
-        windowMat.emissiveIntensity = 0.8;
-        clockFaceMat.emissiveIntensity = 0.6;
-
-        floodlightSpots.forEach(s => s.intensity = 0.8);
-        floodlightBeams.forEach(b => b.material.color.setHex(0xffeed1));
-      } else {
-        // Night
-        sunLight.intensity = 0.32;
-        sunLight.color.setHex(0x3774cd); // Cool moonlight
-        hemiLight.intensity = 0.22;
-        hemiLight.color.setHex(0x0e1c3a);
-        hemiLight.groundColor.setHex(0x090d14);
-        scene.background = new THREE.Color("#070b14");
-
-        clubLight.intensity = 2.0;
-        liftLight.intensity = 1.8;
-        windowMat.emissive.setHex(0xf5b32e);
-        windowMat.emissiveIntensity = 1.2;
-        clockFaceMat.emissiveIntensity = 1.0;
-
-        floodlightSpots.forEach(s => s.intensity = 2.2);
-        floodlightBeams.forEach(b => b.material.color.setHex(0xd6f6ff));
+    // 8. Goal Netting Collision & Detection
+    if (ball.pos.x >= GX && ball.pos.x <= (GX + NETD + 0.4)) {
+      if (Math.abs(ball.pos.z) < (GHW - 0.15) && ball.pos.y < (BAR - 0.1)) {
+        if (!ball.isGoal && !ball.isSaved) {
+          ball.isGoal = true;
+          ball.score++;
+          playSound('net');
+          playSound('cheer');
+          playSound('whistle');
+          showToast('GOAL!', 'goal');
+          addFeed(ball.touchedPost ? 'GOAL! In off the woodwork!' : 'GOAL! Top bins finish!', 'goal');
+          setTimeout(handleShotFinished, 1800);
+        }
+        // Net absorbs velocity (damped inelastic)
+        ball.vel.multiplyScalar(0.72);
+        ball.pos.x = Math.min(ball.pos.x, GX + NETD - 0.2);
       }
-
-      // Format clock telemetry
-      const hInt = Math.floor(hour);
-      const mInt = Math.floor((hour - hInt) * 60);
-      const timeStr = `${String(hInt).padStart(2, "0")}:${String(mInt).padStart(2, "0")}:00`;
-      document.getElementById("telem-clock").textContent = timeStr;
-      document.getElementById("time-val").textContent = `${String(hInt).padStart(2, "0")}:${String(mInt).padStart(2, "0")}`;
-    }
-    setTimeOfDay(14.0);
-
-    /* =========================================================================
-       9. PALETTE MODAL DOM INJECTION
-       ========================================================================= */
-    const paletteGrid = document.getElementById("palette-grid");
-    const swatchInfo = document.getElementById("palette-swatch-info");
-
-    HEX_PALETTE_90.forEach((hex, i) => {
-      const swatch = document.createElement("div");
-      swatch.className = "palette-swatch";
-      swatch.style.backgroundColor = hex;
-      swatch.dataset.hex = hex;
-      swatch.dataset.index = i;
-
-      swatch.addEventListener("mouseenter", () => {
-        const ok = OKLAB_VECTORS[i];
-        swatchInfo.textContent = `#${i + 1} | HEX: ${hex} | OKLab: L=${ok.x.toFixed(3)}, a=${ok.y.toFixed(3)}, b=${ok.z.toFixed(3)}`;
-      });
-
-      paletteGrid.appendChild(swatch);
-    });
-
-    document.getElementById("open-palette-btn").addEventListener("click", () => {
-      document.getElementById("palette-modal").style.display = "flex";
-    });
-    document.getElementById("close-palette-btn").addEventListener("click", () => {
-      document.getElementById("palette-modal").style.display = "none";
-    });
-    document.getElementById("palette-modal").addEventListener("click", (e) => {
-      if (e.target.id === "palette-modal") {
-        document.getElementById("palette-modal").style.display = "none";
-      }
-    });
-
-    /* =========================================================================
-       10. UI CONTROLS & HUD EVENT HANDLERS
-       ========================================================================= */
-    // Pixel Size Slider (Default 2)
-    const pixelSlider = document.getElementById("pixel-size");
-    const pixelValLabel = document.getElementById("pixel-size-val");
-    const rtLabel = document.getElementById("rt-label");
-
-    pixelSlider.addEventListener("input", (e) => {
-      pixelScale = parseInt(e.target.value, 10);
-      pixelValLabel.textContent = `${pixelScale} px`;
-      rtLabel.textContent = `${pixelScale}×`;
-      resizeBuffers();
-    });
-
-    // Depth Outlines
-    const outlineToggle = document.getElementById("outline-toggle");
-    outlineToggle.addEventListener("change", (e) => {
-      postMaterial.uniforms.uOutlineEnabled.value = e.target.checked ? 1.0 : 0.0;
-    });
-
-    const outlineThresh = document.getElementById("outline-thresh");
-    outlineThresh.addEventListener("input", (e) => {
-      postMaterial.uniforms.uOutlineThreshold.value = parseFloat(e.target.value);
-      document.getElementById("outline-thresh-val").textContent = parseFloat(e.target.value).toFixed(2);
-    });
-
-    const outlineStr = document.getElementById("outline-str");
-    outlineStr.addEventListener("input", (e) => {
-      postMaterial.uniforms.uOutlineStrength.value = parseFloat(e.target.value);
-      document.getElementById("outline-str-val").textContent = parseFloat(e.target.value).toFixed(2);
-    });
-
-    // 90-Color Snap & Bayer Dither
-    const snapToggle = document.getElementById("snap-toggle");
-    snapToggle.addEventListener("change", (e) => {
-      postMaterial.uniforms.uSnapEnabled.value = e.target.checked ? 1.0 : 0.0;
-    });
-
-    const ditherToggle = document.getElementById("dither-toggle");
-    ditherToggle.addEventListener("change", (e) => {
-      postMaterial.uniforms.uDitherEnabled.value = e.target.checked ? 1.0 : 0.0;
-    });
-
-    const ditherStr = document.getElementById("dither-str");
-    ditherStr.addEventListener("input", (e) => {
-      postMaterial.uniforms.uDitherStrength.value = parseFloat(e.target.value);
-      document.getElementById("dither-str-val").textContent = parseFloat(e.target.value).toFixed(2);
-    });
-
-    // Doll's-House Lift Controls
-    const liftSlider = document.getElementById("lift-slider");
-    const liftValLabel = document.getElementById("lift-val");
-    const liftDownBtn = document.getElementById("lift-down-btn");
-    const liftUpBtn = document.getElementById("lift-up-btn");
-    const liftAutoBtn = document.getElementById("lift-auto-btn");
-
-    liftSlider.addEventListener("input", (e) => {
-      autoLiftCycle = false;
-      liftAutoBtn.classList.remove("active");
-      targetLift = parseFloat(e.target.value);
-      liftValLabel.textContent = `${targetLift.toFixed(1)} m`;
-    });
-
-    liftDownBtn.addEventListener("click", () => {
-      autoLiftCycle = false;
-      liftAutoBtn.classList.remove("active");
-      targetLift = 0.0;
-      liftSlider.value = targetLift;
-      liftValLabel.textContent = "0.0 m";
-    });
-
-    liftUpBtn.addEventListener("click", () => {
-      autoLiftCycle = false;
-      liftAutoBtn.classList.remove("active");
-      targetLift = 12.0;
-      liftSlider.value = targetLift;
-      liftValLabel.textContent = "12.0 m";
-    });
-
-    liftAutoBtn.addEventListener("click", () => {
-      autoLiftCycle = !autoLiftCycle;
-      liftAutoBtn.classList.toggle("active", autoLiftCycle);
-    });
-
-    // Lighting Controls
-    const timeDayBtn = document.getElementById("time-day-btn");
-    const timeDuskBtn = document.getElementById("time-dusk-btn");
-    const timeNightBtn = document.getElementById("time-night-btn");
-    const timeSlider = document.getElementById("time-slider");
-
-    function clearTimeButtons() {
-      timeDayBtn.classList.remove("active");
-      timeDuskBtn.classList.remove("active");
-      timeNightBtn.classList.remove("active");
     }
 
-    timeDayBtn.addEventListener("click", () => {
-      clearTimeButtons();
-      timeDayBtn.classList.add("active");
-      timeSlider.value = 14.0;
-      setTimeOfDay(14.0);
-    });
-
-    timeDuskBtn.addEventListener("click", () => {
-      clearTimeButtons();
-      timeDuskBtn.classList.add("active");
-      timeSlider.value = 18.5;
-      setTimeOfDay(18.5);
-    });
-
-    timeNightBtn.addEventListener("click", () => {
-      clearTimeButtons();
-      timeNightBtn.classList.add("active");
-      timeSlider.value = 23.0;
-      setTimeOfDay(23.0);
-    });
-
-    timeSlider.addEventListener("input", (e) => {
-      clearTimeButtons();
-      const val = parseFloat(e.target.value);
-      if (val >= 8 && val <= 16.5) timeDayBtn.classList.add("active");
-      else if ((val > 16.5 && val <= 20.5) || (val >= 5 && val < 8)) timeDuskBtn.classList.add("active");
-      else timeNightBtn.classList.add("active");
-      setTimeOfDay(val);
-    });
-
-    // Camera Controls
-    document.getElementById("cam-reset-btn").addEventListener("click", resetIsometricCamera);
-
-    let isAutoRotating = false;
-    const rotateBtn = document.getElementById("rotate-toggle-btn");
-    rotateBtn.addEventListener("click", () => {
-      isAutoRotating = !isAutoRotating;
-      rotateBtn.classList.toggle("active", isAutoRotating);
-      controls.autoRotate = isAutoRotating;
-      controls.autoRotateSpeed = 1.0;
-    });
-
-    window.addEventListener("resize", resizeBuffers);
-    resizeBuffers();
-
-    /* =========================================================================
-       11. ANIMATION & RENDER LOOP
-       ========================================================================= */
-    let lastTime = performance.now();
-    let frameCount = 0;
-    let fpsTimer = performance.now();
-    const fpsLabel = document.getElementById("telem-fps");
-
-    function animate(time) {
-      requestAnimationFrame(animate);
-
-      const delta = (time - lastTime) * 0.001;
-      lastTime = time;
-
-      // FPS Telemetry
-      frameCount++;
-      if (time - fpsTimer >= 500) {
-        const fps = Math.round((frameCount * 1000) / (time - fpsTimer));
-        fpsLabel.textContent = String(fps);
-        frameCount = 0;
-        fpsTimer = time;
+    // 9. Out of bounds detection
+    if (ball.pos.x > (GX + 3.0) || Math.abs(ball.pos.z) > (HW + 4.0) || ball.pos.y > 18.0) {
+      if (!ball.isGoal && !ball.isSaved) {
+        ball.isSaved = true;
+        playSound('gasp');
+        showToast('MISSED!', 'miss');
+        addFeed('Fired wide of the goal!', 'miss');
+        setTimeout(handleShotFinished, 1400);
       }
-
-      // Working Clubhouse Clock Hand Movement
-      const totalMinutes = currentTimeOfDay * 60.0 + (time * 0.005);
-      const hourAngle = ((totalMinutes / 60.0) % 12.0) * (Math.PI / 6);
-      const minAngle = (totalMinutes % 60.0) * (Math.PI / 30);
-      hourHand.rotation.z = -hourAngle;
-      minuteHand.rotation.z = -minAngle;
-
-      // Doll's-House Lift Animation
-      if (autoLiftCycle) {
-        // Smooth sine wave hovering between 2m and 11.5m
-        targetLift = 6.5 + Math.sin(time * 0.0012) * 5.0;
-        liftSlider.value = targetLift.toFixed(1);
-        liftValLabel.textContent = `${targetLift.toFixed(1)} m`;
-      }
-      currentLift += (targetLift - currentLift) * 0.08;
-      setLiftHeight(currentLift);
-
-      // Subtle Island levitation oscillation
-      island.position.y = Math.sin(time * 0.0008) * 0.4;
-      clubhouseGroup.position.y = island.position.y;
-      testStandGroup.position.y = 2.4 + island.position.y;
-
-      // Update Controls
-      controls.update();
-
-      // Render Step 1: Render 3D Scene into Low-Res WebGLRenderTarget with Depth
-      renderer.setRenderTarget(renderTarget);
-      renderer.render(scene, camera);
-
-      // Render Step 2: Fullscreen Post Pass with Depth Outlines + OKLab Snap + Bayer Dither
-      postMaterial.uniforms.tDiffuse.value = renderTarget.texture;
-      postMaterial.uniforms.tDepth.value = renderTarget.depthTexture;
-
-      renderer.setRenderTarget(null);
-      renderer.render(postScene, postCamera);
     }
+  }
 
-    requestAnimationFrame(animate);
-  </script>
+  ballMesh.position.copy(ball.pos);
+}
+
+/* ============================ GOALKEEPER AI UPDATE ============================ */
+function updateKeeper(dt) {
+  const kCfg = KEEPER[keeper.level];
+
+  if (keeper.state === 'anticipating') {
+    keeper.reactionTimer -= dt;
+    if (keeper.reactionTimer <= 0) {
+      keeper.state = 'diving';
+    }
+  } else if (keeper.state === 'diving') {
+    // Dive toward target Z
+    const dz = keeper.targetZ - keeper.pos.z;
+    if (Math.abs(dz) > 0.1) {
+      keeper.vel.z = Math.sign(dz) * kCfg.dive;
+      keeper.pos.z += keeper.vel.z * dt;
+      keeperGroup.rotation.z = -Math.sign(dz) * 0.35; // Diving lean
+    } else {
+      keeper.vel.z = 0;
+    }
+  } else if (currentFormat === 'ovo' && !ball.inFlight) {
+    // In 1v1, keeper rushes off line to narrow striker angle
+    const strikerDist = striker.pos.distanceTo(keeper.pos);
+    if (strikerDist < 24.0) {
+      const rushTargetX = clamp(striker.pos.x + 4.0, GX - 10.0, GX - 0.5);
+      keeper.pos.x = lerp(keeper.pos.x, rushTargetX, dt * 2.0);
+      keeper.pos.z = lerp(keeper.pos.z, striker.pos.z * 0.7, dt * 2.5);
+    }
+  }
+
+  keeperGroup.position.copy(keeper.pos);
+}
+
+/* ============================ STRIKER (1v1) UPDATE ============================ */
+const keysDown = {};
+window.addEventListener('keydown', e => {
+  keysDown[e.key.toLowerCase()] = true;
+  keysDown[e.code] = true;
+  initAudio();
+
+  if (e.key === ' ' && !ball.inFlight && !isPaused) {
+    isCharging = true;
+  }
+  if (e.key === 'c' || e.key === 'C') cycleCamera();
+  if (e.key === 'p' || e.key === 'P') togglePause();
+  if (e.key === 'n' || e.key === 'N') startNewChallenge();
+  if (e.key === 'q' || e.key === 'Q') setCurl(-1);
+  if (e.key === 'e' || e.key === 'E') setCurl(1);
+  if (e.key === '1') setFormat('pen');
+  if (e.key === '2') setFormat('fk');
+  if (e.key === '3') setFormat('ovo');
+  if (e.key === 'l' || e.key === 'L') toggleAllLifts();
+});
+
+window.addEventListener('keyup', e => {
+  keysDown[e.key.toLowerCase()] = false;
+  keysDown[e.code] = false;
+
+  if (e.key === ' ' && isCharging) {
+    isCharging = false;
+    shootWithCurrentPower();
+  }
+});
+
+function updateStriker(dt) {
+  if (currentFormat !== 'ovo' || ball.inFlight) return;
+
+  const move = new V3(0, 0, 0);
+  if (keysDown['arrowup'] || keysDown['w']) move.x += 1;
+  if (keysDown['arrowdown'] || keysDown['s']) move.x -= 1;
+  if (keysDown['arrowleft'] || keysDown['a']) move.z -= 1;
+  if (keysDown['arrowright'] || keysDown['d']) move.z += 1;
+
+  if (move.lengthSq() > 0) {
+    move.normalize();
+    striker.pos.addScaledVector(move, striker.speed * dt);
+    striker.pos.x = clamp(striker.pos.x, 10.0, GX - 1.5);
+    striker.pos.z = clamp(striker.pos.z, -HW + 2.0, HW - 2.0);
+    strikerGroup.position.copy(striker.pos);
+
+    // Dribble ball at player's feet
+    ball.pos.set(striker.pos.x + 0.8, BALL_R, striker.pos.z);
+    ballMesh.position.copy(ball.pos);
+  }
+}
+
+/* ============================ AIMING RETICLE & POWER ============================ */
+let reticleZ = 0, reticleY = 1.2;
+const reticleEl = $('reticle');
+const powerFill = $('powerFill');
+
+function updateAimingReticle() {
+  if (ball.inFlight) {
+    reticleEl.style.display = 'none';
+    return;
+  }
+  reticleEl.style.display = 'block';
+
+  // Manual key aim adjustments in Penalty & FK modes
+  if (currentFormat !== 'ovo') {
+    if (keysDown['arrowleft'] || keysDown['a']) reticleZ -= 0.08;
+    if (keysDown['arrowright'] || keysDown['d']) reticleZ += 0.08;
+    if (keysDown['arrowup'] || keysDown['w']) reticleY += 0.05;
+    if (keysDown['arrowdown'] || keysDown['s']) reticleY -= 0.05;
+  }
+
+  reticleZ = clamp(reticleZ, -GHW + 0.35, GHW - 0.35);
+  reticleY = clamp(reticleY, 0.25, BAR - 0.2);
+
+  // Project 3D aim position (GX, reticleY, reticleZ) to screen coordinates
+  const aimWorld = new V3(GX, reticleY, reticleZ);
+  aimWorld.project(camera);
+
+  const sx = (aimWorld.x * 0.5 + 0.5) * viewW;
+  const sy = (-aimWorld.y * 0.5 + 0.5) * viewH;
+
+  reticleEl.style.left = sx + 'px';
+  reticleEl.style.top = sy + 'px';
+
+  if (isCharging) {
+    chargePower = Math.min(1.0, chargePower + 0.024 * (1.0 / gameSpeed));
+    powerFill.style.width = (chargePower * 100) + '%';
+    reticleEl.classList.add('charging');
+  } else {
+    chargePower = 0;
+    powerFill.style.width = '0%';
+    reticleEl.classList.remove('charging');
+  }
+}
+
+// Click to aim directly at goal face
+canvas.addEventListener('pointerdown', e => {
+  if (e.target !== canvas || ball.inFlight) return;
+  initAudio();
+
+  const mouse = new THREE.Vector2(
+    (e.clientX / viewW) * 2 - 1,
+    -(e.clientY / viewH) * 2 + 1
+  );
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(mouse, camera);
+
+  // Intersect goal face plane (X = GX)
+  const goalPlane = new THREE.Plane(new V3(-1, 0, 0), GX);
+  const hit = new V3();
+  if (ray.ray.intersectPlane(goalPlane, hit)) {
+    reticleZ = clamp(hit.z, -GHW + 0.35, GHW - 0.35);
+    reticleY = clamp(hit.y, 0.25, BAR - 0.2);
+  }
+});
+
+function shootWithCurrentPower() {
+  const p = Math.max(0.4, chargePower);
+  kickBall(reticleZ, reticleY, p, curlValue);
+}
+
+function setCurl(val) {
+  curlValue = curlValue === val ? 0 : val;
+  $('curlInd').textContent = 'Curl: ' + (curlValue === -1 ? 'Inside bend (Left)' : curlValue === 1 ? 'Outside bend (Right)' : 'none');
+}
+
+/* ============================ GAME CHALLENGE PROGRESSION ============================ */
+function handleShotFinished() {
+  ball.kickCount++;
+
+  if (currentFormat === 'pen') {
+    if (ball.kickCount >= FORMATS.pen.kicks) {
+      endChallenge();
+      return;
+    }
+  }
+
+  setTimeout(resetBallForShot, 600);
+}
+
+function startNewChallenge() {
+  initAudio();
+  playSound('whistle');
+  ball.kickCount = 0;
+  ball.score = 0;
+  formatTimer = FORMATS[currentFormat].time || 60.0;
+  $('over').style.display = 'none';
+  resetBallForShot();
+  addFeed(`New ${FORMATS[currentFormat].label} Challenge started!`);
+}
+
+function endChallenge() {
+  $('over').style.display = 'flex';
+  const total = FORMATS[currentFormat].kicks || (currentFormat === 'fk' ? 8 : 6);
+  const sc = ball.score;
+
+  let stars = '★☆☆';
+  if (sc >= total * 0.7) stars = '★★★';
+  else if (sc >= total * 0.4) stars = '★★☆';
+
+  $('ovStars').textContent = stars;
+  $('ovBody').innerHTML = `
+    <b>Final Score: ${sc} Goals</b><br>
+    Surface: ${SURF[currentSurface].label} · Keeper: ${KEEPER[keeper.level].label}<br>
+    Rating: ${stars === '★★★' ? 'World Class Finisher!' : stars === '★★☆' ? 'Clinical Striker' : 'Practice Required'}
+  `;
+}
+
+function updateScoreboard(dt) {
+  if (currentFormat === 'pen') {
+    $('sbMain').textContent = ball.score;
+    $('sbSub').textContent = `Kick ${Math.min(5, ball.kickCount + 1)}/5`;
+    $('sbSub').classList.remove('warn');
+  } else {
+    if (!isPaused) formatTimer = Math.max(0, formatTimer - dt);
+    $('sbMain').textContent = ball.score;
+    $('sbSub').textContent = `${Math.ceil(formatTimer)}s Left`;
+    if (formatTimer <= 10) $('sbSub').classList.add('warn');
+    else $('sbSub').classList.remove('warn');
+
+    if (formatTimer <= 0 && !ball.inFlight) {
+      endChallenge();
+    }
+  }
+
+  $('stats').innerHTML = `
+    SURF: <b>${SURF[currentSurface].label}</b> · 
+    KEEPER: <b>${KEEPER[keeper.level].label}</b> · 
+    TOD: <b>${currentTod.toUpperCase()}</b> · 
+    FPS: <b id="fpsNum">60</b>
+  `;
+}
+
+function addFeed(text, type = '') {
+  const feed = $('feed');
+  const li = document.createElement('li');
+  if (type) li.className = type;
+  li.textContent = text;
+  feed.appendChild(li);
+}
+
+function showToast(text, type = '') {
+  const t = $('toast');
+  t.className = 'hud show ' + type;
+  t.textContent = text;
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ============================ BROADCAST CAMERAS ============================ */
+let camMode = 'tv'; // tv, island, close
+const tvCamPos = new V3();
+const tvCamTarget = new V3();
+
+function setCameraMode(mode) {
+  camMode = mode;
+  if (mode === 'island') {
+    // Exact Hive Style Lock isometric baseline: ~850 m distance, 45° azimuth, atan(1/sqrt(2)) elevation
+    const pitch = Math.atan(1 / Math.SQRT2);
+    const yaw = Math.PI / 4;
+    const ground = ISO_DIST * Math.cos(pitch);
+    camera.position.set(ground * Math.sin(yaw), ISO_DIST * Math.sin(pitch), ground * Math.cos(yaw));
+    camera.lookAt(0, 0, 0);
+
+    const aspect = viewW / viewH;
+    const frustum = 120.0;
+    camera.left = -frustum * aspect / 2;
+    camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2;
+    camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  }
+}
+
+function updateCamera(dt) {
+  const aspect = viewW / viewH;
+
+  if (camMode === 'tv') {
+    // Dynamic TV broadcast camera tracking the play smoothly
+    const trackX = ball.inFlight ? ball.pos.x : (currentFormat === 'ovo' ? striker.pos.x : ball.pos.x);
+    const trackZ = ball.inFlight ? ball.pos.z : (currentFormat === 'ovo' ? striker.pos.z : ball.pos.z);
+
+    const targetLook = new V3(trackX * 0.7 + GX * 0.3, 1.2, trackZ * 0.6);
+    tvCamTarget.lerp(targetLook, dt * 5.0);
+
+    // Isometric elevated TV angle
+    const camDist = 65.0;
+    const targetCam = new V3(tvCamTarget.x - 38.0, 32.0, tvCamTarget.z + 42.0);
+    tvCamPos.lerp(targetCam, dt * 4.0);
+
+    camera.position.copy(tvCamPos);
+    camera.lookAt(tvCamTarget);
+
+    const frustum = 52.0;
+    camera.left = -frustum * aspect / 2;
+    camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2;
+    camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  } else if (camMode === 'close') {
+    // Intimate behind-the-kicker court view
+    const behindX = ball.pos.x - 14.0;
+    const behindZ = ball.pos.z;
+    camera.position.set(behindX, 4.5, behindZ);
+    camera.lookAt(GX, 1.5, 0);
+
+    const frustum = 22.0;
+    camera.left = -frustum * aspect / 2;
+    camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2;
+    camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  }
+}
+
+function cycleCamera() {
+  const modes = ['tv', 'island', 'close'];
+  const next = modes[(modes.indexOf(camMode) + 1) % modes.length];
+  setCameraMode(next);
+  document.querySelectorAll('[data-g=cam] button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
+}
+
+function togglePause() {
+  isPaused = !isPaused;
+  $('pausedTag').style.display = isPaused ? 'block' : 'none';
+  $('bPause').textContent = isPaused ? 'Resume' : 'Pause';
+}
+
+function toggleAllLifts() {
+  const anyOn = liftState.stands || liftState.club || liftState.goals;
+  liftState.stands = !anyOn;
+  liftState.club = !anyOn;
+  liftState.goals = !anyOn;
+  document.querySelectorAll('[data-g=lift] button').forEach(b => b.classList.toggle('on', !anyOn));
+}
+
+/* ============================ UI & CONTROL WIRING ============================ */
+function setFormat(fmt) {
+  currentFormat = fmt;
+  document.querySelectorAll('[data-g=format] button').forEach(b => b.classList.toggle('on', b.dataset.v === fmt));
+  $('sbFmt').textContent = FORMATS[fmt].label;
+  startNewChallenge();
+}
+
+document.querySelectorAll('[data-g=format] button').forEach(b => {
+  b.addEventListener('click', () => setFormat(b.dataset.v));
+});
+
+document.querySelectorAll('[data-g=keeper] button').forEach(b => {
+  b.addEventListener('click', () => {
+    keeper.level = b.dataset.v;
+    document.querySelectorAll('[data-g=keeper] button').forEach(x => x.classList.toggle('on', x === b));
+  });
+});
+
+document.querySelectorAll('[data-g=surface] button').forEach(b => {
+  b.addEventListener('click', () => {
+    renderGroundTexture(b.dataset.v);
+    document.querySelectorAll('[data-g=surface] button').forEach(x => x.classList.toggle('on', x === b));
+  });
+});
+
+document.querySelectorAll('[data-g=tod] button').forEach(b => {
+  b.addEventListener('click', () => {
+    setTimeOfDay(b.dataset.v);
+    document.querySelectorAll('[data-g=tod] button').forEach(x => x.classList.toggle('on', x === b));
+  });
+});
+
+document.querySelectorAll('[data-g=speed] button').forEach(b => {
+  b.addEventListener('click', () => {
+    gameSpeed = parseFloat(b.dataset.v);
+    document.querySelectorAll('[data-g=speed] button').forEach(x => x.classList.toggle('on', x === b));
+  });
+});
+
+document.querySelectorAll('[data-g=cam] button').forEach(b => {
+  b.addEventListener('click', () => {
+    setCameraMode(b.dataset.v);
+    document.querySelectorAll('[data-g=cam] button').forEach(x => x.classList.toggle('on', x === b));
+  });
+});
+
+document.querySelectorAll('[data-g=lift] button').forEach(b => {
+  b.addEventListener('click', () => {
+    liftState[b.dataset.v] = !liftState[b.dataset.v];
+    b.classList.toggle('on', liftState[b.dataset.v]);
+  });
+});
+
+$('pxSize').addEventListener('input', e => {
+  pixelSize = parseInt(e.target.value, 10);
+  $('pxVal').textContent = pixelSize + ' px';
+  resize();
+});
+
+$('bOutline').addEventListener('click', function() {
+  postMat.uniforms.uOutline.value = postMat.uniforms.uOutline.value > 0.5 ? 0.0 : 1.0;
+  this.classList.toggle('on', postMat.uniforms.uOutline.value > 0.5);
+});
+
+$('bDither').addEventListener('click', function() {
+  postMat.uniforms.uSnap.value = postMat.uniforms.uSnap.value > 0.5 ? 0.0 : 1.0;
+  this.classList.toggle('on', postMat.uniforms.uSnap.value > 0.5);
+});
+
+$('bPause').addEventListener('click', togglePause);
+$('bNew').addEventListener('click', startNewChallenge);
+$('ovNew').addEventListener('click', startNewChallenge);
+
+$('bSound').addEventListener('click', function() {
+  soundOn = !soundOn;
+  this.textContent = 'Sound: ' + (soundOn ? 'On' : 'Off');
+  if (soundOn) initAudio();
+});
+
+$('menuBtn').addEventListener('click', () => $('panel').classList.toggle('open'));
+
+// Mobile touch buttons
+const tShoot = $('tShoot');
+tShoot.addEventListener('touchstart', e => { e.preventDefault(); initAudio(); isCharging = true; tShoot.classList.add('held'); });
+tShoot.addEventListener('touchend', e => { e.preventDefault(); isCharging = false; tShoot.classList.remove('held'); shootWithCurrentPower(); });
+
+$('tCurl').addEventListener('touchstart', e => { e.preventDefault(); setCurl(curlValue === 0 ? 1 : (curlValue === 1 ? -1 : 0)); });
+$('tCam').addEventListener('touchstart', e => { e.preventDefault(); cycleCamera(); });
+
+document.querySelectorAll('#dpad button').forEach(btn => {
+  btn.addEventListener('touchstart', e => { e.preventDefault(); keysDown[btn.dataset.k] = true; });
+  btn.addEventListener('touchend', e => { e.preventDefault(); keysDown[btn.dataset.k] = false; });
+});
+
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  document.body.classList.add('touch');
+}
+
+/* ============================ ANIMATED LED & JUMBOTRON GRAPHICS ============================ */
+let ledScroll = 0;
+function updateLEDGraphics(time) {
+  ledScroll += 0.003;
+  ledTex.offset.x = ledScroll;
+
+  // Render LED Sponsor texture
+  ledCtx.fillStyle = '#090d14';
+  ledCtx.fillRect(0, 0, 1024, 64);
+  ledCtx.font = 'bold 24px "SF Mono", monospace';
+  ledCtx.fillStyle = '#39b2de';
+  ledCtx.fillText('★ HIVEKEY ARENA ★', 40, 42);
+  ledCtx.fillStyle = '#f5b32e';
+  ledCtx.fillText('PITCH CHALLENGE 2026', 360, 42);
+  ledCtx.fillStyle = '#7ee787';
+  ledCtx.fillText('GOALLL!!', 760, 42);
+  ledTex.needsUpdate = true;
+
+  // Jumbotron Video Screen
+  jctx.fillStyle = '#090d14';
+  jctx.fillRect(0, 0, 512, 128);
+  jctx.strokeStyle = '#39b2de';
+  jctx.strokeRect(4, 4, 504, 120);
+
+  jctx.font = 'bold 22px "SF Mono", monospace';
+  jctx.fillStyle = '#f5b32e';
+  jctx.fillText('HIVE PITCH ARENA', 24, 38);
+
+  jctx.font = 'bold 44px "SF Mono", monospace';
+  jctx.fillStyle = '#7ee787';
+  jctx.fillText(`SCORE: ${ball.score}`, 24, 94);
+
+  // Animated equalizer bars on jumbotron right
+  for (let i = 0; i < 10; i++) {
+    const barH = 15 + Math.sin(time * 0.006 + i) * 35;
+    jctx.fillStyle = i % 2 === 0 ? '#39b2de' : '#e04568';
+    jctx.fillRect(360 + i * 14, 105 - barH, 10, barH);
+  }
+  jumbotronTex.needsUpdate = true;
+}
+
+/* ============================ MAIN ANIMATION & GAME LOOP ============================ */
+window.addEventListener('resize', resize);
+resize();
+renderGroundTexture('grass');
+setTimeOfDay('day');
+setCameraMode('tv');
+resetBallForShot();
+
+let lastFrame = performance.now();
+let fpsCount = 0, fpsTimer = performance.now();
+
+function animate(now) {
+  requestAnimationFrame(animate);
+
+  const rawDt = (now - lastFrame) * 0.001;
+  lastFrame = now;
+  const dt = Math.min(0.06, rawDt) * (isPaused ? 0.0 : gameSpeed);
+
+  // FPS ticker
+  fpsCount++;
+  if (now - fpsTimer >= 500) {
+    const fps = Math.round((fpsCount * 1000) / (now - fpsTimer));
+    const fpsEl = $('fpsNum');
+    if (fpsEl) fpsEl.textContent = fps;
+    fpsCount = 0; fpsTimer = now;
+  }
+
+  // Clock hands
+  const clockSec = now * 0.001;
+  hourHand.rotation.z = -clockSec * 0.02;
+  minHand.rotation.z = -clockSec * 0.24;
+
+  // Floating rock hover & mist animation
+  rocks.forEach(r => {
+    r.mesh.position.y = r.baseY + Math.sin(now * 0.0015 * r.speed) * 0.6;
+  });
+
+  // Waterfall particle flow
+  const posArr = mistParticles.geometry.attributes.position.array;
+  for (let i = 0; i < mistCount; i++) {
+    posArr[i * 3 + 1] -= dt * 6.0;
+    if (posArr[i * 3 + 1] < -26.0) posArr[i * 3 + 1] = -20.0;
+  }
+  mistParticles.geometry.attributes.position.needsUpdate = true;
+
+  // Jumbotron & LED updates
+  updateLEDGraphics(now);
+
+  // Doll's-house hydraulic lift animation
+  updateLifts(dt);
+
+  // Game & Physics updates
+  if (!isPaused) {
+    updatePhysics(dt);
+    updateKeeper(dt);
+    updateStriker(dt);
+  }
+  updateAimingReticle();
+  updateScoreboard(dt);
+  updateCamera(rawDt);
+
+  // Render Pass 1: 3D scene to low-res WebGLRenderTarget
+  renderer.setRenderTarget(rt);
+  renderer.render(scene, camera);
+
+  // Render Pass 2: Fullscreen Post Pass (Sobel Depth Outlines + OKLab Snap + Bayer Dither)
+  renderer.setRenderTarget(null);
+  postMat.uniforms.tDiffuse.value = rt.texture;
+  postMat.uniforms.tDepth.value = rt.depthTexture;
+  renderer.render(postScene, postCam);
+}
+
+requestAnimationFrame(animate);
+
+})();
+</script>
 </body>
 </html>
