@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Hive Pitch Challenge — HiveKey Arena</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
-<link rel="icon" href="data:,">
 <style>
 :root{
   --bg:#090d14;--panel:rgba(14,20,32,.92);--line:rgba(99,140,200,.28);
@@ -113,7 +112,19 @@ body.touch #touch{display:block}
 #over p{color:var(--dim);margin:10px 0 16px;line-height:1.6;font-family:var(--mono);font-size:11px}
 #over .stars{font-size:28px;color:var(--gold);letter-spacing:4px;margin-bottom:6px}
 
+/* Mode selector (Match vs Drills) */
+#modeBar{position:fixed;top:12px;left:12px;z-index:12;display:flex;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel);box-shadow:0 4px 16px rgba(0,0,0,.45)}
+#modeBar button{padding:8px 14px;font:700 11px var(--mono);letter-spacing:1px;text-transform:uppercase;color:var(--dim);background:transparent;border:0;cursor:pointer;transition:all .15s}
+#modeBar button+button{border-left:1px solid var(--line)}
+#modeBar button:hover{color:var(--tx);background:rgba(255,255,255,.06)}
+#modeBar button.on{background:var(--acc);color:#0d1117}
+body[data-mode=match] .drillsOnly{display:none!important}
+body[data-mode=drills] .matchOnly{display:none!important}
+#mTeams{top:46px;left:12px;font-size:11px;color:var(--dim);background:rgba(9,13,20,.75);padding:4px 10px;border-radius:4px;letter-spacing:.5px}
+body[data-mode=drills] #mTeams{display:none}
 @media (max-width:768px){
+  #modeBar{top:48px;left:8px}#modeBar button{padding:6px 10px;font-size:10px}
+  #mTeams{display:none}
   #menuBtn{top:8px;right:8px;padding:6px 10px;font-size:10px}
   #sbDbg{display:none!important}
   #panel{top:auto;bottom:0;right:0;left:0;width:auto;max-height:64%;border-radius:12px 12px 0 0;transform:translateY(105%);opacity:1;transition:transform .25s ease;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
@@ -130,8 +141,220 @@ body.touch #touch{display:block}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style id="hk-theme">
+/* ===== SCAD Bee Olympics theme (shared) ===== */
+#hkIntro{position:fixed;inset:0;z-index:100000;background-color:#070604;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;transition:opacity .9s ease;cursor:pointer;touch-action:none}
+#hkIntro.fade{opacity:0;pointer-events:none}
+#hkIntroTr,#hkIntroCv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+#hkIntro .hk-scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,209,0,.07) 0 1px,transparent 1px 4px);mix-blend-mode:screen}
+#hkIntro .hk-scan::after{content:"";position:absolute;left:0;right:0;height:22%;top:-22%;background:linear-gradient(to bottom,transparent,rgba(255,209,0,.10),transparent);animation:hkBeam 3.2s linear infinite}
+@keyframes hkBeam{to{top:100%}}
+#hkIntro .hk-center{position:relative;text-align:center;font-family:"SF Mono","JetBrains Mono",Consolas,Menlo,monospace;display:flex;flex-direction:column;gap:14px;padding:0 16px}
+#hkIntro .hk-l1,#hkIntro .hk-l2{color:#FFD100;font-weight:800;text-transform:uppercase;opacity:0;transform:translateY(8px) scale(.98);letter-spacing:.5em;
+  text-shadow:0 0 14px rgba(255,209,0,.55),2px 0 rgba(255,60,90,.5),-2px 0 rgba(60,220,255,.45);transition:opacity .8s ease,transform .8s ease,letter-spacing 1.2s ease}
+#hkIntro .hk-l1{font-size:clamp(14px,2.2vw,26px)}
+#hkIntro .hk-l2{font-size:clamp(24px,5.4vw,64px);color:#fff4b0}
+#hkIntro .hk-l1.on,#hkIntro .hk-l2.on{opacity:1;transform:none;letter-spacing:.18em;animation:hkGlitch 2.6s steps(1) infinite}
+#hkIntro .hk-l2.on{animation-delay:.9s}
+@keyframes hkGlitch{0%,90%,100%{transform:translateX(0);clip-path:none}91%{transform:translateX(-4px);clip-path:inset(18% 0 52% 0)}93%{transform:translateX(4px);clip-path:inset(60% 0 8% 0)}95%{transform:translateX(0);clip-path:none}}
+#hkIntro .hk-skip{position:absolute;bottom:22px;left:0;right:0;text-align:center;font:600 12px "SF Mono",Consolas,monospace;letter-spacing:1.5px;color:rgba(255,209,0,.6)}
+
+#hkLogo{position:fixed;z-index:4;pointer-events:none;display:flex;align-items:center;gap:8px;opacity:.9;padding:4px 12px 4px 8px;background:rgba(10,9,7,.74);border:1px solid rgba(255,209,0,.38);border-radius:6px;
+  font:800 11px "SF Mono","JetBrains Mono",Consolas,Menlo,monospace;letter-spacing:2px;line-height:1.25;color:#FFD100;
+  filter:drop-shadow(0 0 8px rgba(255,209,0,.45));text-shadow:1px 0 rgba(255,70,70,.35),-1px 0 rgba(70,220,255,.3);animation:hkHolo 6s steps(1) infinite}
+#hkLogo::after{content:"";position:absolute;inset:-2px;pointer-events:none;background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(255,209,0,.12) 2px 3px);mix-blend-mode:screen}
+@keyframes hkHolo{0%,94%,100%{transform:none;opacity:.88}95%{transform:translateX(-2px);opacity:.55}97%{transform:translateX(2px);opacity:.95}}
+body[data-game=pitch] #hkLogo{top:78px;left:12px}
+body[data-game=lacrosse] #hkLogo{bottom:60px;left:16px}
+@media (max-width:768px){body[data-game=pitch] #hkLogo{display:none}body[data-game=lacrosse] #hkLogo{bottom:96px;left:8px}}
+@media (prefers-reduced-motion:reduce){#hkLogo,#hkIntro .hk-l1.on,#hkIntro .hk-l2.on,#hkIntro .hk-scan::after{animation:none}}
+
+/* pitch: yellow / black overrides */
+:root{--bg:#0a0907;--panel:rgba(12,10,6,.93);--line:rgba(255,209,0,.30);--acc:#FFD100;--acc-glow:rgba(255,209,0,.38);--cy:#FFD100;--gold:#FFD100;--tx:#f7efd6;--dim:#b3a272}
+#sbFmt{background:#FFD100;color:#0a0907}
+.seg button.on,.btn.on,#modeBar button.on{color:#0a0907;border-color:#ffe566}
+.btn.big{background:#14110a;border-color:#FFD100;color:#FFD100}
+.btn.big:hover{background:#FFD100;color:#0a0907}
+#powerFill{background:linear-gradient(90deg,#8a6d12,#FFD100 70%,#fff3a8)}
+#sweet{border-color:#FFD100;background:rgba(255,209,0,.2)}
+#feed li{border-left-color:#FFD100}
+#feed li.goal{border-color:#FFD100;color:#fff3a8}
+#feed li.save{border-color:#c29600;color:#FFD100}
+#toast.goal{color:#fff3a8}
+#over h2,#over .stars{color:#FFD100}
+#panel h1::before,#menuBtn::before{background:#FFD100;box-shadow:0 0 6px #FFD100}
+#hint{border:1px solid rgba(255,209,0,.25)}
+#modeBar button,#mTeams,.lbl,.keys,#stats{font-size:11px}
+#modeBar{top:46px}
+#mTeams{top:80px}
+body[data-game=pitch] #hkLogo{top:112px}
+.sport-pill.active{background:rgba(255,209,0,.18);border-color:#FFD100;box-shadow:0 0 10px rgba(255,209,0,.35)}
+.sport-pill.active::before{background:#FFD100;box-shadow:0 0 6px #FFD100}
+</style>
 </head>
-<body>
+<body data-mode="drills">
+<script>
+/* ===== HiveKey Arena // SCAD Bee Olympics theme layer (shared by pitch + lacrosse) ===== */
+(function () {
+  'use strict';
+  const GAME = 'pitch', Y = '#FFD100', K = '#0a0907';
+  const SEEN_KEY = 'hk_intro_seen_v1';
+  const MSGS = ['HIVEKEY ARENA — BEE OLYMPICS', 'SCAD BEES · BUZZ IN', 'HIVEKEY ARENA — GO BEES', 'SCAD BEE OLYMPICS 2026'];
+  document.body.dataset.game = GAME;
+  const S = { done: false, cbs: [] };
+  window.hkWhenIntroDone = cb => { if (S.done) cb(); else S.cbs.push(cb); };
+  function fireDone() { if (S.done) return; S.done = true; S.cbs.splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); }
+
+  /* ---------- hex helpers ---------- */
+  function hexPath(c, cx, cy, rx, ry) {
+    c.beginPath();
+    c.moveTo(cx, cy - ry); c.lineTo(cx + rx, cy - ry / 2); c.lineTo(cx + rx, cy + ry / 2);
+    c.lineTo(cx, cy + ry); c.lineTo(cx - rx, cy + ry / 2); c.lineTo(cx - rx, cy - ry / 2); c.closePath();
+  }
+  function hexTileCanvas(bg, line, lw) {          // seamless 28x48 honeycomb tile
+    const c = document.createElement('canvas'); c.width = 28; c.height = 48; const g = c.getContext('2d');
+    if (bg) { g.fillStyle = bg; g.fillRect(0, 0, 28, 48); }
+    g.strokeStyle = line; g.lineWidth = lw || 1.5;
+    for (const [x, y] of [[0, 0], [28, 0], [14, 24], [-14, 24], [42, 24], [0, 48], [28, 48]]) { hexPath(g, x, y, 14, 16); g.stroke(); }
+    return c;
+  }
+  window.hkHexTexture = function (THREE, bg, line, repX, repY) {
+    const t = new THREE.CanvasTexture(hexTileCanvas(bg, line, 1.6));
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.repeat.set(repX, repY);
+    return t;
+  };
+  /** Honeycomb panel (a thin plane) to lay over a wall: size in metres, ~1.7 m cells. */
+  window.hkHexPanel = function (THREE, w, h, bg, line, opts) {
+    opts = opts || {};
+    const tex = window.hkHexTexture(THREE, bg, line, w / 1.7 / 1, h / 2.9);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide, emissive: opts.emissive || '#000000' }));
+    m.receiveShadow = true; return m;
+  };
+  /** Rotating LED message board painter (1024x64 canvas). */
+  window.hkLed = function (ctx, w, h, t) {
+    const i = Math.floor(t / 3.5) % MSGS.length, ph = (t % 3.5) / 3.5;
+    ctx.fillStyle = K; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(255,209,0,0.16)'; ctx.lineWidth = 1;
+    for (let r = 0; r < 4; r++) for (let x = (r & 1) * 12; x < w + 24; x += 24) { hexPath(ctx, x, r * 15 + 4, 12, 13); ctx.stroke(); }
+    ctx.globalAlpha = Math.min(1, ph * 8, (1 - ph) * 8 + 0.15);
+    ctx.fillStyle = Y; hexPath(ctx, 34, h / 2, 14, 16); ctx.fill(); ctx.fillStyle = K; ctx.fillRect(26, h / 2 - 8, 4, 16); ctx.fillRect(34, h / 2 - 8, 4, 16);
+    ctx.font = 'bold 28px monospace'; ctx.textBaseline = 'middle'; ctx.fillStyle = Y; ctx.fillText(MSGS[i], 62, h / 2 + 2);
+    ctx.globalAlpha = 1;
+  };
+
+  /* ---------- holographic corner logo ---------- */
+  (function logo() {
+    const el = document.createElement('div'); el.id = 'hkLogo';
+    el.innerHTML = '<svg viewBox="0 0 48 32" width="46" height="31" aria-hidden="true"><defs><clipPath id="hkb"><ellipse cx="22" cy="19" rx="15" ry="9"/></clipPath></defs>' +
+      '<ellipse cx="14" cy="9" rx="9" ry="6" fill="#fff" fill-opacity=".5" transform="rotate(-20 14 9)"/><ellipse cx="26" cy="7" rx="9" ry="6" fill="#fff" fill-opacity=".4" transform="rotate(12 26 7)"/>' +
+      '<ellipse cx="22" cy="19" rx="15" ry="9" fill="#FFD100"/><g clip-path="url(#hkb)" stroke="#0a0907" stroke-width="3.6"><path d="M16 8v22M23 8v22M30 8v22"/></g>' +
+      '<circle cx="39" cy="18" r="5.5" fill="#0a0907"/><circle cx="41" cy="16.5" r="1.3" fill="#FFD100"/><path d="M7 19l-5 1 5 2z" fill="#0a0907"/>' +
+      '<path d="M41 13q3-5 6-5M43 14q4-3 6-2" stroke="#FFD100" fill="none" stroke-width="1.2"/></svg><span>HIVEKEY<br>BEE OLYMPICS</span>';
+    document.body.appendChild(el);
+  })();
+
+  /* ---------- 3D flourish: tiny voxel bees + drifting light motes ---------- */
+  window.hkSceneFx = function (THREE, scene, o) {
+    o = o || {}; const cx = o.cx || 0, cz = o.cz || 0, rx = o.rx || 60, rz = o.rz || 40, y0 = o.y0 || 4, y1 = o.y1 || 14, sc = o.scale || 1;
+    const bees = [], matY = new THREE.MeshLambertMaterial({ color: Y }), matK = new THREE.MeshLambertMaterial({ color: '#14110a' });
+    const matW = new THREE.MeshBasicMaterial({ color: '#fff7d6', transparent: true, opacity: 0.7, depthWrite: false });
+    for (let i = 0; i < 7; i++) {
+      const g = new THREE.Group(), box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); g.add(b); return b; };
+      box(0.5, 0.42, 0.42, matY, 0, 0, 0); box(0.12, 0.44, 0.44, matK, -0.08, 0, 0); box(0.12, 0.44, 0.44, matK, 0.12, 0, 0); box(0.24, 0.3, 0.3, matK, 0.36, 0.02, 0); box(0.1, 0.1, 0.1, matK, -0.3, -0.02, 0);
+      const wl = box(0.3, 0.03, 0.22, matW, -0.02, 0.26, -0.2), wr = box(0.3, 0.03, 0.22, matW, -0.02, 0.26, 0.2);
+      g.scale.setScalar(sc * (1.4 + Math.random() * 0.6)); scene.add(g);
+      bees.push({ g, wl, wr, a: 0.07 + Math.random() * 0.05, b: 0.05 + Math.random() * 0.05, c: 0.4 + Math.random() * 0.4, ph: Math.random() * 6.28, rx: rx * (0.6 + Math.random() * 0.5), rz: rz * (0.6 + Math.random() * 0.5) });
+    }
+    const N = 70, pos = new Float32Array(N * 3), base = [];
+    for (let i = 0; i < N; i++) { const b = { x: cx + (Math.random() * 2 - 1) * rx * 1.2, y: y0 + Math.random() * (y1 + 6 - y0), z: cz + (Math.random() * 2 - 1) * rz * 1.3, s: 0.3 + Math.random() * 0.7, p: Math.random() * 6.28 }; base.push(b); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: Y, size: 2.5, sizeAttenuation: false, transparent: true, opacity: 0.55, depthWrite: false }));
+    pts.frustumCulled = false; scene.add(pts);
+    const tmp = new THREE.Vector3();
+    return {
+      update(t) {
+        for (const b of bees) {
+          const x = cx + b.rx * Math.cos(b.a * t + b.ph), z = cz + b.rz * Math.sin(b.b * t * 1.3 + b.ph), y = y0 + (y1 - y0) * (0.5 + 0.5 * Math.sin(b.c * t + b.ph));
+          tmp.set(x - b.g.position.x, 0, z - b.g.position.z);
+          if (tmp.lengthSq() > 1e-6) b.g.rotation.y = Math.atan2(-tmp.z, tmp.x);
+          b.g.position.set(x, y, z);
+          const fl = Math.sin(t * 60 + b.ph) * 0.8; b.wl.rotation.x = fl; b.wr.rotation.x = -fl;
+        }
+        const a = geo.attributes.position.array;
+        for (let i = 0; i < N; i++) {
+          const b = base[i]; a[i * 3] = b.x + Math.sin(t * 0.3 * b.s + b.p) * 4; a[i * 3 + 1] = b.y + Math.sin(t * 0.5 * b.s + b.p * 2) * 1.6; a[i * 3 + 2] = b.z + Math.cos(t * 0.27 * b.s + b.p) * 4;
+        }
+        geo.attributes.position.needsUpdate = true;
+      }
+    };
+  };
+
+  /* ---------- full-screen intro (plays once; skippable; never blocks loading) ---------- */
+  (function intro() {
+    const qs = new URLSearchParams(location.search), force = qs.get('intro') === '1', off = qs.get('intro') === '0';
+    let seen = false; try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch (e) { }
+    let reduce = false; try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { }
+    if (off || (!force && (seen || reduce))) { fireDone(); return; }
+
+    const root = document.createElement('div'); root.id = 'hkIntro';
+    root.style.backgroundImage = 'url(' + hexTileCanvas(null, 'rgba(255,209,0,0.07)', 1.2).toDataURL() + ')';
+    root.innerHTML = '<canvas id="hkIntroTr"></canvas><canvas id="hkIntroCv"></canvas><div class="hk-scan"></div><div class="hk-center"><div class="hk-l1">HIVEKEY ARENA</div><div class="hk-l2">SCAD BEE OLYMPICS</div></div><div class="hk-skip">Click or press any key to skip</div>';
+    document.body.appendChild(root);
+    const l1 = root.querySelector('.hk-l1'), l2 = root.querySelector('.hk-l2'), cv = root.querySelector('#hkIntroCv'), ctx = cv.getContext('2d'), tr = root.querySelector('#hkIntroTr'), tctx = tr.getContext('2d');
+    let W = 1, H = 1; const PX = 3;
+    const fit = () => { W = Math.ceil(innerWidth / PX); H = Math.ceil(innerHeight / PX); cv.width = tr.width = W; cv.height = tr.height = H; };
+    fit(); addEventListener('resize', fit);
+
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const bees = [];
+    for (let i = 0; i < 18; i++) {
+      const side = i % 4, big = Math.random() < 0.3 ? 2 : 1;
+      let x0, y0, x1, y1;
+      if (side === 0) { x0 = -20; y0 = rnd(0, H); x1 = W + 20; y1 = rnd(0, H); }
+      else if (side === 1) { x0 = W + 20; y0 = rnd(0, H); x1 = -20; y1 = rnd(0, H); }
+      else if (side === 2) { x0 = rnd(0, W); y0 = -20; x1 = rnd(0, W); y1 = H + 20; }
+      else { x0 = rnd(0, W); y0 = H + 20; x1 = rnd(0, W); y1 = -20; }
+      bees.push({ x0, y0, x1, y1, t0: rnd(0, 2.8), dur: rnd(2.0, 3.6), amp: rnd(6, 22), fr: rnd(1.5, 4), ph: rnd(0, 6.28), sc: big, px: null, py: null, dirx: 0 });
+    }
+    const drawBee = (x, y, dir, sc, flap) => {
+      ctx.save(); ctx.translate(Math.round(x), Math.round(y)); ctx.scale(dir * sc, sc);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(-3, flap ? -6 : -4, 4, flap ? 4 : 2); ctx.fillRect(1, flap ? -5 : -4, 3, flap ? 3 : 2);
+      ctx.fillStyle = Y; ctx.fillRect(-5, -2, 10, 5);
+      ctx.fillStyle = '#0a0907'; ctx.fillRect(-2, -2, 2, 5); ctx.fillRect(2, -2, 2, 5); ctx.fillRect(5, -2, 3, 5); ctx.fillRect(-7, 0, 2, 1);
+      ctx.fillStyle = Y; ctx.fillRect(7, -1, 1, 1);
+      ctx.restore();
+    };
+    let t0 = performance.now(), raf = 0, finished = false, fading = false;
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      const t = (now - t0) / 1000;
+      ctx.clearRect(0, 0, W, H);                                   // bees: redrawn each frame
+      tctx.globalCompositeOperation = 'destination-out'; tctx.fillStyle = 'rgba(0,0,0,0.035)'; tctx.fillRect(0, 0, W, H);   // trails: slow fade
+      tctx.globalCompositeOperation = 'source-over';
+      for (const b of bees) {
+        const u = (t - b.t0) / b.dur; if (u < 0 || u > 1) { b.px = null; continue; }
+        const dx = b.x1 - b.x0, dy = b.y1 - b.y0, L = Math.hypot(dx, dy) || 1, off = Math.sin(u * b.fr * 6.283 + b.ph) * b.amp * Math.sin(u * Math.PI);
+        const x = b.x0 + dx * u - dy / L * off, y = b.y0 + dy * u + dx / L * off;
+        if (b.px !== null) { tctx.fillStyle = 'rgba(255,209,0,0.32)'; const n = 6; for (let k = 0; k < n; k++) tctx.fillRect(Math.round(b.px + (x - b.px) * k / n) - 3 * b.dirx, Math.round(b.py + (y - b.py) * k / n), 1, 1); }
+        b.dirx = dx >= 0 ? 1 : -1; drawBee(x, y, b.dirx, b.sc, Math.floor(t * 16 + b.ph) % 2 === 0);
+        b.px = x; b.py = y;
+      }
+    }
+    raf = requestAnimationFrame(frame);
+    const timers = [setTimeout(() => l1.classList.add('on'), 500), setTimeout(() => l2.classList.add('on'), 2300), setTimeout(finish, 4900)];
+    function finish() {
+      if (finished) return; finished = true; timers.forEach(clearTimeout);
+      window.removeEventListener('keydown', onKey, true);
+      try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) { }
+      root.classList.add('fade'); fireDone();                       // the game starts under the fading overlay
+      setTimeout(() => { cancelAnimationFrame(raf); removeEventListener('resize', fit); root.remove(); }, 1000);
+    }
+    function onKey(e) { e.stopImmediatePropagation(); e.preventDefault(); finish(); }
+    window.addEventListener('keydown', onKey, true);
+    root.addEventListener('pointerdown', e => { e.preventDefault(); finish(); });
+  })();
+})();
+</script>
 <canvas id="c"></canvas>
 
 <!-- Multi-Sport Arena Header Switcher -->
@@ -142,7 +365,9 @@ body.touch #touch{display:block}
 </nav>
 
 <!-- Top HUD Scoreboard -->
-<div id="score" class="hud"><span id="sbFmt">PENALTIES</span><span id="sbMain">0</span><span id="sbSub">Kick 1/5</span><span id="sbDbg" style="background:#2ea043;color:#090d14;font-weight:700;padding:6px 10px;font-size:10px;border-left:1px solid var(--line)">Debug: Direct Render</span></div>
+<div id="score" class="hud"><span id="sbFmt">PENALTIES</span><span id="sbMain">0</span><span id="sbSub">Kick 1/5</span><span id="sbDbg" style="background:#FFD100;color:#090d14;font-weight:700;padding:6px 10px;font-size:11px;border-left:1px solid var(--line)">Debug: Direct Render</span></div>
+<div id="modeBar"><button id="modeMatch" class="on">Match 5v5</button><button id="modeDrills">Drills</button></div>
+<div id="mTeams" class="hud">BEES (you) vs DRONES &middot; first to 2 goals or 90 s</div>
 <div id="hint" class="hud">Aim ←↑→↓ / Click goal · Hold SPACE to power · Q/E curl · C camera · Tab/Esc dashboard</div>
 <div id="stats" class="hud"></div>
 <ul id="feed" class="hud"></ul>
@@ -162,7 +387,10 @@ body.touch #touch{display:block}
   </div>
   <div class="sub">HiveKey Arena · Hive Style Lock baseline</div>
   
-  <div class="sec"><div class="lbl">Challenge Format</div>
+  <div class="sec"><div class="lbl">Game Mode</div>
+    <div class="seg" data-g="mode"><button data-v="match" class="on">Match 5v5</button><button data-v="drills">Drills</button></div></div>
+
+  <div class="sec drillsOnly"><div class="lbl">Challenge Format</div>
     <div class="seg" data-g="format"><button data-v="pen" class="on">Penalties</button><button data-v="fk">Free Kicks</button><button data-v="ovo">1v1 Finish</button></div></div>
   
   <div class="sec"><div class="lbl">Goalkeeper AI</div>
@@ -181,7 +409,7 @@ body.touch #touch{display:block}
     <div class="seg" data-g="speed"><button data-v="0.5">0.5×</button><button data-v="1" class="on">1×</button><button data-v="2">2×</button></div></div>
   
   <div class="sec"><div class="lbl">Broadcast Camera</div>
-    <div class="seg" data-g="cam"><button data-v="tv" class="on">TV Follow</button><button data-v="island">Island (850m)</button><button data-v="close">Close-up</button></div></div>
+    <div class="seg" data-g="cam"><button data-v="bc" class="matchOnly">Broadcast</button><button data-v="tv" class="drillsOnly">TV Follow</button><button data-v="island">Island (850m)</button><button data-v="close">Close-up</button></div></div>
   
   <div class="sec"><div class="lbl">Doll's-House Lift</div>
     <div class="seg" data-g="lift" data-multi="1"><button data-v="stands">Stands</button><button data-v="club">Clubhouse</button><button data-v="goals">Goals</button></div></div>
@@ -190,7 +418,10 @@ body.touch #touch{display:block}
     <input type="range" id="pxSize" min="1" max="6" step="1" value="2">
     <div class="row"><button class="btn on" id="bOutline">Depth Outlines</button><button class="btn on" id="bDither">OKLab+Dither</button></div></div>
   
-  <div class="sec keys">
+  <div class="sec keys matchOnly">
+    <b>WASD</b>/<b>←↑→↓</b> run · <b>Space</b>/<b>click</b> hold &amp; release to shoot<br><b>F</b>/<b>right-click</b> pass to teammate near cursor<br><b>Shift</b> sprint (dodges a tackle) · slide-tackle without the ball<br><b>Q</b>/<b>E</b> curl · <b>C</b> camera · <b>P</b> pause · <b>N</b> restart match<br><b>Tab</b>/<b>Esc</b> dashboard · <b>1 2 3</b> switch to a drill
+  </div>
+  <div class="sec keys drillsOnly">
     <b>←↑→↓</b>/<b>WASD</b> aim (1v1: move)<br><b>Space</b> hold power · release shoot<br><b>Q</b>/<b>E</b> curl · <b>Click</b> goal to aim<br><b>C</b> camera · <b>P</b> pause · <b>N</b> new challenge<br><b>Tab</b>/<b>Esc</b> toggle dashboard · <b>1 2 3</b> format<br><b>Click pitch</b> to close dashboard & aim
   </div>
 </aside>
@@ -237,19 +468,22 @@ const KEEPER = {
 };
 const FORMATS = { pen: { label: 'PENALTIES', kicks: 5 }, fk: { label: 'FREE KICKS', time: 60 }, ovo: { label: '1v1 FINISH', time: 30 } };
 const TOD = {
-  day:   { bg: '#8ec0f8', sun: 0xfff4e0, sunI: 1.15, sunDir: [-0.35, 1, 0.5],  sky: 0xbfd8ff, gnd: 0x3d4a36, hemiI: 0.55, flood: 0,   lamp: '#5c6d8f', win: 0.0, hour: 14 },
-  dusk:  { bg: '#371247', sun: 0xf06810, sunI: 0.95, sunDir: [-1, 0.32, 0.3],  sky: 0x8d37aa, gnd: 0x382415, hemiI: 0.45, flood: 0.9, lamp: '#ffeed1', win: 0.75, hour: 18.6 },
-  night: { bg: '#061124', sun: 0x6ba4f8, sunI: 0.35, sunDir: [0.4, 1, -0.3],   sky: 0x18396e, gnd: 0x090d14, hemiI: 0.3,  flood: 2.0, lamp: '#ffffff', win: 1.0, hour: 21.5 }
+  day:   { bg: '#f0d577', sun: 0xfff4e0, sunI: 1.15, sunDir: [-0.35, 1, 0.5],  sky: 0xfff3c9, gnd: 0x4a4224, hemiI: 0.55, flood: 0,   lamp: '#5c6d8f', win: 0.0, hour: 14 },
+  dusk:  { bg: '#b8530a', sun: 0xffa31a, sunI: 0.95, sunDir: [-1, 0.32, 0.3],  sky: 0xffb84d, gnd: 0x3a1d08, hemiI: 0.45, flood: 0.9, lamp: '#ffeed1', win: 0.75, hour: 18.6 },
+  night: { bg: '#0b0a06', sun: 0xffe9a8, sunI: 0.35, sunDir: [0.4, 1, -0.3],   sky: 0x8a7424, gnd: 0x0a0907, hemiI: 0.3,  flood: 2.0, lamp: '#ffffff', win: 1.0, hour: 21.5 }
 };
 
 /* ============ 90-COLOUR HIVEKEY OKLAB PALETTE ============ */
 const PAL90 = [
-  "#090d14","#131924","#1e2636","#2c364c","#414e6a","#5c6d8f","#7f90b3","#a8b8d8","#d1dcf0","#f4f7fc",
-  "#072412","#0d381c","#144f28","#1c6936","#258444","#2ea043","#3ebc56","#56d364","#7ee787","#133827","#1b4d37","#256549","#317f5d","#409b72","#55b98a","#96e3b8",
-  "#27130a","#3d1e10","#582b17","#763a1f","#964b28","#b75c32","#d96f3e","#e88554","#f49f75","#382415","#51351e","#6d4729","#8d5d36","#ae7445","#cf8d56","#ebd0ad",
-  "#061124","#0b1c3a","#112952","#18396e","#204a8c","#2a5eac","#3774cd","#4a8cef","#6ba4f8","#082d3f","#0e425c","#165a7b","#1f749c","#2a90be","#39b2de","#9ce5fb",
-  "#28080f","#400e19","#5c1525","#7c1e33","#9f2742","#c33353","#e04568","#ee6584","#f68da6","#230b2e","#371247","#501c64","#6d2785","#8d37aa","#b04ed0","#e097f5",
-  "#2e1c02","#472c03","#633e05","#825207","#a4690a","#c7810e","#ea9c13","#f5b32e","#fbca5b","#3b1602","#5a2203","#7c2f05","#a13e07","#c8500a","#f06810","#ffeed1"
+  "#0a0907","#14110a","#1d1810","#2a2316","#3a311f","#4d4229","#665837","#857347","#a69260","#c9b887",
+  "#e8dcb4","#f7efd6","#08140a","#0f2412","#17381b","#204f26","#2b6a32","#38853e","#4aa04d","#66bb63",
+  "#8fd18a","#1a2d12","#2a4519","#3d6125","#557f33","#79a54a","#2b2100","#3d2e00","#523d00","#6b5000",
+  "#856500","#a37d00","#c29600","#e0ad00","#FFD100","#ffdb33","#ffe566","#ffee99","#fff4c2","#fffbe6",
+  "#b8860b","#d9a521","#f0b429","#c49a1c","#8a6d12","#5c4709","#7a5a0e","#e6c04d","#f7d56a","#a38519",
+  "#cfae35","#dec253","#2a1608","#46250c","#663713","#8a4b18","#b0621f","#d47c2b","#f0993a","#f7b865",
+  "#33200f","#5a3a1a","#7d5527","#a37538","#c79a54","#e3bf86","#f2d9ae","#4d2e12","#28080f","#400e19",
+  "#5c1525","#7c1e33","#9f2742","#c33353","#e04568","#ee6584","#f68da6","#6b1a2a","#0b1c3a","#18396e",
+  "#2a5eac","#4a8cef","#6ba4f8","#165a7b","#39b2de","#9ce5fb","#fffdf5","#d9d3c3","#6e6a5e","#38352c"
 ];
 function toOklab(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -468,25 +702,25 @@ function renderGroundTexture(type) {
   const toV = z => ((z - PZ0) / (PZ1 - PZ0)) * h;
 
   // 1. Base island apron (Stone plaza, gravel run-off, track)
-  gctx.fillStyle = '#2c364c'; // Sideline basalt
+  gctx.fillStyle = '#14110a'; // Sideline basalt
   gctx.fillRect(0, 0, w, h);
 
   // Plaza around clubhouse
-  gctx.fillStyle = '#414e6a';
+  gctx.fillStyle = '#2a2316';
   gctx.fillRect(toU(PX0 + 4), toV(PZ0 + 2), toU(PX1 - 4) - toU(PX0 + 4), toV(-36) - toV(PZ0 + 2));
 
   // Running track / apron around pitch
-  gctx.fillStyle = type === 'clay' ? '#964b28' : '#763a1f'; // Terracotta track
+  gctx.fillStyle = type === 'clay' ? '#5a4516' : '#3a2f12'; // Terracotta track
   const trackPadX = 5, trackPadZ = 3.5;
   gctx.fillRect(toU(-GX - trackPadX), toV(-HW - trackPadZ), toU(GX + trackPadX) - toU(-GX - trackPadX), toV(HW + trackPadZ) - toV(-HW - trackPadZ));
 
   // Technical areas / dugouts
-  gctx.fillStyle = '#39b2de';
+  gctx.fillStyle = '#FFD100';
   gctx.fillRect(toU(-15), toV(-HW - 3.2), toU(-3) - toU(-15), toV(-HW - 0.5) - toV(-HW - 3.2));
   gctx.fillRect(toU(3), toV(-HW - 3.2), toU(15) - toU(3), toV(-HW - 0.5) - toV(-HW - 3.2));
 
   // Garden beds / green borders near clubhouse
-  gctx.fillStyle = '#1c6936';
+  gctx.fillStyle = '#1f4a1d';
   gctx.fillRect(toU(-45), toV(-48), toU(-25) - toU(-45), toV(-42) - toV(-48));
   gctx.fillRect(toU(25), toV(-48), toU(45) - toU(25), toV(-42) - toV(-48));
 
@@ -495,13 +729,13 @@ function renderGroundTexture(type) {
 
   let cPitch1, cPitch2;
   if (type === 'grass') {
-    cPitch1 = '#2ea043'; cPitch2 = '#3ebc56'; // Lush turf stripes
+    cPitch1 = '#2f6f2c'; cPitch2 = '#3a8034'; // Lush turf stripes
   } else if (type === 'clay') {
-    cPitch1 = '#d96f3e'; cPitch2 = '#b75c32'; // Roland Garros clay
+    cPitch1 = '#c9801f'; cPitch2 = '#b06d17'; // Roland Garros clay
   } else if (type === 'hard') {
-    cPitch1 = '#2a5eac'; cPitch2 = '#204a8c'; // US Open hard court
+    cPitch1 = '#2a2316'; cPitch2 = '#1d1810'; // US Open hard court
   } else { // carpet
-    cPitch1 = '#258444'; cPitch2 = '#1c6936'; // Indoor rapid turf
+    cPitch1 = '#2c6e2d'; cPitch2 = '#245c25'; // Indoor rapid turf
   }
 
   // Draw 18 alternating stripes along length
@@ -513,8 +747,8 @@ function renderGroundTexture(type) {
   }
 
   // 3. Regulation White Markings
-  gctx.strokeStyle = '#f4f7fc';
-  gctx.fillStyle = '#f4f7fc';
+  gctx.strokeStyle = '#FFD100';
+  gctx.fillStyle = '#FFD100';
   gctx.lineWidth = Math.max(2, (0.18 / (PX1 - PX0)) * w);
 
   // Touchlines & Goal lines
@@ -592,7 +826,7 @@ islandGroup.add(groundMesh);
 
 // Banded soil strata & voxel skirt under island
 const bedrockGroup = new THREE.Group();
-const strataColors = ['#1e2636', '#2c364c', '#582b17', '#3d1e10', '#131924'];
+const strataColors = ['#14110a', '#2a2316', '#3a2410', '#c29600', '#0a0907'];
 for (let i = 0; i < 5; i++) {
   const depth = 3.6 + i * 4.2;
   const inset = i * 2.2;
@@ -610,7 +844,7 @@ for (let i = 0; i < 5; i++) {
 // Tapering inverted stalactite points
 [-30, 0, 30].forEach(sx => {
   [-10, 10].forEach(sz => {
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(8.0, 18.0, 5), getMat('#090d14'));
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(8.0, 18.0, 5), getMat('#0a0907'));
     tip.rotation.x = Math.PI;
     tip.position.set(sx, -26.0, sz);
     bedrockGroup.add(tip);
@@ -621,12 +855,12 @@ islandGroup.add(bedrockGroup);
 // Floating satellite rocks
 const rocks = [];
 [[-68, -4, -30], [68, -6, 25], [-62, -8, 28], [64, -5, -28]].forEach(([rx, ry, rz], idx) => {
-  const rock = makeBox(4.8, 3.6, 4.8, '#2c364c', rx, ry, rz, islandGroup);
+  const rock = makeBox(4.8, 3.6, 4.8, '#2a2316', rx, ry, rz, islandGroup);
   rocks.push({ mesh: rock, baseY: ry, speed: 0.8 + idx * 0.3 });
 });
 
 // Waterfall over south rim with mist particles
-const waterfallMesh = makeBox(14.0, 24.0, 1.2, getMat('#39b2de', { opacity: 0.85, transparent: true }), 0, -12.0, PZ1 + 0.5, islandGroup, false);
+const waterfallMesh = makeBox(14.0, 24.0, 1.2, getMat('#e0ad00', { opacity: 0.85, transparent: true }), 0, -12.0, PZ1 + 0.5, islandGroup, false);
 
 const mistCount = 40;
 const mistGeo = new THREE.BufferGeometry();
@@ -637,11 +871,12 @@ for (let i = 0; i < mistCount; i++) {
   mistPos[i * 3 + 2] = PZ1 + rnd(1, 6);
 }
 mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
-const mistMat = new THREE.PointsMaterial({ color: 0x9ce5fb, size: 2.2, transparent: true, opacity: 0.6 });
+const mistMat = new THREE.PointsMaterial({ color: 0xffd100, size: 2.2, transparent: true, opacity: 0.6 });
 const mistParticles = new THREE.Points(mistGeo, mistMat);
 islandGroup.add(mistParticles);
 
 scene.add(islandGroup);
+const hkFx = window.hkSceneFx(THREE, scene, { cx: 0, cz: 0, rx: 70, rz: 42, y0: 6, y1: 18, scale: 1.6 });   // tiny voxel bees + light motes
 
 /* ============================ 3D STADIUM ASSETS & DOLL'S-HOUSE LIFTS ============================ */
 // Doll's House Lift Parents
@@ -657,7 +892,7 @@ scene.add(liftGoalsGroup);
 const standPistons = [], clubPistons = [], goalPistons = [];
 function addPistonSet(coords, parentArr) {
   coords.forEach(([px, pz]) => {
-    const base = makeBox(0.8, 2.4, 0.8, '#1e2636', px, 1.2, pz, islandGroup);
+    const base = makeBox(0.8, 2.4, 0.8, '#14110a', px, 1.2, pz, islandGroup);
     const rod = makeBox(0.4, 1.0, 0.4, '#d1dcf0', px, 2.4, pz, islandGroup);
     parentArr.push(rod);
   });
@@ -671,9 +906,9 @@ addPistonSet([[-32, standBaseZ], [32, standBaseZ], [-12, standBaseZ], [12, stand
 const standMesh = new THREE.Group();
 for (let tier = 0; tier < 4; tier++) {
   const stepH = 1.4, stepD = 2.4;
-  makeBox(68.0, stepH, stepD, '#414e6a', 0, tier * stepH + stepH / 2, standBaseZ - 4.0 + tier * stepD, standMesh);
+  makeBox(68.0, stepH, stepD, '#2a2316', 0, tier * stepH + stepH / 2, standBaseZ - 4.0 + tier * stepD, standMesh);
   // Spectator voxels
-  const crowdCols = ['#e04568', '#39b2de', '#f5b32e', '#f4f7fc', '#2ea043'];
+  const crowdCols = ['#FFD100', '#14110a', '#f7efd6', '#c29600', '#2a2316'];
   for (let c = -30; c <= 30; c += 2.2) {
     if (Math.abs(c) % 3 < 2) {
       makeBox(1.1, 1.2, 1.1, crowdCols[(Math.abs(Math.round(c)) + tier) % crowdCols.length], c, tier * stepH + stepH + 0.6, standBaseZ - 4.0 + tier * stepD, standMesh, false);
@@ -681,7 +916,9 @@ for (let tier = 0; tier < 4; tier++) {
   }
 }
 // Stand Canopy Roof
-makeBox(72.0, 0.8, 14.0, '#1e2636', 0, 7.8, standBaseZ, standMesh);
+makeBox(72.0, 0.8, 14.0, '#14110a', 0, 7.8, standBaseZ, standMesh);
+makeBox(72.4, 0.3, 14.4, '#FFD100', 0, 8.3, standBaseZ, standMesh, false);
+{ const hp = window.hkHexPanel(THREE, 71, 0.7, '#14110a', '#FFD100'); hp.position.set(0, 7.8, standBaseZ - 7.02); hp.rotation.y = Math.PI; standMesh.add(hp); }
 liftStandsGroup.add(standMesh);
 
 // 2. Clubhouse with Clock & Video Screen (North Plaza)
@@ -690,14 +927,17 @@ addPistonSet([[-16, clubBaseZ - 4], [16, clubBaseZ - 4], [-16, clubBaseZ + 4], [
 
 const clubMesh = new THREE.Group();
 // 1st Floor Hall
-makeBox(36.0, 5.0, 14.0, '#51351e', 0, 2.5, clubBaseZ, clubMesh);
+makeBox(36.0, 5.0, 14.0, '#1d1810', 0, 2.5, clubBaseZ, clubMesh);
+{ const hp = window.hkHexPanel(THREE, 33, 3.6, '#14110a', '#FFD100'); hp.position.set(0, 2.6, clubBaseZ + 7.05); clubMesh.add(hp); }
 // Porch Pillars
 [-15, -7.5, 0, 7.5, 15].forEach(colX => {
-  makeBox(0.8, 5.0, 0.8, '#f4f7fc', colX, 2.5, clubBaseZ + 7.4, clubMesh);
+  makeBox(0.8, 5.0, 0.8, '#FFD100', colX, 2.5, clubBaseZ + 7.4, clubMesh);
 });
 // 2nd Floor & Roof
-makeBox(38.0, 4.0, 16.0, '#382415', 0, 7.0, clubBaseZ, clubMesh);
-makeBox(40.0, 0.8, 18.0, '#27130a', 0, 9.4, clubBaseZ, clubMesh);
+makeBox(38.0, 4.0, 16.0, '#14110a', 0, 7.0, clubBaseZ, clubMesh);
+{ const hp = window.hkHexPanel(THREE, 35, 3.2, '#14110a', '#FFD100'); hp.position.set(0, 7.0, clubBaseZ + 8.05); clubMesh.add(hp); }
+makeBox(40.0, 0.8, 18.0, '#0a0907', 0, 9.4, clubBaseZ, clubMesh);
+makeBox(40.4, 0.3, 18.4, '#FFD100', 0, 9.9, clubBaseZ, clubMesh, false);
 
 // Clubhouse Analog Clock
 const clockDisc = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 0.2, 24), getMat('#ffeed1'));
@@ -706,7 +946,7 @@ clockDisc.position.set(0, 7.4, clubBaseZ + 8.1);
 clubMesh.add(clockDisc);
 
 const hourHand = makeBox(0.12, 0.8, 0.05, '#090d14', 0, 7.4, clubBaseZ + 8.25, clubMesh, false);
-const minHand  = makeBox(0.08, 1.2, 0.05, '#c8500a', 0, 7.4, clubBaseZ + 8.28, clubMesh, false);
+const minHand  = makeBox(0.08, 1.2, 0.05, '#FFD100', 0, 7.4, clubBaseZ + 8.28, clubMesh, false);
 
 // Jumbotron LED Video Screen on Clubhouse Roof
 const jumbotronCanvas = document.createElement('canvas');
@@ -726,7 +966,7 @@ liftClubGroup.add(clubMesh);
 addPistonSet([[GX, -GHW], [GX, GHW], [GX + NETD, -GHW], [GX + NETD, GHW]], goalPistons);
 
 const goalNetGroup = new THREE.Group();
-const goalPostMat = getMat('#f4f7fc');
+const goalPostMat = getMat('#FFD100');
 const netWireMat = getMat('#ffffff', { wireframe: true, transparent: true, opacity: 0.45 });
 
 // Target Goal (East, X = 52.5)
@@ -786,7 +1026,7 @@ islandGroup.add(boardsGroup);
 // Corner Flags
 [[-GX, -HW], [GX, -HW], [-GX, HW], [GX, HW]].forEach(([fx, fz]) => {
   makeBox(0.08, 1.6, 0.08, '#f4f7fc', fx, 0.8, fz, islandGroup, false);
-  const flag = makeBox(0.5, 0.35, 0.04, '#e04568', fx + (fx > 0 ? -0.25 : 0.25), 1.45, fz, islandGroup, false);
+  const flag = makeBox(0.5, 0.35, 0.04, (fz > 0 ? '#FFD100' : '#14110a'), fx + (fx > 0 ? -0.25 : 0.25), 1.45, fz, islandGroup, false);
 });
 
 // 4 Corner Stadium Floodlight Masts
@@ -795,10 +1035,10 @@ const mastCoords = [[-58, -38], [58, -38], [-58, 38], [58, 38]];
 mastCoords.forEach(([mx, mz]) => {
   const mast = new THREE.Group();
   mast.position.set(mx, 0, mz);
-  makeBox(1.0, 22.0, 1.0, '#2c364c', 0, 11.0, 0, mast);
-  const bank = makeBox(4.0, 2.2, 1.2, '#131924', 0, 21.0, 0, mast);
+  makeBox(1.0, 22.0, 1.0, '#2a2316', 0, 11.0, 0, mast);
+  const bank = makeBox(4.0, 2.2, 1.2, '#0a0907', 0, 21.0, 0, mast);
   
-  const spot = new THREE.SpotLight(0xd6f6ff, 0.0, 110.0, Math.PI / 3.5, 0.6, 1.0);
+  const spot = new THREE.SpotLight(0xffd070, 0.0, 110.0, Math.PI / 3.5, 0.6, 1.0);
   spot.position.set(0, 21.0, 0);
   spot.target.position.set(mx > 0 ? 30 : -30, 0, 0);
   mast.add(spot);
@@ -813,7 +1053,7 @@ defWallGroup.visible = false;
 const defWallMeshes = [];
 for (let i = 0; i < 4; i++) {
   const defender = new THREE.Group();
-  makeBox(0.8, 1.85, 0.6, '#ae2442', 0, 0.92, 0, defender); // Red jersey
+  makeBox(0.8, 1.85, 0.6, '#14110a', 0, 0.92, 0, defender); // Black jersey
   makeBox(0.4, 0.45, 0.4, '#dcb07b', 0, 1.95, 0, defender);  // Head
   defender.position.set(0, 0, (i - 1.5) * 0.95);
   defWallGroup.add(defender);
@@ -823,7 +1063,12 @@ scene.add(defWallGroup);
 
 /* ============================ BALL, PLAYERS & GOALKEEPER ============================ */
 // Soccer Ball
-const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(BALL_R, 12, 12), getMat('#f4f7fc'));
+const ballTexCv = document.createElement('canvas'); ballTexCv.width = 128; ballTexCv.height = 64;
+{ const bt = ballTexCv.getContext('2d'); bt.fillStyle = '#FFD100'; bt.fillRect(0, 0, 128, 64); bt.fillStyle = '#14110a';
+  for (let j = 0; j < 3; j++) for (let i = 0; i < 6; i++) { const cx = (i + (j & 1 ? 0.5 : 0)) * 21.3 + 10, cy = 8 + j * 24; bt.beginPath();
+    for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3, px = cx + Math.cos(a) * 7, py = cy + Math.sin(a) * 7; k ? bt.lineTo(px, py) : bt.moveTo(px, py); } bt.closePath(); bt.fill(); } }
+const ballTex = new THREE.CanvasTexture(ballTexCv); ballTex.magFilter = ballTex.minFilter = THREE.NearestFilter; ballTex.generateMipmaps = false;
+const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(BALL_R, 12, 12), new THREE.MeshLambertMaterial({ map: ballTex }));
 ballMesh.castShadow = true;
 scene.add(ballMesh);
 
@@ -843,6 +1088,7 @@ function buildHumanoidMesh({
   skin = '#dcb07b',
   hair = '#27130a',
   gloves = null,
+  badge = '#14110a',
   isKeeper = false
 }) {
   const root = new THREE.Group();
@@ -885,10 +1131,10 @@ function buildHumanoidMesh({
   // Striker chest stripe & number '10' patch
   if (!isKeeper) {
     makeBox(0.20, 0.44, 0.39, accent, 0, 0.26, 0.01, torso, false); // Center white stripe
-    makeBox(0.12, 0.16, 0.40, '#e04568', 0, 0.28, 0.02, torso, false); // Red #10 badge
+    makeBox(0.12, 0.16, 0.40, badge, 0, 0.28, 0.02, torso, false); // number badge
   } else {
     // Goalkeeper padded chest panel
-    makeBox(0.70, 0.18, 0.39, '#f06810', 0, 0.38, 0.01, torso, false);
+    makeBox(0.70, 0.18, 0.39, '#14110a', 0, 0.38, 0.01, torso, false);
   }
 
   // Neck collar
@@ -941,14 +1187,14 @@ function buildHumanoidMesh({
 
 // Goalkeeper Rig (Always visible)
 const keeperRig = buildHumanoidMesh({
-  jersey: '#f5b32e', // Bright gold jersey
-  accent: '#f06810', // Orange accents
-  shorts: '#1e2636', // Slate shorts
-  socks: '#f5b32e',  // Gold socks
+  jersey: '#FFD100', // SCAD yellow jersey
+  accent: '#14110a', // Black details
+  shorts: '#14110a', // Black shorts
+  socks: '#FFD100',  // Yellow socks
   boots: '#090d14',
   skin: '#dcb07b',
   hair: '#131924',
-  gloves: '#39b2de', // Cyan padded gloves
+  gloves: '#14110a', // Black padded gloves
   isKeeper: true
 });
 const keeperGroup = keeperRig.root;
@@ -966,10 +1212,10 @@ keeperRig.body.position.y = -0.04;
 
 // Striker Rig (Always visible)
 const strikerRig = buildHumanoidMesh({
-  jersey: '#204a8c', // Royal blue jersey
-  accent: '#f4f7fc', // White chest stripe & collar
-  shorts: '#f4f7fc', // White shorts
-  socks: '#204a8c',  // Royal blue socks
+  jersey: '#FFD100', // SCAD yellow jersey
+  accent: '#14110a', // Black chest stripe & collar
+  shorts: '#14110a', // Black shorts
+  socks: '#FFD100',  // Yellow socks
   boots: '#090d14',
   skin: '#dcb07b',
   hair: '#3d1e10',   // Brown hair
@@ -1212,7 +1458,7 @@ function kickBall(aimZ, aimY, powerFrac, curl) {
 
 /* ============================ SUB-STEPPED BALL PHYSICS LOOP ============================ */
 function updatePhysics(dt) {
-  if (!ball.inFlight) return;
+  if (gameMode === 'match' || !ball.inFlight) return;
 
   const surf = SURF[currentSurface];
   const SUBSTEPS = 8;
@@ -1354,6 +1600,7 @@ function updatePhysics(dt) {
 
 /* ============================ GOALKEEPER AI UPDATE ============================ */
 function updateKeeper(dt) {
+  if (gameMode === 'match') return;
   const kCfg = KEEPER[keeper.level];
 
   if (keeper.state === 'anticipating') {
@@ -1410,6 +1657,10 @@ window.addEventListener('keydown', e => {
   if (e.key === '2') setFormat('fk');
   if (e.key === '3') setFormat('ovo');
   if (e.key === 'l' || e.key === 'L') toggleAllLifts();
+  if (gameMode === 'match') {
+    if (e.key === 'f' || e.key === 'F') matchPass();
+    if (e.key === 'Shift') matchSprint();
+  }
 });
 
 window.addEventListener('keyup', e => {
@@ -1423,7 +1674,7 @@ window.addEventListener('keyup', e => {
 });
 
 function updateStriker(dt) {
-  if (currentFormat !== 'ovo' || ball.inFlight) return;
+  if (gameMode === 'match' || currentFormat !== 'ovo' || ball.inFlight) return;
 
   const move = new V3(0, 0, 0);
   if (keysDown['arrowup'] || keysDown['w']) move.x += 1;
@@ -1450,14 +1701,17 @@ const reticleEl = $('reticle');
 const powerFill = $('powerFill');
 
 function updateAimingReticle() {
-  if (ball.inFlight) {
+  if (gameMode === 'match') {
+    const u = mUser();
+    if (!(u && mb.owner === u && MS.state === 'play')) { reticleEl.style.display = 'none'; isCharging = false; chargePower = 0; powerFill.style.width = '0%'; return; }
+  } else if (ball.inFlight) {
     reticleEl.style.display = 'none';
     return;
   }
   reticleEl.style.display = 'block';
 
   // Manual key aim adjustments in Penalty & FK modes
-  if (currentFormat !== 'ovo') {
+  if (currentFormat !== 'ovo' && gameMode !== 'match') {
     if (keysDown['arrowleft'] || keysDown['a']) reticleZ -= 0.08;
     if (keysDown['arrowright'] || keysDown['d']) reticleZ += 0.08;
     if (keysDown['arrowup'] || keysDown['w']) reticleY += 0.05;
@@ -1494,6 +1748,7 @@ canvas.addEventListener('pointerdown', e => {
     closeDashboard();
     return;
   }
+  if (gameMode === 'match') { matchPointerDown(e); return; }
   if (e.target !== canvas || ball.inFlight) return;
   initAudio();
 
@@ -1515,6 +1770,7 @@ canvas.addEventListener('pointerdown', e => {
 
 function shootWithCurrentPower() {
   const p = Math.max(0.4, chargePower);
+  if (gameMode === 'match') { matchShoot(p); return; }
   kickBall(reticleZ, reticleY, p, curlValue);
 }
 
@@ -1539,6 +1795,7 @@ function handleShotFinished() {
 
 function startNewChallenge() {
   initAudio();
+  if (gameMode === 'match') { startMatch(); return; }
   playSound('whistle');
   ball.kickCount = 0;
   ball.score = 0;
@@ -1566,6 +1823,7 @@ function endChallenge() {
 }
 
 function updateScoreboard(dt) {
+  if (gameMode === 'match') { matchHUD(); return; }
   if (currentFormat === 'pen') {
     $('sbMain').textContent = ball.score;
     $('sbSub').textContent = `Kick ${Math.min(5, ball.kickCount + 1)}/5`;
@@ -1609,13 +1867,15 @@ function showToast(text, type = '') {
 }
 
 // Broadcast camera target & position tracking
-let camMode = 'tv'; // tv, island, close
+let camMode = 'tv'; // tv, island, close, bc (match broadcast)
+const bcTarget = new V3(0, 1, 0);
 const tvCamTarget = new V3(46.0, 1.1, 0);
 const tvCamPos = new V3(46.0 - 24.0, 18.0, 26.0);
 
 function setCameraMode(mode) {
   camMode = mode;
   const aspect = viewW / viewH;
+  if (mode === 'bc') { updateCamera(0.5); return; }
   if (mode === 'island') {
     // Exact Hive Style Lock isometric baseline: ~850 m distance, 45° azimuth, atan(1/sqrt(2)) elevation
     const pitch = Math.atan(1 / Math.SQRT2);
@@ -1659,7 +1919,17 @@ function setCameraMode(mode) {
 function updateCamera(dt) {
   const aspect = viewW / viewH;
 
-  if (camMode === 'tv') {
+  if (camMode === 'bc') {
+    // Broadcast follow: stay on the ball carrier (or the loose ball), leaning toward the attack
+    const ref = mb.owner ? mb.owner.root.position : mb.pos;
+    const lead = mb.owner ? mDir(mb.owner.team) * 4.0 : 0;
+    bcTarget.lerp(new V3(clamp(ref.x + lead, -34, 34), 1.0, clamp(ref.z * 0.8, -18, 18)), Math.min(1.0, dt * 3.0));
+    camera.position.set(bcTarget.x - 30.0, 24.0, bcTarget.z + 34.0);
+    camera.lookAt(bcTarget);
+    const fr = 46.0;
+    camera.left = -fr * aspect / 2; camera.right = fr * aspect / 2; camera.top = fr / 2; camera.bottom = -fr / 2;
+    camera.updateProjectionMatrix();
+  } else if (camMode === 'tv') {
     // Smooth tracking of penalty box action
     const trackX = ball.inFlight ? ball.pos.x : (currentFormat === 'ovo' ? striker.pos.x : ball.pos.x);
     const trackZ = ball.inFlight ? ball.pos.z : (currentFormat === 'ovo' ? striker.pos.z : ball.pos.z);
@@ -1693,7 +1963,7 @@ function updateCamera(dt) {
 }
 
 function cycleCamera() {
-  const modes = ['tv', 'island', 'close'];
+  const modes = gameMode === 'match' ? ['bc', 'island'] : ['tv', 'island', 'close'];
   const next = modes[(modes.indexOf(camMode) + 1) % modes.length];
   setCameraMode(next);
   document.querySelectorAll('[data-g=cam] button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
@@ -1715,6 +1985,7 @@ function toggleAllLifts() {
 
 /* ============================ UI & CONTROL WIRING ============================ */
 function setFormat(fmt) {
+  if (gameMode === 'match') enterDrills(false);
   currentFormat = fmt;
   document.querySelectorAll('[data-g=format] button').forEach(b => b.classList.toggle('on', b.dataset.v === fmt));
   $('sbFmt').textContent = FORMATS[fmt].label;
@@ -1783,6 +2054,9 @@ $('bDither').addEventListener('click', function() {
   this.classList.toggle('on', postMat.uniforms.uSnap.value > 0.5);
 });
 
+document.querySelectorAll('[data-g=mode] button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.v)));
+$('modeMatch').addEventListener('click', () => setMode('match'));
+$('modeDrills').addEventListener('click', () => setMode('drills'));
 $('bPause').addEventListener('click', togglePause);
 $('bNew').addEventListener('click', startNewChallenge);
 $('ovNew').addEventListener('click', startNewChallenge);
@@ -1844,6 +2118,533 @@ if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
   document.body.classList.add('touch');
 }
 
+/* ============================ 5v5 SMALL-SIDED MATCH ============================
+   Blue (you + 3 AI + keeper) attacks +X; Red (4 AI + keeper) attacks -X. You control the Blue forward.
+   Reuses the voxel humanoid factory, goals, surfaces, keeper skill, audio, HUD and jumbotron above.   */
+let gameMode = 'drills';
+const MR = 0.27;                                   // match ball radius (drawn oversized so it reads at broadcast zoom)
+const MATCH_GOALS = 2, MATCH_SECS = 90, AI_SPD = 6.0, USER_SPD = 7.2, SPRINT_SPD = 12.0, SPRINT_DUR = 0.4;
+const mb = { pos: new V3(0, MR, 0), vel: new V3(), spin: new V3(), owner: null, kicker: null, target: null, lastTeam: 0, shot: false, scored: false, scoredGoal: -1, noTeam: -1, noTeamUntil: 0, tKick: 0, dead: false };
+const MS = { state: 'off', countdown: 0, lastCount: 4, time: MATCH_SECS, score: [0, 0], shots: [0, 0], saves: [0, 0], overtime: false, over: false, goalT: 0, concede: 1, userGoals: 0, userShots: 0, kickoffTeam: 0 };
+let MT = 0;                                        // match clock
+const MP = { teams: [[], []], gk: [null, null], all: [], built: false };
+const mDir = t => t === 0 ? 1 : -1;                // +1: team 0 attacks +X
+const mAtkX = t => mDir(t) * GX, mOwnX = t => -mDir(t) * GX;
+const mUser = () => MP.teams[0][0];
+const mFmt = sec => { sec = Math.max(0, Math.ceil(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
+const mv1 = new V3(), mv2 = new V3(), mvPrev = new V3(), mvCp = new V3();
+const mPtr = { x: 0, y: 0, active: false, gx: 0, gz: 0 };
+
+const MKIT = [
+  { jersey: '#FFD100', accent: '#14110a', shorts: '#14110a', socks: '#FFD100', boots: '#090d14', skin: '#dcb07b', hair: '#3d1e10', badge: '#14110a' },
+  { jersey: '#14110a', accent: '#FFD100', shorts: '#14110a', socks: '#14110a', boots: '#090d14', skin: '#dcb07b', hair: '#27130a', badge: '#FFD100' }
+];
+const MGK = [
+  { jersey: '#FFD100', accent: '#14110a', shorts: '#14110a', socks: '#FFD100', boots: '#090d14', skin: '#dcb07b', hair: '#27130a', gloves: '#14110a', isKeeper: true },
+  { jersey: '#f0b429', accent: '#14110a', shorts: '#14110a', socks: '#f0b429', boots: '#090d14', skin: '#dcb07b', hair: '#131924', gloves: '#14110a', isKeeper: true }
+];
+function mkPlayer(team, role, isGK) {
+  const rig = buildHumanoidMesh(isGK ? MGK[team] : MKIT[team]);
+  const p = { rig, root: rig.root, team, role, isGK, vel: new V3(), face: mDir(team) > 0 ? Math.PI / 2 : -Math.PI / 2, phase: 0, kickT: 0, stun: 0, protectUntil: 0, tackleCD: 0, noCtl: 0,
+    sprintT: -1, sprintCD: 0, sprintDir: new V3(), lean: 0, lastDodge: -9, ai: { hold: 0, cd: 0.3 + Math.random(), gkSet: false, gkReact: 0, gkTz: 0, out: 0 } };
+  rig.root.visible = false; scene.add(rig.root);
+  return p;
+}
+function ensureMatchTeams() {
+  if (MP.built) return; MP.built = true;
+  for (let t = 0; t < 2; t++) {
+    for (let r = 0; r < 4; r++) { const p = mkPlayer(t, r, false); MP.teams[t].push(p); MP.all.push(p); }
+    const g = mkPlayer(t, 4, true); MP.gk[t] = g; MP.all.push(g);
+  }
+}
+
+/* ---- layout + flow ---- */
+function mPlace(p, x, z) {
+  p.root.position.set(x, 0, z); p.face = mDir(p.team) > 0 ? Math.PI / 2 : -Math.PI / 2; p.vel.set(0, 0, 0);
+  p.stun = 0; p.sprintT = -1; p.kickT = 0; p.noCtl = 0; p.protectUntil = 0; p.tackleCD = 0; p.lean = 0;
+  Object.assign(p.ai, { hold: 0, gkSet: false, out: 0, cd: 0.3 + Math.random() }); p.root.rotation.set(0, p.face, 0);
+}
+function mKickoffLayout(kt) {
+  for (const p of MP.all) {
+    const d = mDir(p.team); let x, z;
+    if (p.isGK) { x = -d * (GX - 1.2); z = 0; }
+    else if (p.role === 0) { if (p.team === kt) { x = -d * 0.7; z = 0; } else { x = -d * 11; z = 4; } }
+    else if (p.role === 1) { x = -d * 9; z = p.team === kt ? 7 : -7; }
+    else { x = -d * 24; z = p.role === 2 ? -11 : 11; }
+    mPlace(p, x, z);
+  }
+}
+function mGain(p) {
+  mb.owner = p; mb.vel.set(0, 0, 0); mb.spin.set(0, 0, 0); mb.lastTeam = p.team; mb.target = null; mb.shot = false; mb.kicker = null;
+  p.protectUntil = MT + 0.45; p.ai.hold = 0; p.ai.out = 0;
+}
+function mKickoff(team, msg) {
+  MS.state = 'faceoff'; MS.countdown = 3.2; MS.lastCount = 4; MS.kickoffTeam = team;
+  mKickoffLayout(team);
+  Object.assign(mb, { owner: null, kicker: null, target: null, shot: false, scored: false, scoredGoal: -1, dead: false, noTeam: -1 });
+  mb.pos.set(0, MR, 0); mb.vel.set(0, 0, 0); mb.spin.set(0, 0, 0);
+  isCharging = false; chargePower = 0;
+  playSound('whistle'); if (msg) showToast(msg);
+}
+function startMatch() {
+  ensureMatchTeams(); gameMode = 'match'; initAudio();
+  Object.assign(MS, { score: [0, 0], shots: [0, 0], saves: [0, 0], time: MATCH_SECS, overtime: false, over: false, userGoals: 0, userShots: 0 });
+  strikerGroup.visible = false; keeperGroup.visible = false; defWallGroup.visible = false; penSpotMarker.visible = false;
+  ballMesh.scale.setScalar(MR / BALL_R);
+  MP.all.forEach(p => p.root.visible = true);
+  document.body.dataset.mode = 'match';
+  $('over').style.display = 'none'; $('sbFmt').textContent = 'MATCH 5v5';
+  $('hint').textContent = 'WASD run · Space/click hold & release shoot · F/right-click pass · Shift sprint/slide · Q/E curl · C camera';
+  document.querySelectorAll('[data-g=mode] button').forEach(b => b.classList.toggle('on', b.dataset.v === 'match'));
+  $('modeMatch').classList.add('on'); $('modeDrills').classList.remove('on');
+  if (camMode !== 'bc' && camMode !== 'island') setCameraMode('bc');
+  document.querySelectorAll('[data-g=cam] button').forEach(b => b.classList.toggle('on', b.dataset.v === camMode));
+  addFeed('Match started: Bees vs Drones, first to ' + MATCH_GOALS);
+  mKickoff(0, 'KICK-OFF');
+}
+function enterDrills(restart) {
+  gameMode = 'drills'; MS.state = 'off';
+  MP.all.forEach(p => p.root.visible = false);
+  ballMesh.scale.setScalar(1); keeperGroup.visible = true; strikerGroup.visible = true; penSpotMarker.visible = true;
+  document.body.dataset.mode = 'drills'; mb.owner = null;
+  $('hint').textContent = 'Aim ←↑→↓ / Click goal · Hold SPACE to power · Q/E curl · C camera · Tab/Esc dashboard';
+  document.querySelectorAll('[data-g=mode] button').forEach(b => b.classList.toggle('on', b.dataset.v === 'drills'));
+  $('modeMatch').classList.remove('on'); $('modeDrills').classList.add('on');
+  $('sbFmt').textContent = FORMATS[currentFormat].label;
+  setCameraMode('tv'); document.querySelectorAll('[data-g=cam] button').forEach(b => b.classList.toggle('on', b.dataset.v === 'tv'));
+  if (restart !== false) startNewChallenge();
+}
+function setMode(m) { if (m === 'match') startMatch(); else enterDrills(true); }
+function mFinish() {
+  MS.state = 'over'; isCharging = false; chargePower = 0;
+  const [a, b] = MS.score, res = a > b ? 'WIN' : a < b ? 'LOSS' : 'DRAW';
+  $('over').style.display = 'flex'; $('ovTitle').textContent = 'FULL TIME  ' + a + ' - ' + b;
+  $('ovStars').textContent = res + (a > b ? '  ★★★' : a === b ? '  ★★☆' : '  ★☆☆');
+  $('ovBody').innerHTML = `<b>Bees ${a} – ${b} Drones</b><br>Your goals: ${MS.userGoals} · Your shots: ${MS.userShots}<br>Team shots ${MS.shots[0]}–${MS.shots[1]} · Keeper saves ${MS.saves[0]}–${MS.saves[1]}<br>Surface: ${SURF[currentSurface].label} · Keeper: ${KEEPER[keeper.level].label}`;
+  playSound('whistle');
+}
+
+/* ---- ball ---- */
+const MPIPES = [];
+for (const gx of [GX, -GX]) { for (const z of [-GHW, GHW]) MPIPES.push([new V3(gx, 0, z), new V3(gx, BAR, z)]); MPIPES.push([new V3(gx, BAR, -GHW), new V3(gx, BAR, GHW)]); }
+function mSegDist(p, a, b, out) {
+  mv2.subVectors(b, a); const l2 = mv2.lengthSq(); const t = l2 ? clamp(mv1.subVectors(p, a).dot(mv2) / l2, 0, 1) : 0;
+  out.copy(a).addScaledVector(mv2, t); return p.distanceTo(out);
+}
+function mbPhysics(h) {
+  const p = mb.pos, v = mb.vel, surf = SURF[currentSurface];
+  const vl = v.length();
+  if (vl > 0.001) { v.addScaledVector(v, -KDRAG * vl * h); v.add(mv1.crossVectors(mb.spin, v).multiplyScalar(KMAG * h)); }
+  v.y -= GRAV * h; mvPrev.copy(p); p.addScaledVector(v, h);
+  // goal posts + crossbar
+  for (const [a, b] of MPIPES) {
+    if (mSegDist(p, a, b, mvCp) < MR + 0.1) {
+      mv1.subVectors(p, mvCp).normalize(); const vn = v.dot(mv1);
+      if (vn < 0) v.addScaledVector(mv1, -(1 + 0.6) * vn);
+      p.copy(mvCp).addScaledVector(mv1, MR + 0.11); playSound('clang'); addFeed('Off the woodwork!', 'miss'); mb.shot = mb.shot;
+    }
+  }
+  // goal line crossing (east goal: team 0 scores, west goal: team 1 scores)
+  if (!mb.scored) {
+    for (let gi = 0; gi < 2; gi++) {
+      const gx = gi === 0 ? GX : -GX, crossed = gi === 0 ? (mvPrev.x < gx && p.x >= gx) : (mvPrev.x > gx && p.x <= gx);
+      if (!crossed) continue;
+      const f = (mvPrev.x - gx) / (mvPrev.x - p.x), zc = mvPrev.z + (p.z - mvPrev.z) * f, yc = mvPrev.y + (p.y - mvPrev.y) * f;
+      if (Math.abs(zc) < GHW && yc > 0 && yc < BAR) { mb.scored = true; mb.scoredGoal = gi; }
+      break;
+    }
+  }
+  if (mb.scored) {            // net absorbs the ball
+    const gx = mb.scoredGoal === 0 ? GX : -GX, s = mb.scoredGoal === 0 ? 1 : -1;
+    v.multiplyScalar(Math.max(0, 1 - 6 * h));
+    if ((p.x - gx) * s > NETD - MR) { p.x = gx + s * (NETD - MR); if (v.x * s > 0) v.x *= -0.1; }
+    if ((p.x - gx) * s < MR) { p.x = gx + s * MR; if (v.x * s < 0) v.x *= -0.2; }
+    if (Math.abs(p.z) > GHW - MR) { p.z = Math.sign(p.z) * (GHW - MR); v.z *= -0.2; }
+    if (p.y > BAR - MR) { p.y = BAR - MR; if (v.y > 0) v.y *= -0.2; }
+  }
+  // ground
+  if (p.y <= MR) {
+    p.y = MR;
+    if (v.y < -0.8) { v.y = -v.y * surf.e; v.x *= (1 - surf.bf * 0.5); v.z *= (1 - surf.bf * 0.5); mb.spin.multiplyScalar(0.7); }
+    else {
+      v.y = 0; const hs = Math.hypot(v.x, v.z);
+      if (hs > 0) { const ns = Math.max(0, hs - (surf.roll * 1.6 + 0.22 * hs) * h); v.x *= ns / hs; v.z *= ns / hs; }
+      mb.spin.multiplyScalar(0.99);
+    }
+  }
+  if (Math.abs(p.x) > GX + 12 || Math.abs(p.z) > HW + 12 || p.y > 40) mb.dead = true;
+}
+function mSaveCheck() {
+  if (!mb.shot || mb.scored || mb.owner) return;
+  const k = KEEPER[keeper.level];
+  for (let t = 0; t < 2; t++) {
+    if (mb.lastTeam === t) continue;
+    const gk = MP.gk[t], kp = gk.root.position;
+    mv1.set(kp.x, 1.0, kp.z);
+    if (mb.pos.distanceTo(mv1) < k.reach * 0.72) {
+      const sp = mb.vel.length(); MS.saves[t]++;
+      if (sp < k.catchV * 1.1) { mGain(gk); showToast('SAVED!'); addFeed('Keeper holds it.', 'save'); }
+      else {
+        mv2.set(mb.pos.x - kp.x, 0, mb.pos.z - kp.z).normalize();
+        mb.vel.set(-mDir(1 - t) * 0 + mv2.x * sp * 0.3 + mDir(t) * 4, 2 + Math.random() * 3, mv2.z * sp * 0.3 + (Math.random() - 0.5) * 6);
+        mb.shot = false; mb.kicker = gk; mb.tKick = MT; mb.lastTeam = t; addFeed('Parried!', 'save'); showToast('SAVED!');
+      }
+      gk.lean = 0; playSound('gasp'); return;
+    }
+  }
+}
+function mBall(dt) {
+  const o = mb.owner;
+  if (o) {
+    const op = o.root.position, fx = Math.sin(o.face), fz = Math.cos(o.face);
+    if (o.isGK) { mb.pos.set(op.x + fx * 0.45, 1.15, op.z + fz * 0.45); }
+    else { const touch = 0.85 + 0.28 * Math.sin(o.phase * 0.5) * Math.min(1, Math.hypot(o.vel.x, o.vel.z) / 6); mb.pos.set(op.x + fx * touch, MR, op.z + fz * touch); }
+    mb.vel.set(o.vel.x, 0, o.vel.z);
+  } else if (!mb.dead) {
+    const n = Math.max(1, Math.ceil(dt / (1 / 120))), h = dt / n;
+    for (let i = 0; i < n; i++) { mbPhysics(h); if (MS.state === 'play') { mSaveCheck(); if (mb.owner) break; } }
+  }
+  ballMesh.position.copy(mb.pos);
+  ballMesh.rotation.x += mb.vel.z * dt * 1.6; ballMesh.rotation.z -= mb.vel.x * dt * 1.6;
+}
+function mKick(p, to, speed, mode, ez, ey, tp) {
+  if (mb.owner !== p) return;
+  const from = mv1.set(p.root.position.x + Math.sin(p.face) * 0.6, MR, p.root.position.z + Math.cos(p.face) * 0.6);
+  const tx = to.x + gauss() * ez, tz = to.z + gauss() * ez, ty = clamp(to.y + gauss() * ey, 0.1, 5);
+  const dx = tx - from.x, dz = tz - from.z, d = Math.max(0.5, Math.hypot(dx, dz));
+  const v = new V3(dx / d * speed, 0, dz / d * speed);
+  if (mode === 'shot') { const t = d / speed; v.y = clamp((ty - MR) / t + 0.5 * GRAV * t, 0, 14); }
+  mb.owner = null; mb.pos.copy(from); mb.vel.copy(v); mb.kicker = p; mb.tKick = MT; mb.lastTeam = p.team; mb.target = tp || null; mb.shot = mode === 'shot'; mb.scored = false;
+  p.noCtl = MT + 0.35; p.kickT = 0.3; p.face = Math.atan2(dx, dz);
+  if (mode === 'shot') { MS.shots[p.team]++; if (p === mUser()) MS.userShots++; }
+  initAudio(); playSound('kick');
+}
+
+/* ---- user ---- */
+function mBasis() { camera.getWorldDirection(mv1); const l = Math.hypot(mv1.x, mv1.z) || 1; return { fx: mv1.x / l, fz: mv1.z / l, rx: -mv1.z / l, rz: mv1.x / l }; }
+function mUpdateUser(dt) {
+  const u = mUser(); if (!u) return;
+  u.stun = Math.max(0, u.stun - dt); u.sprintCD = Math.max(0, u.sprintCD - dt);
+  const live = MS.state === 'play' && u.stun <= 0;
+  const k = keysDown, B = mBasis();
+  const mx = live ? ((k['d'] || k['arrowright'] || k['right']) ? 1 : 0) - ((k['a'] || k['arrowleft'] || k['left']) ? 1 : 0) : 0;
+  const my = live ? ((k['w'] || k['arrowup'] || k['up']) ? 1 : 0) - ((k['s'] || k['arrowdown'] || k['down']) ? 1 : 0) : 0;
+  const wish = mv2.set(B.rx * mx + B.fx * my, 0, B.rz * mx + B.fz * my); if (wish.lengthSq() > 1) wish.normalize();
+  if (u.sprintT >= 0) {
+    u.sprintT += dt; u.vel.copy(u.sprintDir).multiplyScalar(SPRINT_SPD * (1 - 0.4 * u.sprintT / SPRINT_DUR));
+    if (u.sprintT >= SPRINT_DUR) u.sprintT = -1;
+  } else {
+    const sp = USER_SPD * (isCharging ? 0.7 : 1) * (currentSurface === 'clay' ? 0.96 : 1);
+    u.vel.x = lerp(u.vel.x, wish.x * sp, Math.min(1, dt * 10)); u.vel.z = lerp(u.vel.z, wish.z * sp, Math.min(1, dt * 10));
+  }
+  const p = u.root.position; p.x = clamp(p.x + u.vel.x * dt, -GX - 1.5, GX + 1.5); p.z = clamp(p.z + u.vel.z * dt, -HW - 1.5, HW + 1.5);
+  if (isCharging && mb.owner === u) u.face = lerpAngle(u.face, Math.atan2(GX - p.x, reticleZ - p.z), Math.min(1, dt * 12));
+  else if (Math.hypot(u.vel.x, u.vel.z) > 0.5) u.face = lerpAngle(u.face, Math.atan2(u.vel.x, u.vel.z), Math.min(1, dt * 12));
+  // mouse aim (goal plane) + ground cursor (pass target)
+  if (mPtr.active) {
+    const ray = new THREE.Raycaster(); ray.setFromCamera(new THREE.Vector2(mPtr.x / viewW * 2 - 1, -(mPtr.y / viewH) * 2 + 1), camera);
+    const hit = new V3();
+    if (ray.ray.intersectPlane(new THREE.Plane(new V3(0, 1, 0), 0), hit)) { mPtr.gx = hit.x; mPtr.gz = hit.z; }
+    if (!isCharging || true) { if (ray.ray.intersectPlane(new THREE.Plane(new V3(-1, 0, 0), GX), hit)) { reticleZ = clamp(hit.z, -GHW + 0.35, GHW - 0.35); reticleY = clamp(hit.y, 0.25, BAR - 0.2); } }
+  }
+}
+function lerpAngle(a, b, t) { const d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + d * t; }
+function matchShoot(power) {
+  const u = mUser(); if (!u || MS.state !== 'play' || mb.owner !== u) return;
+  const surf = SURF[currentSurface];
+  const acc = (power >= sweetSpotMin && power <= sweetSpotMax) ? 0.35 : power > 0.88 ? 1.5 : 0.9;
+  const moving = Math.min(1, Math.hypot(u.vel.x, u.vel.z) / 7);
+  mKick(u, new V3(GX, reticleY, reticleZ), lerp(18, 34, power), 'shot', 0.45 * acc * surf.err * (1 + 0.5 * moving), 0.35 * acc * surf.err);
+  mb.spin.set(0, curlValue * 26 * surf.grip, 0);
+  addFeed(`Your shot (${(mb.vel.length() * 3.6).toFixed(0)} km/h)`);
+}
+function mPickPassTarget() {
+  const u = mUser(); let best = null, bd = 1e9; const up = u.root.position;
+  for (const m of MP.teams[0]) {
+    if (m === u) continue;
+    const mp = m.root.position; let d;
+    if (mPtr.active) d = Math.hypot(mp.x - mPtr.gx, mp.z - mPtr.gz);
+    else { const dx = mp.x - up.x, dz = mp.z - up.z, dl = Math.hypot(dx, dz) || 1; d = dl * 0.15 + (1 - (dx * Math.sin(u.face) + dz * Math.cos(u.face)) / dl) * 18; }
+    if (d < bd) { bd = d; best = m; }
+  }
+  return best;
+}
+function matchPass() {
+  const u = mUser(); if (!u || MS.state !== 'play' || mb.owner !== u) return;
+  const tp = mPickPassTarget(); if (!tp) return;
+  const d = Math.hypot(tp.root.position.x - u.root.position.x, tp.root.position.z - u.root.position.z), sp = clamp(d * 1.1 + 8, 12, 24), t0 = d / sp * 1.1;
+  mKick(u, new V3(tp.root.position.x + tp.vel.x * t0, MR, tp.root.position.z + tp.vel.z * t0), sp, 'pass', 0.25, 0, tp);
+}
+function matchSprint() {
+  const u = mUser(); if (!u || MS.state !== 'play' || u.sprintCD > 0 || u.sprintT >= 0) return;
+  const B = mBasis(), k = keysDown;
+  const mx = ((k['d'] || k['arrowright']) ? 1 : 0) - ((k['a'] || k['arrowleft']) ? 1 : 0), my = ((k['w'] || k['arrowup']) ? 1 : 0) - ((k['s'] || k['arrowdown']) ? 1 : 0);
+  if (mx || my) u.sprintDir.set(B.rx * mx + B.fx * my, 0, B.rz * mx + B.fz * my).normalize(); else u.sprintDir.set(Math.sin(u.face), 0, Math.cos(u.face));
+  u.sprintT = 0; u.sprintCD = 1.4; u.lastDodge = MT;
+}
+function matchPointerDown(e) {
+  if (e.target !== canvas) return;
+  initAudio(); mPtr.x = e.clientX; mPtr.y = e.clientY; mPtr.active = true;
+  if (e.button === 2) { matchPass(); return; }
+  const u = mUser(); if (u && mb.owner === u && MS.state === 'play' && !isCharging) { isCharging = true; mPtr.charging = true; }
+}
+window.addEventListener('pointermove', e => { mPtr.x = e.clientX; mPtr.y = e.clientY; if (e.target === canvas) mPtr.active = true; });
+window.addEventListener('pointerup', e => { if (gameMode === 'match' && mPtr.charging && e.button === 0) { mPtr.charging = false; if (isCharging) { isCharging = false; shootWithCurrentPower(); } } });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---- AI ---- */
+function mMove(p, tx, tz, speed, dt) {
+  const pos = p.root.position;
+  if (p.sprintT >= 0) {
+    p.sprintT += dt; p.vel.copy(p.sprintDir).multiplyScalar(SPRINT_SPD * (1 - 0.4 * p.sprintT / SPRINT_DUR)); if (p.sprintT >= SPRINT_DUR) p.sprintT = -1;
+  } else {
+    mv2.set(tx - pos.x, 0, tz - pos.z); const d = mv2.length(), want = d > 0.4 ? Math.min(speed, d * 3.5) : 0;
+    if (d > 1e-3) mv2.multiplyScalar(want / d); else mv2.set(0, 0, 0);
+    p.vel.x = lerp(p.vel.x, mv2.x, Math.min(1, dt * 8)); p.vel.z = lerp(p.vel.z, mv2.z, Math.min(1, dt * 8));
+  }
+  pos.x = clamp(pos.x + p.vel.x * dt, -GX - 1.5, GX + 1.5); pos.z = clamp(pos.z + p.vel.z * dt, -HW - 1.5, HW + 1.5);
+  if (Math.hypot(p.vel.x, p.vel.z) > 0.8) p.face = lerpAngle(p.face, Math.atan2(p.vel.x, p.vel.z), Math.min(1, dt * 10));
+}
+function mSegDist2(px, pz, ax, az, bx, bz) {
+  const dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz; let t = l2 ? ((px - ax) * dx + (pz - az) * dz) / l2 : 0; t = clamp(t, 0, 1);
+  return Math.hypot(px - (ax + dx * t), pz - (az + dz * t));
+}
+function mLaneClear(ax, az, bx, bz, team, w) {
+  for (const o of MP.teams[1 - team]) { const q = o.root.position; if (mSegDist2(q.x, q.z, ax, az, bx, bz) < w) return false; }
+  return true;
+}
+function mBestPass(p) {
+  const t = p.team, pos = p.root.position, gx = mAtkX(t); let best = null;
+  const myG = Math.hypot(gx - pos.x, pos.z);
+  for (const m of MP.teams[t]) {
+    if (m === p) continue;
+    const mp = m.root.position, d = Math.hypot(mp.x - pos.x, mp.z - pos.z);
+    if (d < 5 || d > 32 || !mLaneClear(pos.x, pos.z, mp.x, mp.z, t, 1.4)) continue;
+    let open = 10; for (const o of MP.teams[1 - t]) open = Math.min(open, Math.hypot(o.root.position.x - mp.x, o.root.position.z - mp.z));
+    const sc = open * 0.5 + (myG - Math.hypot(gx - mp.x, mp.z)) * 0.12 - d * 0.04;
+    if (!best || sc > best.score) best = { m, score: sc };
+  }
+  return best;
+}
+function mAIPass(p, m) {
+  const pos = p.root.position, mp = m.root.position, d = Math.hypot(mp.x - pos.x, mp.z - pos.z), sp = clamp(d * 1.1 + 8, 12, 24), t0 = d / sp * 1.1;
+  mKick(p, new V3(mp.x + m.vel.x * t0, MR, mp.z + m.vel.z * t0), sp, 'pass', 0.2 + d * 0.01, 0, m);
+}
+function mAIShoot(p, dg, nd) {
+  const gx = mAtkX(p.team), z = (Math.random() < 0.5 ? -1 : 1) * (0.8 + Math.random() * (GHW - 1.7)), y = 0.3 + Math.random() * 1.6;
+  mKick(p, new V3(gx, y, z), 21 + Math.random() * 9, 'shot', 0.5 + dg * 0.025 + (nd < 2.5 ? 0.4 : 0), 0.3);
+}
+function mCarrier(p, dt, out) {
+  const A = p.ai, t = p.team, pos = p.root.position, gx = mAtkX(t), d = mDir(t), dg = Math.hypot(gx - pos.x, pos.z);
+  let near = null, nd = 99;
+  for (const o of MP.teams[1 - t]) { const q = o.root.position, dd = Math.hypot(q.x - pos.x, q.z - pos.z); if (dd < nd && !o.isGK) { nd = dd; near = o; } }
+  let tx = gx - d * 11, tz = pos.z * 0.5;
+  for (const o of MP.teams[1 - t]) { if (o.isGK) continue; const q = o.root.position, dx = pos.x - q.x, dz = pos.z - q.z, dd = Math.hypot(dx, dz); if (dd < 4.5 && dd > 0.01) { const k = (4.5 - dd) * 1.5; tx += dx / dd * k; tz += dz / dd * k; } }
+  out.tx = tx; out.tz = tz;
+  if (A.hold < 0.4) return;
+  const clear = mLaneClear(pos.x, pos.z, gx, 0, t, 1.0);
+  if (dg < 26 && dg > 6 && clear && Math.random() < dt * (dg < 20 ? 3.5 : 1.2)) { mAIShoot(p, dg, nd); return; }
+  if (A.hold > 3.8 || (nd < 2.6 && Math.random() < dt * 3)) {
+    const b = mBestPass(p);
+    if (b && (b.score > 0.2 || A.hold > 3.8)) { mAIPass(p, b.m); return; }
+    if (A.hold > 5 && dg < 34) { mAIShoot(p, dg, nd); return; }
+  }
+  if (near && nd < 2.4 && p.sprintCD <= 0 && Math.random() < dt * 2.2) {
+    const side = Math.random() < 0.5 ? -1 : 1; mv1.set(near.root.position.x - pos.x, 0, near.root.position.z - pos.z).normalize();
+    p.sprintDir.set(-mv1.z * side, 0, mv1.x * side).addScaledVector(mv2.set(gx - pos.x, 0, -pos.z).normalize(), 0.7).normalize();
+    p.sprintT = 0; p.sprintCD = 2.0; p.lastDodge = MT;
+  }
+}
+const MF = [{ a: [30, -6], d: [6, -6] }, { a: [16, 9], d: [-8, 8] }, { a: [-4, -13], d: [-28, -11] }, { a: [-4, 13], d: [-28, 11] }];
+function mAnchor(p, attacking) { const f = MF[p.role], b = attacking ? f.a : f.d, d = mDir(p.team); return [clamp(d * b[0] + 0.25 * mb.pos.x, -48, 48), clamp(b[1] + 0.3 * mb.pos.z, -28, 28)]; }
+const MMARK = [2, 1, 0, 1];
+function mFieldAI(p, dt, ctx) {
+  const A = p.ai, t = p.team, pos = p.root.position, owner = mb.owner;
+  A.cd -= dt; p.stun = Math.max(0, p.stun - dt); p.sprintCD = Math.max(0, p.sprintCD - dt);
+  if (p.stun > 0) { mMove(p, pos.x, pos.z, 0, dt); return; }
+  const out = { tx: pos.x, tz: pos.z, spd: AI_SPD * (0.94 + 0.02 * p.role) };
+  if (owner === p) { A.hold += dt; mCarrier(p, dt, out); }
+  else {
+    A.hold = 0;
+    if (!owner) {
+      if (ctx.chaser[t] === p) { out.tx = mb.pos.x + mb.vel.x * 0.3; out.tz = mb.pos.z + mb.vel.z * 0.3; out.spd *= 1.12; }
+      else { const a = mAnchor(p, mb.lastTeam === t); out.tx = a[0]; out.tz = a[1]; }
+    } else if (owner.team === t) {
+      const a = mAnchor(p, true); out.tx = a[0] + Math.sin(MT * 0.5 + p.role) * 1.5; out.tz = a[1] + Math.sin(MT * 0.7 + p.role * 1.7) * 2.5;
+    } else {
+      const ox = mOwnX(t), op = owner.root.position;
+      if (ctx.press[t] === p) {
+        const dx = ox - op.x, dz = -op.z, dl = Math.hypot(dx, dz) || 1, d = Math.hypot(op.x - pos.x, op.z - pos.z), stand = d > 4 ? 1.8 : 0;
+        out.tx = op.x + dx / dl * stand; out.tz = op.z + dz / dl * stand; out.spd *= 1.06;
+      } else if (p.role === 0) { const a = mAnchor(p, false); out.tx = a[0]; out.tz = a[1]; }
+      else {
+        const o = MP.teams[1 - t][MMARK[p.role]], q = o.root.position, dx = ox - q.x, dz = -q.z, dl = Math.hypot(dx, dz) || 1;
+        out.tx = q.x + dx / dl * Math.min(2.8, dl * 0.5); out.tz = q.z + dz / dl * Math.min(2.8, dl * 0.5);
+      }
+    }
+  }
+  mMove(p, out.tx, out.tz, out.spd, dt);
+  if (owner && Math.hypot(p.vel.x, p.vel.z) < 0.8) p.face = lerpAngle(p.face, Math.atan2(owner.root.position.x - pos.x, owner.root.position.z - pos.z), Math.min(1, dt * 8));
+}
+function mKeeperAI(gk, dt) {
+  const A = gk.ai, t = gk.team, p = gk.root.position, in_ = -mDir(t) * -1;      // +1 for team 0 (defends -X): inward is +X
+  const gx = mOwnX(t), k = KEEPER[keeper.level], bp = mb.pos;
+  if (mb.owner === gk) {
+    A.out += dt; gk.vel.set(0, 0, 0); gk.face = lerpAngle(gk.face, mDir(t) > 0 ? Math.PI / 2 : -Math.PI / 2, 0.2);
+    if (A.out > 1.2) {
+      let best = null, bd = -1;
+      for (const m of MP.teams[t]) { if (m === gk) continue; let o = 10; for (const q of MP.teams[1 - t]) o = Math.min(o, Math.hypot(q.root.position.x - m.root.position.x, q.root.position.z - m.root.position.z)); if (o > bd) { bd = o; best = m; } }
+      if (best) { const mp = best.root.position; mKick(gk, new V3(mp.x, MR, mp.z), 16, 'pass', 0.3, 0, best); }
+      A.out = 0;
+    }
+    return;
+  }
+  A.out = 0;
+  const incoming = mb.shot && mb.lastTeam !== t && !mb.owner && !mb.scored && mb.vel.x * in_ < -4 && Math.abs(bp.x - gx) < 34;
+  let tz, tx = gx + in_ * 0.7, spd = k.rush;
+  if (incoming) {
+    if (!A.gkSet) {
+      A.gkSet = true; A.gkReact = k.react + (Math.random() * 0.1 - 0.05);
+      const tt = (gx - bp.x) / mb.vel.x; let pz = bp.z + mb.vel.z * tt;
+      if (Math.random() < k.guess) pz += (Math.random() > 0.5 ? 1 : -1) * 1.5; else pz += gauss() * 0.4;
+      A.gkTz = clamp(pz, -GHW + 0.3, GHW - 0.3);
+    }
+    A.gkReact -= dt; tz = A.gkReact <= 0 ? A.gkTz : p.z; spd = k.dive * 0.85;
+  } else {
+    A.gkSet = false;
+    const near = !mb.owner && Math.hypot(bp.x - gx, bp.z) < 9 && mb.vel.length() < 6;
+    if (near) { tx = bp.x; tz = bp.z; spd = k.rush; }
+    else { tz = clamp(bp.z * 0.32, -2.6, 2.6); tx = gx + in_ * clamp(0.6 + Math.abs(bp.x - gx) * 0.03, 0.6, 3.2); }
+  }
+  mv2.set(tx - p.x, 0, tz - p.z); const d = mv2.length(), want = d > 0.15 ? Math.min(spd, d * 5) : 0;
+  if (d > 1e-3) mv2.multiplyScalar(want / d); else mv2.set(0, 0, 0);
+  gk.vel.x = lerp(gk.vel.x, mv2.x, Math.min(1, dt * 12)); gk.vel.z = lerp(gk.vel.z, mv2.z, Math.min(1, dt * 12));
+  p.x += gk.vel.x * dt; p.z = clamp(p.z + gk.vel.z * dt, -HW, HW);
+  gk.lean = lerp(gk.lean, incoming && A.gkReact <= 0 ? -Math.sign(gk.vel.z) * 0.5 * (in_) : 0, Math.min(1, dt * 10));
+  gk.face = lerpAngle(gk.face, Math.atan2(bp.x - p.x, bp.z - p.z) * 0.5 + (mDir(t) > 0 ? Math.PI / 4 : -Math.PI / 4), Math.min(1, dt * 6));
+}
+function mAI(dt) {
+  const owner = mb.owner, ctx = { chaser: [null, null], press: [null, null] }, u = mUser();
+  if (!owner) {
+    for (let t = 0; t < 2; t++) {
+      let best = 1e9;
+      for (const p of MP.teams[t]) { if (p === u || p.stun > 0 || MT < p.noCtl) continue; const d = Math.hypot(p.root.position.x - mb.pos.x, p.root.position.z - mb.pos.z); if (d < best) { best = d; ctx.chaser[t] = p; } }
+    }
+  } else if (!owner.isGK) {
+    const t = 1 - owner.team; let best = 1e9;
+    for (const p of MP.teams[t]) { if (p === u || p.stun > 0) continue; const d = Math.hypot(p.root.position.x - owner.root.position.x, p.root.position.z - owner.root.position.z); if (d < best) { best = d; ctx.press[t] = p; } }
+  }
+  for (const p of MP.all) { if (p === u) continue; if (p.isGK) mKeeperAI(p, dt); else mFieldAI(p, dt, ctx); }
+}
+function mSeparate() {
+  const L = MP.all;
+  for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+    const a = L[i].root.position, b = L[j].root.position, dx = b.x - a.x, dz = b.z - a.z, d2 = dx * dx + dz * dz;
+    if (d2 < 0.64 && d2 > 1e-6) { const d = Math.sqrt(d2), push = (0.8 - d) * 0.5, nx = dx / d, nz = dz / d; a.x -= nx * push; a.z -= nz * push; b.x += nx * push; b.z += nz * push; }
+  }
+}
+function mPickups() {
+  if (mb.owner || mb.scored || mb.dead) return;
+  const sp = mb.vel.length();
+  for (const p of MP.all) {
+    if (MT < p.noCtl || p.stun > 0) continue;
+    if (p.team === mb.noTeam && MT < mb.noTeamUntil) continue;
+    if (p === mb.kicker && MT - mb.tKick < 0.4) continue;
+    const dh = Math.hypot(p.root.position.x - mb.pos.x, p.root.position.z - mb.pos.z);
+    const reach = p.isGK ? 1.5 : (p === mb.target ? 1.45 : 1.0), maxV = p === mb.target ? 24 : 15;
+    if (p.isGK && mb.shot && mb.lastTeam !== p.team) continue;       // shots are decided by mSaveCheck
+    if (dh < reach && mb.pos.y < 1.3 && sp < maxV) { mGain(p); return; }
+  }
+}
+function mTackles() {
+  const o = mb.owner; if (!o || o.isGK || MT < o.protectUntil) return;
+  for (const p of MP.teams[1 - o.team]) {
+    if (p.stun > 0 || MT < p.tackleCD) continue;
+    const d = Math.hypot(p.root.position.x - o.root.position.x, p.root.position.z - o.root.position.z), slide = p.sprintT >= 0;
+    if (d < (slide ? 1.6 : 1.1)) {
+      p.tackleCD = MT + 0.7;
+      let pr = slide ? 0.85 : 0.42; if (o.sprintT >= 0) pr = slide ? 0.4 : 0.08;
+      if (Math.random() < pr) {
+        o.stun = 0.5; o.noCtl = MT + 0.8; mGain(p); p.kickT = 0.2;
+        if (o === mUser()) { showToast('TACKLED!', 'miss'); addFeed('Dispossessed!', 'miss'); } else if (p === mUser()) { showToast('WON IT!', 'goal'); addFeed('Nice tackle!', 'goal'); }
+        playSound('kick');
+      } else { p.stun = slide ? 0.7 : 0.25; if (o === mUser()) showToast('SHOOK HIM OFF', 'goal'); }
+      return;
+    }
+  }
+}
+function mRestore() {
+  const p = mb.pos; mb.dead = false;
+  if (Math.abs(p.z) > HW) p.set(clamp(p.x, -GX + 4, GX - 4), MR, Math.sign(p.z) * (HW - 1.0));
+  else p.set(Math.sign(p.x) * (GX - 6), MR, clamp(p.z, -12, 12));
+  mb.vel.set(0, 0, 0); mb.spin.set(0, 0, 0); mb.shot = false; mb.target = null; mb.kicker = null; mb.noTeam = mb.lastTeam; mb.noTeamUntil = MT + 1.0;
+  addFeed('Out of play.');
+}
+function mFlow(dt) {
+  if (MS.state === 'faceoff') {
+    MS.countdown -= dt; const n = Math.ceil(MS.countdown);
+    if (n !== MS.lastCount && n > 0 && n <= 3) { MS.lastCount = n; showToast(String(n)); }
+    if (MS.countdown <= 0) { MS.state = 'play'; mGain(MP.teams[MS.kickoffTeam][0]); playSound('whistle'); showToast('GO!', 'goal'); }
+    return;
+  }
+  if (MS.state === 'goal') { MS.goalT -= dt; if (MS.goalT <= 0) { if (MS.over) mFinish(); else mKickoff(MS.concede, 'KICK-OFF'); } return; }
+  if (MS.state !== 'play') return;
+  if (!MS.overtime) {
+    MS.time -= dt;
+    if (MS.time <= 0) { MS.time = 0; if (MS.score[0] === MS.score[1]) { MS.overtime = true; showToast('GOLDEN GOAL', 'miss'); } else { mFinish(); return; } }
+  }
+  if (mb.scored) {
+    const team = mb.scoredGoal === 0 ? 0 : 1;
+    MS.score[team]++; MS.state = 'goal'; MS.goalT = 2.8; MS.concede = 1 - team; crowdBurst = 1;
+    if (team === 0 && mb.kicker === mUser()) MS.userGoals++;
+    MS.over = MS.overtime || MS.score[team] >= MATCH_GOALS;
+    playSound('net'); playSound('cheer'); playSound('whistle');
+    showToast(team === 0 ? 'GOAL! BEES' : 'GOAL! DRONES', team === 0 ? 'goal' : 'miss');
+    addFeed(`GOAL! ${MS.score[0]} - ${MS.score[1]}`, team === 0 ? 'goal' : 'miss');
+    return;
+  }
+  if (!mb.owner && (mb.dead || Math.abs(mb.pos.z) > HW + 0.4 || Math.abs(mb.pos.x) > GX + 0.4)) mRestore();
+}
+let crowdBurst = 0;
+
+/* ---- animation + HUD ---- */
+function mAnimate(dt) {
+  for (const p of MP.all) {
+    const rig = p.rig, sp = Math.hypot(p.vel.x, p.vel.z), n = Math.min(1, sp / 8);
+    p.phase += sp * dt * 2.2; p.kickT = Math.max(0, p.kickT - dt);
+    const sw = Math.sin(p.phase) * 0.9 * n;
+    rig.leftLeg.rotation.x = sw; rig.rightLeg.rotation.x = -sw;
+    if (p.kickT > 0) rig.rightLeg.rotation.x = -0.9 * Math.sin(Math.min(1, p.kickT / 0.3) * Math.PI);
+    if (p.isGK) {
+      const hold = mb.owner === p, k = Math.sin(MT * 3 + p.team);
+      rig.leftArm.rotation.x = hold ? -1.2 : 0.32 + k * 0.05; rig.rightArm.rotation.x = hold ? -1.2 : 0.32 - k * 0.05;
+      rig.leftArm.rotation.z = hold ? -0.1 : -0.42 - Math.abs(p.lean) * 1.2; rig.rightArm.rotation.z = hold ? 0.1 : 0.42 + Math.abs(p.lean) * 1.2;
+    } else { rig.leftArm.rotation.x = -sw * 0.8; rig.rightArm.rotation.x = sw * 0.8; }
+    rig.torso.rotation.x = 0.04 + n * 0.14 + (p.sprintT >= 0 ? 0.15 : 0);
+    rig.body.position.y = Math.abs(Math.sin(p.phase)) * 0.05 * n;
+    p.root.rotation.y = p.face; p.root.rotation.z = p.lean;
+    if (p.stun > 0.2) rig.torso.rotation.x = 0.35;
+  }
+}
+function matchHUD() {
+  $('sbFmt').textContent = 'MATCH 5v5';
+  $('sbMain').textContent = `${MS.score[0]} - ${MS.score[1]}`;
+  $('sbSub').textContent = MS.overtime ? 'GOLDEN GOAL' : (MS.state === 'faceoff' ? 'KICK-OFF' : `${mFmt(MS.time)} · first to ${MATCH_GOALS}`);
+  $('sbSub').classList.toggle('warn', !MS.overtime && MS.time <= 10);
+  $('stats').innerHTML = `<span style="color:#7ee787;font-weight:700">[Direct Render]</span> · BEES <b>${MS.score[0]}</b> – DRONES <b>${MS.score[1]}</b> · SHOTS <b>${MS.shots[0]}–${MS.shots[1]}</b> · CAM: <b>${camMode.toUpperCase()}</b> · SURF: <b>${SURF[currentSurface].label}</b> · KEEPER: <b>${KEEPER[keeper.level].label}</b> · FPS: <b id="fpsNum">60</b>`;
+}
+function matchUpdate(dt) {
+  if (MS.state === 'off') return;
+  MT += dt; crowdBurst = Math.max(0, crowdBurst - dt * 0.5);
+  mUpdateUser(dt);
+  if (MS.state === 'play') mAI(dt); else for (const p of MP.all) if (p !== mUser()) p.vel.set(0, 0, 0);
+  mSeparate();
+  mBall(dt);
+  if (MS.state === 'play') { mPickups(); mTackles(); }
+  mFlow(dt);
+  mAnimate(dt);
+}
+
 /* ============================ ANIMATED LED & JUMBOTRON GRAPHICS ============================ */
 let ledScroll = 0;
 function updateLEDGraphics(time) {
@@ -1851,35 +2652,27 @@ function updateLEDGraphics(time) {
   ledTex.offset.x = ledScroll;
 
   // Render LED Sponsor texture
-  ledCtx.fillStyle = '#090d14';
-  ledCtx.fillRect(0, 0, 1024, 64);
-  ledCtx.font = 'bold 24px "SF Mono", monospace';
-  ledCtx.fillStyle = '#39b2de';
-  ledCtx.fillText('★ HIVEKEY ARENA ★', 40, 42);
-  ledCtx.fillStyle = '#f5b32e';
-  ledCtx.fillText('PITCH CHALLENGE 2026', 360, 42);
-  ledCtx.fillStyle = '#7ee787';
-  ledCtx.fillText('GOALLL!!', 760, 42);
+  window.hkLed(ledCtx, 1024, 64, time * 0.001);   // rotating HiveKey Arena - Bee Olympics message
   ledTex.needsUpdate = true;
 
   // Jumbotron Video Screen
   jctx.fillStyle = '#090d14';
   jctx.fillRect(0, 0, 512, 128);
-  jctx.strokeStyle = '#39b2de';
+  jctx.strokeStyle = '#FFD100';
   jctx.strokeRect(4, 4, 504, 120);
 
   jctx.font = 'bold 22px "SF Mono", monospace';
-  jctx.fillStyle = '#f5b32e';
-  jctx.fillText('HIVE PITCH ARENA', 24, 38);
+  jctx.fillStyle = '#FFD100';
+  jctx.fillText(gameMode === 'match' ? 'BEES vs DRONES  5v5' : 'HIVE PITCH ARENA', 24, 38);
 
   jctx.font = 'bold 44px "SF Mono", monospace';
-  jctx.fillStyle = '#7ee787';
-  jctx.fillText(`SCORE: ${ball.score}`, 24, 94);
+  jctx.fillStyle = '#fff3a8';
+  jctx.fillText(gameMode === 'match' ? `${MS.score[0]} - ${MS.score[1]}  ${mFmt(MS.time)}` : `SCORE: ${ball.score}`, 24, 94);
 
   // Animated equalizer bars on jumbotron right
   for (let i = 0; i < 10; i++) {
     const barH = 15 + Math.sin(time * 0.006 + i) * 35;
-    jctx.fillStyle = i % 2 === 0 ? '#39b2de' : '#e04568';
+    jctx.fillStyle = i % 2 === 0 ? '#FFD100' : '#c29600';
     jctx.fillRect(360 + i * 14, 105 - barH, 10, barH);
   }
   jumbotronTex.needsUpdate = true;
@@ -1893,6 +2686,9 @@ setTimeOfDay('day');
 resetBallForShot();
 setCameraMode('tv');
 updateCamera(0.016);
+const qsMode = new URLSearchParams(location.search).get('mode');
+hkWhenIntroDone(() => { if (qsMode === 'drills') enterDrills(false); else startMatch(); });   // match is the default; starts as the intro fades
+window.HSM = { MS, MP, mb, update: matchUpdate, startMatch, enterDrills, mUser, keysDown, get MT() { return MT; }, camera };
 
 let lastFrame = performance.now();
 let fpsCount = 0, fpsTimer = performance.now();
@@ -1933,6 +2729,7 @@ function animate(now) {
 
   // Jumbotron & LED updates
   updateLEDGraphics(now);
+  hkFx.update(now * 0.001);
 
   // Doll's-house hydraulic lift animation
   updateLifts(dt);
@@ -1942,13 +2739,14 @@ function animate(now) {
     updatePhysics(dt);
     updateKeeper(dt);
     updateStriker(dt);
+    if (gameMode === 'match') matchUpdate(dt);
   }
 
   // Humanoid Idle Motions
   const idleT = now * 0.003;
 
   // 1. Goalkeeper side-to-side weight shift on goal line
-  if (keeper.state === 'idle' && !ball.inFlight) {
+  if (gameMode === 'drills' && keeper.state === 'idle' && !ball.inFlight) {
     const kShift = Math.sin(idleT * 1.8);
     keeperRig.body.position.x = kShift * 0.22; // Side-to-side weight shift
     keeperRig.body.position.y = -0.04 + Math.abs(Math.sin(idleT * 3.6)) * 0.025; // Light ready bounce
@@ -1960,7 +2758,7 @@ function animate(now) {
   }
 
   // 2. Striker ready stance bounce behind the ball
-  if (!ball.inFlight && currentFormat !== 'ovo') {
+  if (gameMode === 'drills' && !ball.inFlight && currentFormat !== 'ovo') {
     const sBounce = Math.sin(idleT * 2.5);
     strikerRig.body.position.y = Math.max(0, sBounce * 0.035);
     strikerRig.torso.rotation.x = 0.04 + sBounce * 0.02;
