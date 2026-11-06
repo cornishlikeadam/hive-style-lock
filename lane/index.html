@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Hive Lane Challenge // HiveKey Arena Swimming</title>
+<style>
+:root{
+  --bg:#090d14;
+  --panel:rgba(14,20,32,.92);
+  --line:rgba(99,140,200,.28);
+  --acc:#2ea043;
+  --acc-glow:rgba(46,160,67,.55);
+  --cyan:#39b2de;
+  --gold:#f5b32e;
+  --red:#e04568;
+  --tx:#f4f7fc;
+  --dim:#7f90b3;
+  --mono:"SF Mono","JetBrains Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
+
+/* Multi-Sport Arena Switcher */
+#navPills{position:fixed;top:10px;left:12px;z-index:14;display:flex;gap:6px;align-items:center}
+.sport-pill{padding:5px 10px;border-radius:20px;font:700 11px var(--mono);text-decoration:none;color:var(--dim);background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all .18s ease;display:flex;align-items:center;gap:5px}
+.sport-pill:hover{color:#fff;border-color:var(--cyan);background:rgba(22,32,50,.95)}
+.sport-pill.active{color:#fff;background:rgba(46,160,67,.25);border-color:var(--acc);box-shadow:0 0 10px var(--acc-glow)}
+.sport-pill.active::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc)}
+
+/* HUD Elements */
+.hud{position:fixed;pointer-events:none;z-index:10;font-family:var(--mono)}
+
+/* Top Scoreboard */
+#score{top:12px;left:50%;transform:translateX(-50%);display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.55);pointer-events:auto}
+#score span{padding:6px 14px;display:flex;align-items:center;white-space:nowrap}
+#sbFmt{background:rgba(255,255,255,.05);color:var(--cyan);font-weight:700;letter-spacing:1px;font-size:11px}
+#sbMain{font-size:18px;font-weight:800;color:var(--gold);min-width:96px;justify-content:center}
+#sbRank{font-size:14px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);padding:6px 12px}
+#sbDist{color:var(--tx);font-size:11px}
+#sbDbg{background:#2ea043;color:#090d14;font-weight:700;padding:6px 10px;font-size:10px;border-left:1px solid var(--line)}
+
+#hint{top:62px;left:50%;transform:translateX(-50%);font-size:10px;color:#fff;background:rgba(9,13,20,.75);padding:4px 12px;border-radius:4px;white-space:nowrap}
+#stats{bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);background:rgba(9,13,20,.85);padding:4px 14px;border-radius:20px;border:1px solid var(--line);white-space:nowrap}
+#feed{bottom:44px;left:14px;width:240px;display:flex;flex-direction:column-reverse;gap:4px;list-style:none}
+#feed li{font-size:11px;color:var(--dim);background:rgba(9,13,20,.8);padding:4px 8px;border-radius:4px;border-left:3px solid var(--line);animation:fadeIn .25s ease}
+#feed li.lead{border-color:var(--gold);color:var(--gold)}
+#feed li.turn{border-color:var(--cyan);color:var(--cyan)}
+#feed li.finish{border-color:var(--acc);color:#7ee787}
+
+/* Stroke Timing Gauge & Sweet Spot */
+#strokeWrap{position:fixed;bottom:42px;left:50%;transform:translateX(-50%);width:280px;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:10;pointer-events:none}
+#strokeBar{width:100%;height:18px;background:rgba(9,13,20,.85);border:1px solid var(--line);border-radius:9px;overflow:hidden;position:relative;box-shadow:0 4px 16px rgba(0,0,0,.6)}
+#strokeSweet{position:absolute;top:0;bottom:0;left:64%;width:22%;background:rgba(46,160,67,.4);border-left:2px solid var(--acc);border-right:2px solid var(--acc)}
+#strokeNeedle{position:absolute;top:0;bottom:0;width:4px;left:0%;background:#fff;border-radius:2px;box-shadow:0 0 8px #fff;transition:none}
+#strokeInd{font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:1px;text-transform:uppercase}
+
+/* Surge / Stamina meter */
+#surgeWrap{width:180px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;position:relative}
+#surgeFill{height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),#7ee787);transition:width .1s linear}
+
+/* Toast announcements */
+#toast{top:34%;left:50%;transform:translate(-50%,-50%);font-size:46px;font-weight:900;letter-spacing:3px;color:#fff;text-shadow:0 4px 0 #090d14,0 0 24px rgba(0,0,0,.85);opacity:0;white-space:nowrap}
+#toast.show{animation:toastAnim 1.6s ease forwards}
+#toast.perfect{color:#7ee787}
+#toast.great{color:var(--cyan)}
+#toast.early{color:var(--gold)}
+#toast.late{color:var(--red)}
+#toast.turn{color:var(--gold)}
+@keyframes toastAnim{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}25%{transform:translate(-50%,-50%) scale(1)}78%{opacity:1}100%{opacity:0}}
+
+#pausedTag{top:64px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;display:none}
+
+/* Retractable Dashboard Panel */
+#menuBtn{position:fixed;top:12px;right:12px;z-index:12;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--tx);font:700 11px var(--mono);letter-spacing:.8px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:all .2s ease}
+#menuBtn:hover{background:rgba(22,32,50,.95);border-color:rgba(99,140,200,.5);transform:translateY(-1px)}
+#menuBtn::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc)}
+#menuBtn.active{background:rgba(22,32,50,.95);border-color:var(--acc);color:#fff}
+#menuBtn.active::before{background:var(--red);box-shadow:0 0 6px var(--red)}
+
+#panel{position:fixed;top:12px;right:12px;width:280px;max-height:calc(100% - 24px);overflow-y:auto;background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:8px;padding:12px 14px;z-index:15;box-shadow:0 12px 36px rgba(0,0,0,.7);transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none;transition:transform .26s cubic-bezier(.16,1,.3,1),opacity .18s ease}
+#panel.open{transform:translateX(0);opacity:1;pointer-events:auto}
+
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.close-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--dim);font:700 13px var(--mono);width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.close-btn:hover{background:rgba(224,69,104,.25);border-color:var(--red);color:#fff}
+
+#panel h1{font:700 13px var(--mono);letter-spacing:1.2px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+#panel h1::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+#panel .sub{color:var(--dim);font-size:10px;margin:3px 0 8px}
+.sec{border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-top:8px}
+.lbl{font:600 9px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;display:flex;justify-content:space-between}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button,.btn{flex:1;min-width:0;padding:6px 4px;font:600 10px var(--mono);color:var(--tx);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.seg button:hover,.btn:hover{background:rgba(255,255,255,.12)}
+.seg button.on,.btn.on{background:var(--acc);border-color:#4cd864;color:#0d1117;box-shadow:0 0 8px var(--acc-glow)}
+.btn.big{display:block;width:100%;padding:9px;font-size:11px;background:#204a8c;border-color:#3774cd;margin-top:4px}
+.btn.big:hover{background:#2a5eac}
+.row{display:flex;gap:4px;margin-top:4px}
+input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
+.keys{font:10px/1.6 var(--mono);color:var(--dim)}
+.keys b{color:var(--tx);background:rgba(255,255,255,.08);padding:0 4px;border-radius:3px;font-weight:600}
+
+/* Mobile Touch controls */
+#touch{display:none;position:fixed;left:0;right:0;bottom:0;height:0;z-index:11}
+body.touch #touch{display:block}
+#touchBtns{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
+#tStroke{width:86px;height:86px;border-radius:50%;background:rgba(46,160,67,.75);border:2px solid #fff;color:#fff;font:800 13px var(--mono);box-shadow:0 6px 20px rgba(0,0,0,.6);cursor:pointer;touch-action:none}
+#tStroke.active{background:rgba(245,179,46,.95);transform:scale(.94)}
+#tSurge{width:64px;height:64px;border-radius:50%;background:rgba(57,178,222,.75);border:2px solid #fff;color:#fff;font:700 10px var(--mono);box-shadow:0 4px 16px rgba(0,0,0,.5);cursor:pointer;touch-action:none}
+#tCam{width:48px;height:48px;border-radius:50%;background:rgba(14,20,32,.85);border:1px solid var(--line);color:#fff;font:700 10px var(--mono);cursor:pointer}
+
+/* Game over modal */
+#over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:30}
+#over.show{display:flex}
+#over .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 30px;text-align:center;min-width:320px;max-width:92vw;box-shadow:0 16px 48px rgba(0,0,0,.85)}
+#over h2{font:800 22px var(--mono);letter-spacing:2px;color:var(--gold)}
+#over .podium{font-size:36px;margin:8px 0;letter-spacing:6px}
+#over p{color:var(--dim);margin:10px 0 16px;line-height:1.6;font-family:var(--mono);font-size:12px}
+#over .splits{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(0,0,0,.3);padding:10px;border-radius:6px;margin-bottom:14px;font-size:11px}
+#over .splits div{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding:3px 0}
+#over .stamp{font:10px var(--mono);color:var(--dim);margin-bottom:14px;word-break:break-all}
+#over .stamp b{color:var(--cyan)}
+
+@media (max-width:768px){
+  #navPills{top:8px;left:8px;gap:4px}
+  .sport-pill{padding:4px 8px;font-size:9px}
+  #menuBtn{top:8px;right:8px;padding:6px 10px;font-size:10px}
+  #sbDbg{display:none!important}
+  #panel{top:auto;bottom:0;right:0;left:0;width:auto;max-height:64%;border-radius:12px 12px 0 0;transform:translateY(105%);opacity:1;transition:transform .25s ease;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  #panel.open{transform:translateY(0)}
+  #score{top:42px;left:8px;transform:none;max-width:calc(100% - 16px)}
+  #score span{padding:4px 8px}#sbMain{font-size:15px}#sbFmt{font-size:9px}#sbRank{font-size:11px}
+  #stats{top:74px;bottom:auto;left:8px;transform:none;font-size:9px;padding:3px 8px;max-width:calc(100% - 16px);white-space:normal}
+  #feed{display:none}
+  #strokeWrap{bottom:calc(110px + env(safe-area-inset-bottom));width:220px}
+  #toast{font-size:32px}
+  #hint{display:none}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<!-- Multi-Sport Arena Header Switcher -->
+<nav id="navPills">
+  <a href="/pitch" class="sport-pill" title="Soccer Skills">⚽ Soccer</a>
+  <a href="/lacrosse" class="sport-pill" title="Lacrosse Drills">🥍 Lacrosse</a>
+  <a href="/swim" class="sport-pill active" title="Swimming Races">🏊 Swimming</a>
+</nav>
+
+<!-- Top HUD Scoreboard -->
+<div id="score" class="hud">
+  <span id="sbFmt">50m FREESTYLE</span>
+  <span id="sbMain">00:00.00</span>
+  <span id="sbRank">RANK: -</span>
+  <span id="sbDist">0.0m / 50m</span>
+  <span id="sbDbg">Debug: Direct Render</span>
+</div>
+<div id="hint" class="hud">Press SPACE on START beep to dive · Tap SPACE on rhythm sweet spot to stroke · SHIFT hydro surge · Tab/Esc dashboard</div>
+<div id="stats" class="hud">[Debug: Direct Render] · CAM: TV · LANE 4 · STROKE: FREESTYLE · WATER: 27°C · FPS: 60</div>
+<ul id="feed" class="hud"></ul>
+
+<!-- Stroke Timing & Rhythm Bar -->
+<div id="strokeWrap" class="hud">
+  <div id="strokeInd">READY TO DIVE</div>
+  <div id="strokeBar">
+    <div id="strokeSweet"></div>
+    <div id="strokeNeedle"></div>
+  </div>
+  <div id="surgeWrap">
+    <div id="surgeFill"></div>
+  </div>
+</div>
+
+<div id="toast" class="hud"></div>
+<div id="pausedTag" class="hud">PAUSED</div>
+<button id="menuBtn" aria-label="Toggle Dashboard">☰ Dashboard</button>
+
+<!-- Retractable Side Control Dock -->
+<aside id="panel">
+  <div class="panel-head">
+    <h1>Hive Lane Challenge</h1>
+    <button id="closePanelBtn" class="close-btn" title="Close (Tab / Esc)">✕</button>
+  </div>
+  <div class="sub">HiveKey Arena · Olympic Aquatics Baseline</div>
+  
+  <div class="sec"><div class="lbl">Race Distance</div>
+    <div class="seg" data-g="dist">
+      <button data-v="50" class="on">50m Sprint</button>
+      <button data-v="100">100m Race</button>
+      <button data-v="stroke">Stroke Challenge</button>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="lbl">Stroke Technique</div>
+    <div class="seg" data-g="stroke">
+      <button data-v="free" class="on">Freestyle</button>
+      <button data-v="fly">Butterfly</button>
+      <button data-v="breast">Breaststroke</button>
+      <button data-v="back">Backstroke</button>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="lbl">Rivals in Field</div>
+    <div class="seg" data-g="rivals">
+      <button data-v="3">3 Rivals</button>
+      <button data-v="5">5 Rivals</button>
+      <button data-v="7" class="on">Full (7)</button>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="lbl">Lighting & Time</div>
+    <div class="seg" data-g="tod">
+      <button data-v="day" class="on">Day</button>
+      <button data-v="dusk">Dusk</button>
+      <button data-v="night">Night</button>
+    </div>
+  </div>
+  
+  <div class="sec">
+    <button class="btn big" id="bNew">▶ New Race / Reset</button>
+    <div class="row">
+      <button class="btn" id="bPause">Pause</button>
+      <button class="btn" id="bSound">Sound: On</button>
+    </div>
+    <div class="lbl" style="margin-top:8px">Pacing Speed</div>
+    <div class="seg" data-g="speed">
+      <button data-v="0.5">0.5×</button>
+      <button data-v="1" class="on">1×</button>
+      <button data-v="1.5">1.5×</button>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="lbl">Broadcast Camera</div>
+    <div class="seg" data-g="cam">
+      <button data-v="tv" class="on">TV Follow</button>
+      <button data-v="over">Overhead</button>
+      <button data-v="turn">Turn Wall</button>
+      <button data-v="island">Island (850m)</button>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="lbl">Doll's-House Lift</div>
+    <div class="seg" data-g="lift" data-multi="1">
+      <button data-v="stands">Stands</button>
+      <button data-v="club">Clubhouse</button>
+      <button data-v="blocks">Blocks</button>
+    </div>
+  </div>
+  
+  <div class="sec">
+    <div class="lbl"><span>Pixel Grid Post-Process</span><span id="pxVal">2 px</span></div>
+    <input type="range" id="pxSize" min="1" max="6" step="1" value="2">
+    <div class="row">
+      <button class="btn on" id="bDirect">Direct (Active)</button>
+      <button class="btn" id="bPost">OKLab Post</button>
+    </div>
+  </div>
+  
+  <div class="sec keys">
+    <b>Space</b> dive on start / rhythm stroke<br>
+    <b>Shift</b> dive reaction / hydro surge / wall turn<br>
+    <b>C</b> cycle camera &middot; <b>P</b> pause &middot; <b>N</b> new race<br>
+    <b>1 2 3</b> distance &middot; <b>Tab</b>/<b>Esc</b> toggle dashboard<br>
+    <b>Click pool</b> to close dashboard & focus
+  </div>
+</aside>
+
+<!-- Touch controls for mobile -->
+<div id="touch">
+  <div id="touchBtns">
+    <button id="tCam">CAM</button>
+    <button id="tSurge">SURGE</button>
+    <button id="tStroke">STROKE</button>
+  </div>
+</div>
+
+<!-- Modal Dialog -->
+<div id="over">
+  <div class="card">
+    <h2 id="ovTitle">RACE COMPLETE</h2>
+    <div class="podium" id="ovPodium">🥇</div>
+    <p id="ovBody"></p>
+    <div class="splits">
+      <div><span>Reaction Time:</span><b id="ovReact">0.24s</b></div>
+      <div><span>25m Split:</span><b id="ovSplit25">11.82s</b></div>
+      <div><span>Final Time:</span><b id="ovFinal">24.18s</b></div>
+      <div><span>Stroke Accuracy:</span><b id="ovAcc">88%</b></div>
+    </div>
+    <div class="stamp">BEE STAMP PREVIEW <b id="ovStamp">0x4a9b...c38e</b><br>local hash of this race result</div>
+    <button class="btn big" id="ovNew">▶ Race Again</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const V3 = THREE.Vector3;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ============================ 90-COLOUR OKLAB PALETTE ============================ */
+const PAL90 = [
+  "#090d14","#131924","#1e2636","#2c364c","#414e6a","#5c6d8f","#7f90b3","#a8b8d8","#d1dcf0","#f4f7fc",
+  "#072412","#0d381c","#144f28","#1c6936","#258444","#2ea043","#3ebc56","#56d364","#7ee787","#133827","#1b4d37","#256549","#317f5d","#409b72","#55b98a","#96e3b8",
+  "#27130a","#3d1e10","#582b17","#763a1f","#964b28","#b75c32","#d96f3e","#e88554","#f49f75","#382415","#51351e","#6d4729","#8d5d36","#ae7445","#cf8d56","#ebd0ad",
+  "#061124","#0b1c3a","#112952","#18396e","#204a8c","#2a5eac","#3774cd","#4a8cef","#6ba4f8","#082d3f","#0e425c","#165a7b","#1f749c","#2a90be","#39b2de","#9ce5fb",
+  "#28080f","#400e19","#5c1525","#7c1e33","#9f2742","#c33353","#e04568","#ee6584","#f68da6","#230b2e","#371247","#501c64","#6d2785","#8d37aa","#b04ed0","#e097f5",
+  "#2e1c02","#472c03","#633e05","#825207","#a4690a","#c7810e","#ea9c13","#f5b32e","#fbca5b","#3b1602","#5a2203","#7c2f05","#a13e07","#c8500a","#f06810","#ffeed1"
+];
+
+function hexToRgb(h){ const n=parseInt(h.slice(1),16); return [(n>>16)/255,((n>>8)&255)/255,(n&255)/255]; }
+function s2l(c){ return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); }
+function lin2ok(r,g,b){
+  const l=0.4122214708*r+0.5363325363*g+0.0514459929*b, m=0.2119034982*r+0.6806995451*g+0.1073969566*b, s=0.0883024619*r+0.2817188376*g+0.6299787005*b;
+  const l_=Math.cbrt(l), m_=Math.cbrt(m), s_=Math.cbrt(s);
+  return [0.2104542553*l_+0.7936177850*m_-0.0040720468*s_, 1.9779984951*l_-2.4285922050*m_+0.4505937099*s_, 0.0259040371*l_+0.7827717662*m_-0.8086757660*s_];
+}
+const PAL_OK = PAL90.map(h => { const [r,g,b]=hexToRgb(h); const o=lin2ok(s2l(r),s2l(g),s2l(b)); return new V3(o[0],o[1],o[2]); });
+
+/* ============================ CONSTANTS ============================ */
+const VOX = 2.4;
+const POOL_L = 50.0;    // 50m Olympic pool
+const POOL_W = 21.0;    // 8 lanes x 2.5m + borders
+const POOL_D = 2.0;     // 2.0m depth
+const LANE_W = 2.5;     // 2.5m lane width
+const X_START = -POOL_L/2; // -25.0m
+const X_END = POOL_L/2;    // +25.0m
+const ISO_DIST = 850, CAM_FAR = 1700, CAM_NEAR = 1;
+
+/* Swimmer lane coordinates: 8 lanes centered at z=0 */
+const LANES = [];
+for (let i = 0; i < 8; i++) {
+  LANES.push({
+    laneNum: i + 1,
+    z: -8.75 + i * LANE_W, // -8.75, -6.25, -3.75, -1.25 (lane 4), +1.25, +3.75, +6.25, +8.75
+    country: ['AUS', 'GBR', 'FRA', 'PLAYER', 'USA', 'JPN', 'ITA', 'CAN'][i],
+    capColor: [0x2ea043, 0x18396e, 0x2a5eac, 0xf5b32e, 0xe04568, 0xf4f7fc, 0x3ebc56, 0xc33353][i],
+    jamColor: [0x090d14, 0x112952, 0x18396e, 0x1e2636, 0x204a8c, 0x090d14, 0x144f28, 0x7c1e33][i]
+  });
+}
+
+const TOD = {
+  day:   { bg:'#8ec0f8', sun:0xfff4e0, sunI:1.15, sunDir:[0.3,1,0.6],   sky:0xbfd8ff, gnd:0x3d4a36, hemiI:0.55, flood:0,   lamp:'#5c6d8f' },
+  dusk:  { bg:'#371247', sun:0xf06810, sunI:0.95, sunDir:[-1,0.35,0.4], sky:0x8d37aa, gnd:0x382415, hemiI:0.45, flood:0.9, lamp:'#ffeed1' },
+  night: { bg:'#061124', sun:0x6ba4f8, sunI:0.35, sunDir:[0.4,1,-0.3],  sky:0x18396e, gnd:0x090d14, hemiI:0.3,  flood:2.2, lamp:'#ffffff' }
+};
+
+/* ============================ RENDERER & SCENE SETUP ============================ */
+let viewW = window.innerWidth, viewH = window.innerHeight;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(TOD.day.bg);
+
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, CAM_NEAR, CAM_FAR);
+const tvCamPos = new V3(-30, 16, 22);
+const tvCamTarget = new V3(-20, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+renderer.setSize(viewW, viewH);
+renderer.setPixelRatio(1);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const canvas = renderer.domElement;
+document.body.appendChild(canvas);
+
+let pixelSize = 2;
+let rtW = Math.max(1, Math.floor(viewW / pixelSize));
+let rtH = Math.max(1, Math.floor(viewH / pixelSize));
+const rt = new THREE.WebGLRenderTarget(rtW, rtH, {
+  minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter,
+  format: THREE.RGBAFormat, depthBuffer: true,
+  depthTexture: new THREE.DepthTexture(rtW, rtH)
+});
+
+/* Post-Processing Pass */
+const postScene = new THREE.Scene();
+const postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const postMat = new THREE.ShaderMaterial({
+  uniforms: {
+    tDiffuse: { value: rt.texture }, tDepth: { value: rt.depthTexture },
+    uLowRes: { value: new THREE.Vector2(rtW, rtH) }, uNear: { value: CAM_NEAR }, uFar: { value: CAM_FAR },
+    uOutline: { value: 1.0 }, uSnap: { value: 1.0 }, uDither: { value: 0.85 },
+    uPal: { value: PAL_OK }
+  },
+  vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D tDiffuse; uniform sampler2D tDepth;
+    uniform vec2 uLowRes; uniform float uNear, uFar, uOutline, uSnap, uDither;
+    uniform vec3 uPal[90];
+    varying vec2 vUv;
+    float lz(vec2 uv){ return mix(uNear, uFar, texture2D(tDepth, uv).r); }
+    float bayer4(vec2 p){
+      vec2 m = floor(mod(p, 4.0)); float v;
+      if (m.y < .5) v = m.x < .5 ? 0. : m.x < 1.5 ? 8. : m.x < 2.5 ? 2. : 10.;
+      else if (m.y < 1.5) v = m.x < .5 ? 12. : m.x < 1.5 ? 4. : m.x < 2.5 ? 14. : 6.;
+      else if (m.y < 2.5) v = m.x < .5 ? 3. : m.x < 1.5 ? 11. : m.x < 2.5 ? 1. : 9.;
+      else v = m.x < .5 ? 15. : m.x < 1.5 ? 7. : m.x < 2.5 ? 13. : 5.;
+      return v / 16. - .5;
+    }
+    vec3 toLin(vec3 c){ return mix(c / 12.92, pow((c + .055) / 1.055, vec3(2.4)), step(.04045, c)); }
+    vec3 toSrgb(vec3 c){ c = clamp(c, 0., 1.); return mix(c * 12.92, 1.055 * pow(c, vec3(1. / 2.4)) - .055, step(.0031308, c)); }
+    vec3 lin2ok(vec3 c){
+      float l = pow(max(.4122214708*c.r + .5363325363*c.g + .0514459929*c.b, 0.00001), 1./3.);
+      float m = pow(max(.2119034982*c.r + .6806995451*c.g + .1073969566*c.b, 0.00001), 1./3.);
+      float s = pow(max(.0883024619*c.r + .2817188376*c.g + .6299787005*c.b, 0.00001), 1./3.);
+      return vec3(.2104542553*l + .7936177850*m - .0040720468*s, 1.9779984951*l - 2.4285922050*m + .4505937099*s, .0259040371*l + .7827717662*m - .8086757660*s);
+    }
+    void main(){
+      vec3 col = texture2D(tDiffuse, vUv).rgb;
+      if (uSnap > .5) {
+        vec3 ok = lin2ok(toLin(col));
+        float b = bayer4(vUv * uLowRes) * uDither;
+        ok += vec3(b * .035, b * .018, b * .018);
+        float best = 1e5; vec3 pick = uPal[0];
+        for (int i = 0; i < 90; i++) { vec3 d = ok - uPal[i]; float e = d.x*d.x*1.35 + d.y*d.y + d.z*d.z; if (e < best) { best = e; pick = uPal[i]; } }
+        float l = pick.x + .3963377774*pick.y + .2158037573*pick.z;
+        float m = pick.x - .1055613458*pick.y - .0638541728*pick.z;
+        float s = pick.x - .0894841775*pick.y - 1.2914855480*pick.z;
+        vec3 lin = vec3(4.0767416621*l*l*l - 3.3077115913*m*m*m + .2309699292*s*s*s,
+                        -1.2684380046*l*l*l + 2.6097574011*m*m*m - .3413193965*s*s*s,
+                        -.0041960863*l*l*l - .7034186147*m*m*m + 1.7076147010*s*s*s);
+        col = toSrgb(lin);
+      }
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
+
+/* ============================ MATERIAL CACHE & HELPERS ============================ */
+const mats = {};
+function getMat(hex, opts = {}) {
+  const k = hex + JSON.stringify(opts);
+  if (!mats[k]) {
+    mats[k] = new THREE.MeshLambertMaterial({ color: hex, ...opts });
+  }
+  return mats[k];
+}
+
+function makeBox(w, h, d, hex, opts = {}) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const m = new THREE.Mesh(geo, getMat(hex, opts));
+  m.castShadow = true;
+  m.receiveShadow = true;
+  return m;
+}
+
+/* ============================ LIGHTING SETUP ============================ */
+const hemiLight = new THREE.HemisphereLight(TOD.day.sky, TOD.day.gnd, TOD.day.hemiI);
+scene.add(hemiLight);
+
+const sunLight = new THREE.DirectionalLight(TOD.day.sun, TOD.day.sunI);
+sunLight.position.set(-40, 95, 65);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.left = -50;
+sunLight.shadow.camera.right = 50;
+sunLight.shadow.camera.top = 50;
+sunLight.shadow.camera.bottom = -50;
+sunLight.shadow.camera.near = 10;
+sunLight.shadow.camera.far = 240;
+sunLight.shadow.bias = -0.0006;
+scene.add(sunLight);
+
+const floodLights = [];
+function addFloodlight(x, y, z) {
+  const fl = new THREE.PointLight(0xffeed1, 0, 48, 1.4);
+  fl.position.set(x, y, z);
+  scene.add(fl);
+  floodLights.push(fl);
+}
+addFloodlight(-28, 16, -14);
+addFloodlight(28, 16, -14);
+addFloodlight(-28, 16, 14);
+addFloodlight(28, 16, 14);
+
+/* Underwater Basin Lighting: Flush glowing wall lamps */
+const underLamps = [];
+for (let i = 0; i < 6; i++) {
+  const lampX = -20 + i * 8;
+  const lampN = makeBox(0.6, 0.25, 0.08, 0x9ce5fb);
+  lampN.position.set(lampX, -1.0, -POOL_W/2 + 0.04);
+  scene.add(lampN);
+  const lampS = makeBox(0.6, 0.25, 0.08, 0x9ce5fb);
+  lampS.position.set(lampX, -1.0, POOL_W/2 - 0.04);
+  scene.add(lampS);
+  underLamps.push(lampN, lampS);
+}
+
+/* ============================ FLOATING VOXEL ISLAND ============================ */
+const islandGroup = new THREE.Group();
+scene.add(islandGroup);
+
+const stoneColors = [0x1e2636, 0x2c364c, 0x414e6a, 0x382415];
+const RX0 = -17, RX1 = 17, RZ0 = -11, RZ1 = 11;
+for (let ix = RX0; ix <= RX1; ix++) {
+  for (let iz = RZ0; iz <= RZ1; iz++) {
+    const dCenter = Math.hypot(ix / 17, iz / 11);
+    if (dCenter > 1.08) continue;
+    const x = ix * VOX;
+    const z = iz * VOX;
+    const underPool = (Math.abs(x) <= POOL_L/2 + 0.5 && Math.abs(z) <= POOL_W/2 + 0.5);
+    const topY = underPool ? (-POOL_D - 0.2) : -0.2;
+    const colH = Math.max(1, Math.floor((1.05 - dCenter) * 7.5 + (Math.sin(ix * 0.7) * Math.cos(iz * 0.7) + 1) * 1.5));
+    const h = colH * VOX;
+    const colMesh = makeBox(VOX, h, VOX, stoneColors[(Math.abs(ix + iz)) % stoneColors.length]);
+    colMesh.position.set(x, topY - h / 2, z);
+    islandGroup.add(colMesh);
+  }
+}
+
+// Waterfall dropping off south rim
+const waterfallGeo = new THREE.PlaneGeometry(12, 28, 1, 10);
+const waterfallMat = new THREE.MeshBasicMaterial({ color: 0x9ce5fb, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+const waterfall = new THREE.Mesh(waterfallGeo, waterfallMat);
+waterfall.position.set(0, -14, 25);
+waterfall.rotation.y = Math.PI;
+islandGroup.add(waterfall);
+
+// Pixel mist particles
+const mistCount = 60;
+const mistGeo = new THREE.BufferGeometry();
+const mistPos = new Float32Array(mistCount * 3);
+for (let i = 0; i < mistCount * 3; i += 3) {
+  mistPos[i] = (Math.random() - 0.5) * 16;
+  mistPos[i + 1] = -24 - Math.random() * 8;
+  mistPos[i + 2] = 24 + Math.random() * 6;
+}
+mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
+const mistMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, transparent: true, opacity: 0.6 });
+const mistPoints = new THREE.Points(mistGeo, mistMat);
+scene.add(mistPoints);
+
+/* ============================ OLYMPIC POOL COMPLEX ============================ */
+// 4 Perimeter Deck Slabs (Open Pool Center)
+const deckColor = 0xd1dcf0;
+// West Deck (Start Concourse)
+const deckWest = makeBox(18.0, 1.2, 38.0, deckColor);
+deckWest.position.set(-34.0, -0.6, 0);
+scene.add(deckWest);
+
+// East Deck (Turn Concourse)
+const deckEast = makeBox(12.0, 1.2, 36.0, deckColor);
+deckEast.position.set(31.0, -0.6, 0);
+scene.add(deckEast);
+
+// North Deck (Stands Apron)
+const deckNorth = makeBox(POOL_L, 1.2, 7.5, deckColor);
+deckNorth.position.set(0, -0.6, -14.25);
+scene.add(deckNorth);
+
+// South Deck (Sun Concourse)
+const deckSouth = makeBox(POOL_L, 1.2, 7.5, deckColor);
+deckSouth.position.set(0, -0.6, 14.25);
+scene.add(deckSouth);
+
+// Pool Basin Floor & Walls
+const basinFloor = makeBox(POOL_L, 0.2, POOL_W, 0x165a7b);
+basinFloor.position.set(0, -POOL_D - 0.1, 0);
+scene.add(basinFloor);
+
+const wallN = makeBox(POOL_L, POOL_D, 0.3, 0x1f749c); wallN.position.set(0, -POOL_D/2, -POOL_W/2 - 0.15); scene.add(wallN);
+const wallS = makeBox(POOL_L, POOL_D, 0.3, 0x1f749c); wallS.position.set(0, -POOL_D/2, POOL_W/2 + 0.15); scene.add(wallS);
+const wallW = makeBox(0.3, POOL_D, POOL_W, 0x1f749c); wallW.position.set(-POOL_L/2 - 0.15, -POOL_D/2, 0); scene.add(wallW);
+const wallE = makeBox(0.3, POOL_D, POOL_W, 0x1f749c); wallE.position.set(POOL_L/2 + 0.15, -POOL_D/2, 0); scene.add(wallE);
+
+// Drainage Gutters
+const curbN = makeBox(POOL_L + 1, 0.15, 0.4, 0x5c6d8f); curbN.position.set(0, 0.05, -POOL_W/2 - 0.2); scene.add(curbN);
+const curbS = makeBox(POOL_L + 1, 0.15, 0.4, 0x5c6d8f); curbS.position.set(0, 0.05, POOL_W/2 + 0.2); scene.add(curbS);
+
+// Underwater Lane Marker Lines (Dark Blue T-lines on pool floor)
+for (let i = 0; i < 8; i++) {
+  const lz = LANES[i].z;
+  const lLine = makeBox(POOL_L - 4.0, 0.05, 0.26, 0x090d14);
+  lLine.position.set(0, -POOL_D + 0.02, lz);
+  scene.add(lLine);
+  // Turn Cross "T" at each end (2.0m from wall)
+  const crossW = makeBox(0.26, 0.05, 1.2, 0x090d14); crossW.position.set(-POOL_L/2 + 2.0, -POOL_D + 0.02, lz); scene.add(crossW);
+  const crossE = makeBox(0.26, 0.05, 1.2, 0x090d14); crossE.position.set(POOL_L/2 - 2.0, -POOL_D + 0.02, lz); scene.add(crossE);
+  // Target Cross on end walls
+  const wallCrossW = makeBox(0.05, 0.8, 0.8, 0x090d14); wallCrossW.position.set(-POOL_L/2 + 0.02, -1.0, lz); scene.add(wallCrossW);
+  const wallCrossE = makeBox(0.05, 0.8, 0.8, 0x090d14); wallCrossE.position.set(POOL_L/2 - 0.02, -1.0, lz); scene.add(wallCrossE);
+}
+
+// Touch Pads at both ends
+for (let i = 0; i < 8; i++) {
+  const lz = LANES[i].z;
+  const padW = makeBox(0.08, 0.9, 2.0, 0xf5b32e); padW.position.set(-POOL_L/2 + 0.04, -0.45, lz); scene.add(padW);
+  const padE = makeBox(0.08, 0.9, 2.0, 0xf5b32e); padE.position.set(POOL_L/2 - 0.04, -0.45, lz); scene.add(padE);
+}
+
+// Water Surface Mesh with Animated Waves
+const waterGeo = new THREE.PlaneGeometry(POOL_L, POOL_W, 32, 16);
+const waterMat = new THREE.MeshLambertMaterial({
+  color: 0x39b2de,
+  transparent: true,
+  opacity: 0.55,
+  side: THREE.DoubleSide
+});
+const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+waterMesh.rotation.x = -Math.PI / 2;
+waterMesh.position.set(0, -0.15, 0);
+scene.add(waterMesh);
+
+// Floating Lane Ropes (9 ropes with alternating red/white/blue floats)
+const laneRopeGroup = new THREE.Group();
+scene.add(laneRopeGroup);
+const ropeZ = [-10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5, 10.0];
+ropeZ.forEach((rz) => {
+  const ropeCable = makeBox(POOL_L, 0.04, 0.04, 0x1e2636);
+  ropeCable.position.set(0, -0.06, rz);
+  laneRopeGroup.add(ropeCable);
+
+  const floatCount = 50;
+  for (let f = 0; f < floatCount; f++) {
+    const fx = -POOL_L/2 + 0.5 + f * 1.0;
+    let fCol = 0xf4f7fc;
+    if (fx < -POOL_L/2 + 5.0 || fx > POOL_L/2 - 5.0) {
+      fCol = 0xe04568; // Red 5m markers
+    } else if (f % 2 === 0) {
+      fCol = 0x204a8c; // Deep blue
+    }
+    const fMesh = makeBox(0.8, 0.12, 0.12, fCol);
+    fMesh.position.set(fx, -0.06, rz);
+    laneRopeGroup.add(fMesh);
+  }
+});
+
+// Backstroke Turn Flags (5m from walls)
+function addBackstrokeFlags(xPos) {
+  const poleN = makeBox(0.18, 3.2, 0.18, 0xd1dcf0); poleN.position.set(xPos, 1.4, -POOL_W/2 - 0.4); scene.add(poleN);
+  const poleS = makeBox(0.18, 3.2, 0.18, 0xd1dcf0); poleS.position.set(xPos, 1.4, POOL_W/2 + 0.4); scene.add(poleS);
+  const cable = makeBox(0.04, 0.04, POOL_W + 0.8, 0x1e2636); cable.position.set(xPos, 2.8, 0); scene.add(cable);
+
+  for (let p = 0; p < 16; p++) {
+    const pz = -POOL_W/2 + 0.6 + p * 1.3;
+    const pennant = makeBox(0.02, 0.35, 0.25, p % 2 === 0 ? 0xf5b32e : 0x204a8c);
+    pennant.position.set(xPos, 2.6, pz);
+    scene.add(pennant);
+  }
+}
+addBackstrokeFlags(-POOL_L/2 + 5.0);
+addBackstrokeFlags(POOL_L/2 - 5.0);
+
+// Starting Blocks Group (Doll's-House Liftable)
+const blocksGroup = new THREE.Group();
+scene.add(blocksGroup);
+for (let i = 0; i < 8; i++) {
+  const bGroup = new THREE.Group();
+  const lz = LANES[i].z;
+  const base = makeBox(0.8, 0.65, 0.7, 0x2c364c); base.position.set(X_START - 0.6, 0.32, lz); bGroup.add(base);
+  const topPad = makeBox(0.75, 0.12, 0.65, 0x39b2de); topPad.position.set(X_START - 0.55, 0.7, lz); topPad.rotation.z = -0.12; bGroup.add(topPad);
+  const handle = makeBox(0.06, 0.25, 0.45, 0xd1dcf0); handle.position.set(X_START - 0.12, 0.35, lz); bGroup.add(handle);
+  const numPlate = makeBox(0.04, 0.25, 0.35, 0xf4f7fc); numPlate.position.set(X_START - 0.18, 0.45, lz); bGroup.add(numPlate);
+  blocksGroup.add(bGroup);
+}
+
+/* ============================ STADIUM STANDS & CLUBHOUSE ============================ */
+// Spectator Stands Group (North side - Background for TV camera)
+const standsGroup = new THREE.Group();
+scene.add(standsGroup);
+standsGroup.position.set(0, 0, -POOL_W/2 - 5.5);
+
+const standBase = makeBox(60, 1.2, 7.5, 0x1e2636);
+standBase.position.set(0, 0.6, 0);
+standsGroup.add(standBase);
+
+for (let t = 0; t < 5; t++) {
+  const bench = makeBox(58, 0.5, 1.1, 0x3774cd);
+  bench.position.set(0, 1.3 + t * 0.7, -2.4 + t * 1.2);
+  standsGroup.add(bench);
+
+  const crowdCount = 26;
+  const crowdColors = [0xf5b32e, 0x2ea043, 0xe04568, 0x39b2de, 0xf4f7fc];
+  for (let c = 0; c < crowdCount; c++) {
+    const cx = -26 + c * 2.1 + (Math.random() - 0.5) * 0.4;
+    const person = makeBox(0.45, 0.65, 0.45, crowdColors[(c + t) % crowdColors.length]);
+    person.position.set(cx, 1.8 + t * 0.7, -2.4 + t * 1.2);
+    standsGroup.add(person);
+    const head = makeBox(0.3, 0.3, 0.3, 0xebd0ad);
+    head.position.set(cx, 2.3 + t * 0.7, -2.4 + t * 1.2);
+    standsGroup.add(head);
+  }
+}
+
+// Clubhouse Pavilion (Northwest corner behind start deck, clear of pool sightline)
+const clubhouseGroup = new THREE.Group();
+scene.add(clubhouseGroup);
+clubhouseGroup.position.set(-35.0, 0, -17.5);
+
+const clubBase = makeBox(8.5, 4.5, 12, 0x18396e);
+clubBase.position.set(0, 2.25, 0);
+clubhouseGroup.add(clubBase);
+
+const clubRoof = makeBox(9.5, 0.5, 13, 0x204a8c);
+clubRoof.position.set(0, 4.75, 0);
+clubhouseGroup.add(clubRoof);
+
+// Working Analog Clock on Clubhouse Facade
+const clockFace = makeBox(0.15, 1.8, 1.8, 0xf4f7fc);
+clockFace.position.set(4.3, 3.2, 0);
+clubhouseGroup.add(clockFace);
+
+const hourHand = makeBox(0.18, 0.5, 0.08, 0x090d14);
+hourHand.position.set(4.32, 3.2, 0);
+clubhouseGroup.add(hourHand);
+
+const minHand = makeBox(0.18, 0.75, 0.05, 0xe04568);
+minHand.position.set(4.32, 3.2, 0);
+clubhouseGroup.add(minHand);
+
+/* ============================ JUMBOTRON TIMING SCREEN ============================ */
+const jumbotronGroup = new THREE.Group();
+scene.add(jumbotronGroup);
+jumbotronGroup.position.set(POOL_L/2 - 8.0, 0, POOL_W/2 + 5.5);
+
+const supL = makeBox(0.6, 6, 0.6, 0x1e2636); supL.position.set(-6, 3, 0); jumbotronGroup.add(supL);
+const supR = makeBox(0.6, 6, 0.6, 0x1e2636); supR.position.set(6, 3, 0); jumbotronGroup.add(supR);
+
+const screenBox = makeBox(16, 5.0, 1.0, 0x090d14);
+screenBox.position.set(0, 6.0, 0);
+jumbotronGroup.add(screenBox);
+
+const jCanvas = document.createElement('canvas');
+jCanvas.width = 512;
+jCanvas.height = 192;
+const jCtx = jCanvas.getContext('2d');
+const jTex = new THREE.CanvasTexture(jCanvas);
+const screenFace = new THREE.Mesh(new THREE.PlaneGeometry(15.2, 4.4), new THREE.MeshBasicMaterial({ map: jTex }));
+screenFace.position.set(0, 6.0, -0.52);
+screenFace.rotation.y = Math.PI;
+jumbotronGroup.add(screenFace);
+
+/* ============================ SWIMMERS (8 ARTICULATED VOXEL HUMANOIDS) ============================ */
+const swimmerGroup = new THREE.Group();
+scene.add(swimmerGroup);
+
+function buildVoxelSwimmer(lane) {
+  const g = new THREE.Group();
+  const bodyRoot = new THREE.Group();
+  g.add(bodyRoot);
+
+  // Torso / Chest with competition jammer
+  const torso = makeBox(0.85, 0.42, 0.55, lane.jamColor);
+  torso.position.set(0, 0, 0);
+  bodyRoot.add(torso);
+
+  // Head with swim cap and tinted goggles
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0.62, 0.04, 0);
+  const head = makeBox(0.42, 0.4, 0.38, lane.capColor);
+  headGroup.add(head);
+  const face = makeBox(0.18, 0.25, 0.32, 0xebd0ad);
+  face.position.set(0.16, -0.06, 0);
+  headGroup.add(face);
+  const goggles = makeBox(0.12, 0.12, 0.39, 0x090d14);
+  goggles.position.set(0.18, 0.06, 0);
+  headGroup.add(goggles);
+  bodyRoot.add(headGroup);
+
+  // Left Arm (Upper arm + Forearm)
+  const armL = new THREE.Group();
+  armL.position.set(0.35, 0.05, -0.36);
+  const upperArmL = makeBox(0.55, 0.2, 0.2, 0xebd0ad);
+  upperArmL.position.set(0.25, 0, 0);
+  armL.add(upperArmL);
+  bodyRoot.add(armL);
+
+  // Right Arm (Upper arm + Forearm)
+  const armR = new THREE.Group();
+  armR.position.set(0.35, 0.05, 0.36);
+  const upperArmR = makeBox(0.55, 0.2, 0.2, 0xebd0ad);
+  upperArmR.position.set(0.25, 0, 0);
+  armR.add(upperArmR);
+  bodyRoot.add(armR);
+
+  // Left Leg (Thigh + Foot)
+  const legL = new THREE.Group();
+  legL.position.set(-0.48, -0.05, -0.18);
+  const thighL = makeBox(0.65, 0.22, 0.2, lane.jamColor);
+  thighL.position.set(-0.3, 0, 0);
+  legL.add(thighL);
+  const footL = makeBox(0.32, 0.12, 0.18, 0xebd0ad);
+  footL.position.set(-0.7, 0, 0);
+  legL.add(footL);
+  bodyRoot.add(legL);
+
+  // Right Leg (Thigh + Foot)
+  const legR = new THREE.Group();
+  legR.position.set(-0.48, -0.05, 0.18);
+  const thighR = makeBox(0.65, 0.22, 0.2, lane.jamColor);
+  thighR.position.set(-0.3, 0, 0);
+  legR.add(thighR);
+  const footR = makeBox(0.32, 0.12, 0.18, 0xebd0ad);
+  footR.position.set(-0.7, 0, 0);
+  legR.add(footR);
+  bodyRoot.add(legR);
+
+  return {
+    group: g,
+    bodyRoot,
+    headGroup,
+    armL,
+    armR,
+    legL,
+    legR,
+    lane: lane.laneNum,
+    country: lane.country,
+    state: 'BLOCK',
+    pos: new V3(X_START - 0.55, 0.76, lane.z),
+    vel: new V3(0, 0, 0),
+    distSwum: 0,
+    lap: 1,
+    dir: 1,
+    strokePhase: Math.random() * Math.PI * 2,
+    reactTime: 0.18 + Math.random() * 0.15,
+    speedSkill: 1.72 + (lane.laneNum === 4 ? 0.08 : (Math.random() - 0.5) * 0.16),
+    surgeStamina: 1.0,
+    finishTime: null,
+    split25: null
+  };
+}
+
+const swimmers = [];
+for (let i = 0; i < 8; i++) {
+  const sw = buildVoxelSwimmer(LANES[i]);
+  swimmerGroup.add(sw.group);
+  sw.group.position.copy(sw.pos);
+  swimmers.push(sw);
+}
+const player = swimmers[3]; // Lane 4 is player
+
+/* ============================ WATER SPLASH SYSTEM ============================ */
+const SPLASH_MAX = 180;
+const splashGeo = new THREE.BufferGeometry();
+const splashPos = new Float32Array(SPLASH_MAX * 3);
+const splashVel = [];
+for (let i = 0; i < SPLASH_MAX; i++) {
+  splashVel.push(new V3(0, -10, 0));
+}
+splashGeo.setAttribute('position', new THREE.BufferAttribute(splashPos, 3));
+const splashMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.35, transparent: true, opacity: 0.75 });
+const splashParticles = new THREE.Points(splashGeo, splashMat);
+scene.add(splashParticles);
+
+function triggerSplash(x, y, z, intensity = 1.0) {
+  for (let i = 0; i < 12 * intensity; i++) {
+    const idx = Math.floor(Math.random() * SPLASH_MAX);
+    splashPos[idx * 3] = x + (Math.random() - 0.5) * 0.6;
+    splashPos[idx * 3 + 1] = y + 0.1;
+    splashPos[idx * 3 + 2] = z + (Math.random() - 0.5) * 0.6;
+    splashVel[idx].set(
+      (Math.random() - 0.5) * 2.5 * intensity,
+      (1.5 + Math.random() * 3.5) * intensity,
+      (Math.random() - 0.5) * 2.5 * intensity
+    );
+  }
+}
+
+/* ============================ PROCEDURAL AUDIO ============================ */
+let audioCtx = null;
+let soundOn = true;
+
+function initAudio() {
+  if (audioCtx) return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+  } catch (e) {}
+}
+
+function playBuzzer() {
+  if (!soundOn || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.38);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.38);
+}
+
+function playSplashSound() {
+  if (!soundOn || !audioCtx) return;
+  const bufferSize = audioCtx.sampleRate * 0.25;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.06));
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(700, audioCtx.currentTime);
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  noise.start();
+}
+
+function playTurnThud() {
+  if (!soundOn || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(45, audioCtx.currentTime + 0.2);
+  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.2);
+}
+
+function playFinishChime() {
+  if (!soundOn || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.2, now + i * 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.6);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + i * 0.1);
+    osc.stop(now + i * 0.1 + 0.6);
+  });
+}
+
+/* ============================ GAME LOGIC & STATE MACHINE ============================ */
+let raceState = 'PRE';
+let raceFormat = '50';
+let strokeType = 'free';
+let rivalCount = 7;
+let isPaused = false;
+let gameSpeed = 1.0;
+let camMode = 'tv';
+let raceStartTime = 0;
+let raceElapsed = 0;
+let strokeRhythm = 0;
+let strokeAccuracyHits = 0;
+let strokeTotalHits = 0;
+let isDirectRender = true;
+
+const liftState = { stands: false, club: false, blocks: false };
+
+function feed(text, type = '') {
+  const ul = $('feed');
+  const li = document.createElement('li');
+  li.textContent = text;
+  if (type) li.className = type;
+  ul.appendChild(li);
+  if (ul.children.length > 5) ul.removeChild(ul.firstChild);
+}
+
+function showToast(text, type = '') {
+  const t = $('toast');
+  t.textContent = text;
+  t.className = 'hud show ' + type;
+  setTimeout(() => t.className = 'hud', 1600);
+}
+
+function startNewRace() {
+  raceState = 'PRE';
+  raceElapsed = 0;
+  strokeRhythm = 0;
+  strokeAccuracyHits = 0;
+  strokeTotalHits = 0;
+  $('over').classList.remove('show');
+  $('sbMain').textContent = '00:00.00';
+  $('sbRank').textContent = 'RANK: -';
+  $('sbDist').textContent = `0.0m / ${raceFormat === '100' ? '100' : '50'}m`;
+  $('strokeInd').textContent = 'STEPPING UP...';
+  $('feed').innerHTML = '';
+
+  swimmers.forEach((sw) => {
+    sw.state = 'BLOCK';
+    sw.pos.set(X_START - 0.55, 0.76, sw.lane.z);
+    sw.vel.set(0, 0, 0);
+    sw.distSwum = 0;
+    sw.lap = 1;
+    sw.dir = 1;
+    sw.strokePhase = Math.random() * Math.PI * 2;
+    sw.finishTime = null;
+    sw.split25 = null;
+    sw.surgeStamina = 1.0;
+    sw.group.position.copy(sw.pos);
+    sw.group.rotation.set(0, 0, 0);
+    sw.bodyRoot.rotation.set(0, 0, 0);
+  });
+
+  feed('Swimmers stepping up to starting blocks...');
+  
+  setTimeout(() => {
+    if (raceState !== 'PRE') return;
+    raceState = 'READY';
+    $('strokeInd').textContent = 'TAKE YOUR MARKS...';
+    feed('Take your marks...');
+    swimmers.forEach(sw => {
+      sw.bodyRoot.rotation.z = -0.45;
+    });
+
+    const gunDelay = 1400 + Math.random() * 1000;
+    setTimeout(() => {
+      if (raceState !== 'READY') return;
+      playBuzzer();
+      raceState = 'RACING';
+      raceStartTime = performance.now();
+      $('strokeInd').textContent = 'STROKE! [SPACE]';
+      showToast('BEEP!', 'perfect');
+      feed('GO! Clean start off the blocks!', 'lead');
+
+      swimmers.forEach(sw => {
+        if (sw !== player) {
+          setTimeout(() => {
+            if (sw.state === 'BLOCK') executeDive(sw);
+          }, sw.reactTime * 1000);
+        }
+      });
+    }, gunDelay);
+  }, 1600);
+}
+
+function executeDive(sw) {
+  sw.state = 'DIVE';
+  sw.vel.set(sw.dir * (5.5 + Math.random() * 0.8), 2.2, 0);
+  playSplashSound();
+  triggerSplash(sw.pos.x + 1.5 * sw.dir, -0.1, sw.pos.z, 1.4);
+}
+
+function triggerPlayerAction() {
+  initAudio();
+  if (raceState === 'READY') {
+    showToast('FALSE START!', 'late');
+    feed('Lane 4: False start penalty!', 'late');
+    executeDive(player);
+    player.vel.x *= 0.5;
+    return;
+  }
+
+  if (raceState === 'RACING') {
+    if (player.state === 'BLOCK') {
+      const react = (performance.now() - raceStartTime) / 1000;
+      executeDive(player);
+      if (react < 0.22) {
+        showToast('PERFECT DIVE! (' + react.toFixed(2) + 's)', 'perfect');
+        feed('Lane 4: Rocket dive reaction ' + react.toFixed(2) + 's!', 'lead');
+        player.vel.x = 6.6;
+      } else {
+        showToast('GOOD DIVE (' + react.toFixed(2) + 's)', 'great');
+      }
+      return;
+    }
+
+    if (player.state === 'TURN_APPROACH') {
+      executeTurn(player);
+      return;
+    }
+
+    if (player.state === 'SWIM') {
+      strokeTotalHits++;
+      if (strokeRhythm >= 0.62 && strokeRhythm <= 0.88) {
+        strokeAccuracyHits++;
+        showToast('PERFECT STROKE!', 'perfect');
+        player.vel.x += player.dir * 1.55;
+        triggerSplash(player.pos.x, -0.1, player.pos.z, 0.8);
+      } else if (strokeRhythm > 0.45 && strokeRhythm < 0.62) {
+        showToast('EARLY', 'early');
+        player.vel.x += player.dir * 0.75;
+      } else {
+        showToast('LATE', 'late');
+        player.vel.x += player.dir * 0.55;
+      }
+    }
+  }
+}
+
+function executeTurn(sw) {
+  sw.state = 'STREAMLINE';
+  sw.dir = -1;
+  sw.lap = 2;
+  sw.pos.x = X_END - 0.5;
+  sw.vel.set(-5.8, 0, 0);
+  sw.group.rotation.y = Math.PI;
+  playTurnThud();
+  triggerSplash(X_END, -0.1, sw.pos.z, 1.8);
+  if (sw === player) {
+    showToast('CLEAN FLIP TURN!', 'turn');
+    feed('Lane 4 executes crisp tumble turn!', 'turn');
+  }
+}
+
+/* ============================ SWIMMERS PHYSICAL UPDATE ============================ */
+function updateSwimmer(sw, dt) {
+  if (sw.state === 'BLOCK') return;
+
+  if (sw.state === 'DIVE') {
+    sw.vel.y -= 9.81 * dt;
+    sw.pos.addScaledVector(sw.vel, dt);
+    sw.group.position.copy(sw.pos);
+    sw.bodyRoot.rotation.z = Math.atan2(sw.vel.y, Math.abs(sw.vel.x)) * sw.dir;
+
+    if (sw.pos.y <= -0.2) {
+      sw.state = 'STREAMLINE';
+      sw.pos.y = -0.35;
+      sw.vel.y = 0;
+      sw.bodyRoot.rotation.z = 0;
+      triggerSplash(sw.pos.x, -0.1, sw.pos.z, 1.2);
+    }
+    return;
+  }
+
+  if (sw.state === 'STREAMLINE') {
+    sw.pos.x += sw.vel.x * dt;
+    sw.vel.x *= Math.exp(-0.85 * dt);
+    sw.pos.y = -0.32 + Math.sin(performance.now() * 0.012) * 0.08;
+    sw.group.position.copy(sw.pos);
+
+    sw.legL.rotation.z = Math.sin(performance.now() * 0.015) * 0.55;
+    sw.legR.rotation.z = sw.legL.rotation.z;
+
+    const distFromWall = sw.dir === 1 ? (sw.pos.x - X_START) : (X_END - sw.pos.x);
+    if (distFromWall > 11.0 || Math.abs(sw.vel.x) < 2.0) {
+      sw.state = 'SWIM';
+      sw.pos.y = -0.12;
+      triggerSplash(sw.pos.x, -0.1, sw.pos.z, 0.9);
+      if (sw === player) feed('Lane 4 breaks out to surface!');
+    }
+    return;
+  }
+
+  if (sw.state === 'SWIM') {
+    sw.pos.y = -0.12;
+
+    if (sw !== player) {
+      sw.strokePhase += (3.8 * sw.speedSkill) * dt;
+      if (Math.sin(sw.strokePhase) > 0.92) {
+        sw.vel.x += sw.dir * (1.1 + Math.random() * 0.25);
+        if (Math.random() < 0.25) triggerSplash(sw.pos.x, -0.1, sw.pos.z, 0.4);
+      }
+    }
+
+    const dragCoeff = 0.95;
+    sw.vel.x -= sw.vel.x * Math.abs(sw.vel.x) * 0.18 * dt;
+    sw.vel.x *= Math.exp(-dragCoeff * dt);
+
+    sw.pos.x += sw.vel.x * dt;
+    sw.group.position.copy(sw.pos);
+
+    const cycle = sw === player ? (strokeRhythm * Math.PI * 2) : sw.strokePhase;
+    if (strokeType === 'free') {
+      sw.armL.rotation.z = Math.sin(cycle) * 1.6;
+      sw.armR.rotation.z = Math.sin(cycle + Math.PI) * 1.6;
+      sw.bodyRoot.rotation.x = Math.sin(cycle) * 0.35;
+      sw.headGroup.rotation.y = Math.sin(cycle) > 0.6 ? 0.7 : 0;
+      sw.legL.rotation.z = Math.sin(cycle * 4) * 0.45;
+      sw.legR.rotation.z = Math.sin(cycle * 4 + Math.PI) * 0.45;
+    } else if (strokeType === 'fly') {
+      sw.armL.rotation.z = Math.sin(cycle) * 1.8;
+      sw.armR.rotation.z = sw.armL.rotation.z;
+      sw.bodyRoot.rotation.z = Math.cos(cycle) * 0.3;
+      sw.legL.rotation.z = Math.sin(cycle * 2) * 0.6;
+      sw.legR.rotation.z = sw.legL.rotation.z;
+    } else if (strokeType === 'breast') {
+      sw.armL.rotation.y = Math.sin(cycle) * 0.9;
+      sw.armR.rotation.y = -sw.armL.rotation.y;
+      sw.legL.rotation.y = Math.cos(cycle) * 0.6;
+      sw.legR.rotation.y = -sw.legL.rotation.y;
+    } else if (strokeType === 'back') {
+      sw.bodyRoot.rotation.z = Math.PI;
+      sw.armL.rotation.z = -Math.sin(cycle) * 1.6;
+      sw.armR.rotation.z = -Math.sin(cycle + Math.PI) * 1.6;
+      sw.legL.rotation.z = Math.sin(cycle * 4) * 0.45;
+      sw.legR.rotation.z = Math.sin(cycle * 4 + Math.PI) * 0.45;
+    }
+
+    if (sw.dir === 1) {
+      sw.distSwum = Math.min(POOL_L, sw.pos.x - X_START);
+      if (sw.distSwum >= 25.0 && !sw.split25) {
+        sw.split25 = raceElapsed;
+      }
+      if (sw.pos.x >= X_END - 3.2) {
+        if (raceFormat === '100' && sw.lap === 1) {
+          if (sw === player) {
+            player.state = 'TURN_APPROACH';
+            showToast('TURN! [SPACE/SHIFT]', 'turn');
+          } else {
+            executeTurn(sw);
+          }
+        } else if (raceFormat === '50' || (raceFormat === '100' && sw.lap === 2)) {
+          handleSwimmerFinish(sw);
+        }
+      }
+    } else {
+      sw.distSwum = POOL_L + Math.min(POOL_L, X_END - sw.pos.x);
+      if (sw.pos.x <= X_START + 0.8) {
+        handleSwimmerFinish(sw);
+      }
+    }
+  }
+}
+
+function handleSwimmerFinish(sw) {
+  if (sw.state === 'FINISHED') return;
+  sw.state = 'FINISHED';
+  sw.finishTime = raceElapsed;
+  sw.vel.set(0, 0, 0);
+  triggerSplash(sw.pos.x, -0.1, sw.pos.z, 1.5);
+  playTurnThud();
+
+  const ranked = swimmers.filter(s => s.finishTime !== null).sort((a, b) => a.finishTime - b.finishTime);
+  const myRank = ranked.indexOf(sw) + 1;
+  feed(`Lane ${sw.lane} (${sw.country}) touched in ${sw.finishTime.toFixed(2)}s - Rank ${myRank}!`, sw === player ? 'finish' : '');
+
+  if (sw === player) {
+    playFinishChime();
+    handleRaceComplete(myRank);
+  }
+}
+
+function handleRaceComplete(playerRank) {
+  raceState = 'OVER';
+  const medals = ['🥇 GOLD MEDAL!', '🥈 SILVER MEDAL!', '🥉 BRONZE MEDAL!', '4th Place', '5th Place', '6th Place', '7th Place', '8th Place'];
+  const podiums = ['🥇', '🥈', '🥉', '🏊', '🏊', '🏊', '🏊', '🏊'];
+
+  $('ovTitle').textContent = medals[playerRank - 1] || 'RACE COMPLETE';
+  $('ovPodium').textContent = podiums[playerRank - 1] || '🏊';
+  $('ovBody').textContent = `Incredible swim! You finished ${playerRank}${playerRank === 1 ? 'st' : playerRank === 2 ? 'nd' : playerRank === 3 ? 'rd' : 'th'} in the ${raceFormat}m ${strokeType.toUpperCase()} challenge!`;
+  
+  $('ovReact').textContent = (player.reactTime || 0.22).toFixed(2) + 's';
+  $('ovSplit25').textContent = (player.split25 || (player.finishTime * 0.48)).toFixed(2) + 's';
+  $('ovFinal').textContent = player.finishTime.toFixed(2) + 's';
+  const accPct = strokeTotalHits > 0 ? Math.round((strokeAccuracyHits / strokeTotalHits) * 100) : 85;
+  $('ovAcc').textContent = accPct + '%';
+  $('ovStamp').textContent = '0x' + Math.random().toString(16).slice(2, 10) + '...' + Math.random().toString(16).slice(2, 6);
+
+  setTimeout(() => {
+    $('over').classList.add('show');
+  }, 1200);
+}
+
+/* ============================ CAMERA & VIEW CONTROLS ============================ */
+function setCameraMode(mode) {
+  camMode = mode;
+  const aspect = viewW / viewH;
+  if (mode === 'island') {
+    tvCamTarget.set(0, 0, 0);
+    tvCamPos.set(ISO_DIST * 0.7071, ISO_DIST * 0.8165, ISO_DIST * 0.7071);
+    camera.position.copy(tvCamPos);
+    camera.lookAt(tvCamTarget);
+    const frustum = 85.0;
+    camera.left = -frustum * aspect / 2; camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2; camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  } else if (mode === 'over') {
+    tvCamTarget.set(player.pos.x, 0, 0);
+    camera.position.set(player.pos.x, 42, 0.01);
+    camera.lookAt(player.pos.x, 0, 0);
+    const frustum = 30.0;
+    camera.left = -frustum * aspect / 2; camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2; camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  } else if (mode === 'turn') {
+    tvCamTarget.set(X_END - 2.0, 0, 0);
+    camera.position.set(X_END - 8.0, 14.0, 18.0);
+    camera.lookAt(tvCamTarget);
+    const frustum = 24.0;
+    camera.left = -frustum * aspect / 2; camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2; camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  } else {
+    // TV Follow: Looking from South (+Z) towards North (-Z) across the lanes
+    tvCamTarget.set(player.pos.x + 3.0 * player.dir, 0, 0);
+    tvCamPos.set(player.pos.x - 8.0 * player.dir, 16.0, 22.0);
+    camera.position.copy(tvCamPos);
+    camera.lookAt(tvCamTarget);
+    const frustum = 28.0;
+    camera.left = -frustum * aspect / 2; camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2; camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  }
+}
+
+function updateCamera(dt) {
+  const aspect = viewW / viewH;
+  if (camMode === 'tv') {
+    const targetX = player.pos.x + 3.0 * player.dir;
+    tvCamTarget.lerp(new V3(targetX, 0, 0), Math.min(1.0, dt * 4.5));
+    const camTarget = new V3(player.pos.x - 8.0 * player.dir, 16.0, 22.0);
+    tvCamPos.lerp(camTarget, Math.min(1.0, dt * 4.0));
+    camera.position.copy(tvCamPos);
+    camera.lookAt(tvCamTarget);
+    const frustum = 28.0;
+    camera.left = -frustum * aspect / 2; camera.right = frustum * aspect / 2;
+    camera.top = frustum / 2; camera.bottom = -frustum / 2;
+    camera.updateProjectionMatrix();
+  } else if (camMode === 'over') {
+    camera.position.x = lerp(camera.position.x, player.pos.x, dt * 5.0);
+    camera.lookAt(camera.position.x, 0, 0);
+  }
+}
+
+function cycleCamera() {
+  const modes = ['tv', 'over', 'turn', 'island'];
+  const next = modes[(modes.indexOf(camMode) + 1) % modes.length];
+  setCameraMode(next);
+  document.querySelectorAll('[data-g=cam] button').forEach(b => b.classList.toggle('on', b.dataset.v === next));
+}
+
+/* ============================ DOLL'S-HOUSE LIFTS ============================ */
+function updateLifts(dt) {
+  const targetStands = liftState.stands ? 8.0 : 0.0;
+  standsGroup.position.y = lerp(standsGroup.position.y, targetStands, dt * 4.0);
+
+  const targetClub = liftState.club ? 9.5 : 0.0;
+  clubhouseGroup.position.y = lerp(clubhouseGroup.position.y, targetClub, dt * 3.5);
+
+  const targetBlocks = liftState.blocks ? 3.5 : 0.0;
+  blocksGroup.position.y = lerp(blocksGroup.position.y, targetBlocks, dt * 5.0);
+}
+
+/* ============================ ENVIRONMENT & TIME OF DAY ============================ */
+function setTimeOfDay(tod) {
+  const t = TOD[tod];
+  scene.background.set(t.bg);
+  hemiLight.color.set(t.sky);
+  hemiLight.groundColor.set(t.gnd);
+  hemiLight.intensity = t.hemiI;
+  sunLight.color.set(t.sun);
+  sunLight.intensity = t.sunI;
+  floodLights.forEach(fl => fl.intensity = t.flood);
+  underLamps.forEach(ul => ul.intensity = tod === 'night' ? 1.4 : (tod === 'dusk' ? 0.9 : 0.4));
+}
+
+/* ============================ JUMBOTRON RENDERER ============================ */
+function updateJumbotron() {
+  jCtx.fillStyle = '#090d14';
+  jCtx.fillRect(0, 0, 512, 192);
+  jCtx.strokeStyle = '#39b2de';
+  jCtx.lineWidth = 4;
+  jCtx.strokeRect(4, 4, 504, 184);
+
+  jCtx.font = 'bold 20px "SF Mono", monospace';
+  jCtx.fillStyle = '#39b2de';
+  jCtx.fillText('★ HIVE AQUATICS ARENA ★', 20, 32);
+
+  jCtx.fillStyle = '#f5b32e';
+  jCtx.fillText(`${raceFormat}m ${strokeType.toUpperCase()}`, 340, 32);
+
+  jCtx.font = 'bold 36px "SF Mono", monospace';
+  jCtx.fillStyle = '#7ee787';
+  const t = Math.max(0, raceElapsed);
+  const sec = Math.floor(t);
+  const ms = Math.floor((t % 1) * 100);
+  const timeStr = `${sec < 10 ? '0' + sec : sec}.${ms < 10 ? '0' + ms : ms}`;
+  jCtx.fillText(`TIME: ${timeStr}s`, 20, 78);
+
+  jCtx.font = '14px "SF Mono", monospace';
+  jCtx.fillStyle = '#f4f7fc';
+  for (let i = 0; i < 4; i++) {
+    const sw = swimmers[i * 2 + 1];
+    jCtx.fillText(`L${sw.lane} ${sw.country}: ${sw.distSwum.toFixed(1)}m`, 20 + (i % 2) * 240, 115 + Math.floor(i / 2) * 26);
+  }
+
+  for (let b = 0; b < 12; b++) {
+    const bh = 10 + Math.sin(performance.now() * 0.008 + b) * 20;
+    jCtx.fillStyle = b % 2 === 0 ? '#39b2de' : '#e04568';
+    jCtx.fillRect(360 + b * 10, 170 - bh, 6, bh);
+  }
+
+  jTex.needsUpdate = true;
+}
+
+/* ============================ RESIZE & DASHBOARD TOGGLE ============================ */
+function resize() {
+  viewW = window.innerWidth;
+  viewH = window.innerHeight;
+  renderer.setSize(viewW, viewH);
+  rtW = Math.max(1, Math.floor(viewW / pixelSize));
+  rtH = Math.max(1, Math.floor(viewH / pixelSize));
+  rt.setSize(rtW, rtH);
+  postMat.uniforms.uLowRes.value.set(rtW, rtH);
+  setCameraMode(camMode);
+}
+
+function toggleDashboard() {
+  const panel = $('panel');
+  const btn = $('menuBtn');
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  btn.innerHTML = isOpen ? '✕ Close' : '☰ Dashboard';
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeDashboard() {
+  const panel = $('panel');
+  const btn = $('menuBtn');
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    btn.innerHTML = '☰ Dashboard';
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+/* ============================ EVENT LISTENERS ============================ */
+window.addEventListener('resize', resize);
+
+window.addEventListener('keydown', e => {
+  initAudio();
+  if (e.key === ' ') {
+    e.preventDefault();
+    triggerPlayerAction();
+  }
+  if (e.key === 'Shift') {
+    e.preventDefault();
+    if (player.state === 'SWIM' && player.surgeStamina > 0.1) {
+      player.vel.x += player.dir * 0.9;
+      player.surgeStamina -= 0.15;
+      triggerSplash(player.pos.x, -0.1, player.pos.z, 0.9);
+    } else {
+      triggerPlayerAction();
+    }
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    toggleDashboard();
+  }
+  if (e.key === 'Escape') {
+    closeDashboard();
+  }
+  if (e.key === 'c' || e.key === 'C') cycleCamera();
+  if (e.key === 'p' || e.key === 'P') togglePause();
+  if (e.key === 'n' || e.key === 'N') startNewRace();
+  if (e.key === '1') setDistance('50');
+  if (e.key === '2') setDistance('100');
+  if (e.key === '3') setDistance('stroke');
+});
+
+canvas.addEventListener('pointerdown', e => {
+  if ($('panel').classList.contains('open')) {
+    closeDashboard();
+    return;
+  }
+  triggerPlayerAction();
+});
+
+$('menuBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  toggleDashboard();
+});
+$('closePanelBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  closeDashboard();
+});
+$('panel').addEventListener('pointerdown', e => {
+  e.stopPropagation();
+});
+
+// Mobile Touch Buttons
+$('tStroke').addEventListener('touchstart', e => {
+  e.preventDefault();
+  $('tStroke').classList.add('active');
+  triggerPlayerAction();
+});
+$('tStroke').addEventListener('touchend', e => {
+  e.preventDefault();
+  $('tStroke').classList.remove('active');
+});
+$('tSurge').addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (player.state === 'SWIM' && player.surgeStamina > 0.1) {
+    player.vel.x += player.dir * 0.9;
+    player.surgeStamina -= 0.15;
+    triggerSplash(player.pos.x, -0.1, player.pos.z, 0.9);
+  } else {
+    triggerPlayerAction();
+  }
+});
+$('tCam').addEventListener('touchstart', e => {
+  e.preventDefault();
+  cycleCamera();
+});
+
+// UI Panel Bindings
+function setDistance(dst) {
+  raceFormat = dst;
+  document.querySelectorAll('[data-g=dist] button').forEach(b => b.classList.toggle('on', b.dataset.v === dst));
+  $('sbFmt').textContent = `${raceFormat}m ${strokeType.toUpperCase()}`;
+  startNewRace();
+}
+
+document.querySelectorAll('[data-g=dist] button').forEach(b => {
+  b.addEventListener('click', () => setDistance(b.dataset.v));
+});
+
+document.querySelectorAll('[data-g=stroke] button').forEach(b => {
+  b.addEventListener('click', () => {
+    strokeType = b.dataset.v;
+    document.querySelectorAll('[data-g=stroke] button').forEach(bt => bt.classList.toggle('on', bt === b));
+    $('sbFmt').textContent = `${raceFormat}m ${strokeType.toUpperCase()}`;
+    startNewRace();
+  });
+});
+
+document.querySelectorAll('[data-g=rivals] button').forEach(b => {
+  b.addEventListener('click', () => {
+    rivalCount = parseInt(b.dataset.v, 10);
+    document.querySelectorAll('[data-g=rivals] button').forEach(bt => bt.classList.toggle('on', bt === b));
+    swimmers.forEach(sw => {
+      if (sw === player) return;
+      sw.group.visible = (sw.lane <= rivalCount + 1);
+    });
+  });
+});
+
+document.querySelectorAll('[data-g=tod] button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('[data-g=tod] button').forEach(bt => bt.classList.toggle('on', bt === b));
+    setTimeOfDay(b.dataset.v);
+  });
+});
+
+document.querySelectorAll('[data-g=cam] button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('[data-g=cam] button').forEach(bt => bt.classList.toggle('on', bt === b));
+    setCameraMode(b.dataset.v);
+  });
+});
+
+document.querySelectorAll('[data-g=speed] button').forEach(b => {
+  b.addEventListener('click', () => {
+    gameSpeed = parseFloat(b.dataset.v);
+    document.querySelectorAll('[data-g=speed] button').forEach(bt => bt.classList.toggle('on', bt === b));
+  });
+});
+
+document.querySelectorAll('[data-g=lift] button').forEach(b => {
+  b.addEventListener('click', () => {
+    const k = b.dataset.v;
+    liftState[k] = !liftState[k];
+    b.classList.toggle('on', liftState[k]);
+  });
+});
+
+$('bPause').addEventListener('click', togglePause);
+$('bNew').addEventListener('click', startNewRace);
+$('ovNew').addEventListener('click', startNewRace);
+
+$('bSound').addEventListener('click', function() {
+  soundOn = !soundOn;
+  this.textContent = 'Sound: ' + (soundOn ? 'On' : 'Off');
+  if (soundOn) initAudio();
+});
+
+$('bDirect').addEventListener('click', function() {
+  isDirectRender = true;
+  this.classList.add('on');
+  $('bPost').classList.remove('on');
+  $('sbDbg').textContent = 'Debug: Direct Render';
+});
+
+$('bPost').addEventListener('click', function() {
+  isDirectRender = false;
+  this.classList.add('on');
+  $('bDirect').classList.remove('on');
+  $('sbDbg').textContent = 'Post: OKLab + Dither';
+});
+
+$('pxSize').addEventListener('input', e => {
+  pixelSize = parseInt(e.target.value, 10);
+  $('pxVal').textContent = pixelSize + ' px';
+  resize();
+});
+
+function togglePause() {
+  isPaused = !isPaused;
+  $('pausedTag').style.display = isPaused ? 'block' : 'none';
+  $('bPause').textContent = isPaused ? 'Resume' : 'Pause';
+}
+
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  document.body.classList.add('touch');
+}
+
+/* ============================ MAIN ANIMATION & GAME LOOP ============================ */
+resize();
+setCameraMode('tv');
+startNewRace();
+
+let lastTime = performance.now();
+let fpsCount = 0, fpsTimer = performance.now();
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.1, (now - lastTime) / 1000) * (isPaused ? 0 : gameSpeed);
+  lastTime = now;
+
+  fpsCount++;
+  if (now - fpsTimer >= 1000) {
+    $('stats').textContent = `[${isDirectRender ? 'Debug: Direct Render' : 'OKLab Post'}] · CAM: ${camMode.toUpperCase()} · LANE 4 · STROKE: ${strokeType.toUpperCase()} · FPS: ${fpsCount}`;
+    fpsCount = 0;
+    fpsTimer = now;
+  }
+
+  if (raceState === 'RACING' && !isPaused) {
+    raceElapsed = Math.max(0, (now - raceStartTime) / 1000);
+    const sec = Math.floor(raceElapsed);
+    const ms = Math.floor((raceElapsed % 1) * 100);
+    const secStr = sec < 10 ? '0' + sec : String(sec);
+    const msStr = ms < 10 ? '0' + ms : String(ms);
+    $('sbMain').textContent = `${secStr}:${msStr}`;
+
+    const active = swimmers.filter(s => s.group.visible);
+    active.sort((a, b) => b.distSwum - a.distSwum);
+    const myRank = active.indexOf(player) + 1;
+    $('sbRank').textContent = `RANK: ${myRank} / ${active.length}`;
+    $('sbDist').textContent = `${player.distSwum.toFixed(1)}m / ${raceFormat === '100' ? '100' : '50'}m`;
+
+    strokeRhythm = (strokeRhythm + dt * (strokeType === 'fly' ? 1.1 : 1.35)) % 1.0;
+    $('strokeNeedle').style.left = (strokeRhythm * 100) + '%';
+
+    player.surgeStamina = Math.min(1.0, player.surgeStamina + dt * 0.08);
+    $('surgeFill').style.width = (player.surgeStamina * 100) + '%';
+  }
+
+  swimmers.forEach(sw => updateSwimmer(sw, dt));
+
+  const posAttr = splashGeo.attributes.position;
+  for (let i = 0; i < SPLASH_MAX; i++) {
+    if (splashVel[i].y > -9.0) {
+      splashPos[i * 3] += splashVel[i].x * dt;
+      splashPos[i * 3 + 1] += splashVel[i].y * dt;
+      splashPos[i * 3 + 2] += splashVel[i].z * dt;
+      splashVel[i].y -= 9.81 * dt;
+      if (splashPos[i * 3 + 1] <= -0.15) {
+        splashVel[i].set(0, -10, 0);
+        splashPos[i * 3 + 1] = -10;
+      }
+    }
+  }
+  posAttr.needsUpdate = true;
+
+  const pos = waterGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const vx = pos.getX(i);
+    const vy = pos.getY(i);
+    const wave = Math.sin(vx * 0.4 + now * 0.003) * Math.cos(vy * 0.4 + now * 0.002) * 0.08;
+    pos.setZ(i, wave);
+  }
+  pos.needsUpdate = true;
+
+  const d = new Date();
+  const hrs = d.getHours() % 12 + d.getMinutes() / 60;
+  const mins = d.getMinutes() + d.getSeconds() / 60;
+  hourHand.rotation.x = -hrs * (Math.PI / 6);
+  minHand.rotation.x = -mins * (Math.PI / 30);
+
+  updateLifts(dt);
+  updateCamera(dt);
+  updateJumbotron();
+
+  if (isDirectRender) {
+    renderer.setRenderTarget(null);
+    renderer.render(scene, camera);
+  } else {
+    renderer.setRenderTarget(rt);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(postScene, postCam);
+  }
+}
+
+requestAnimationFrame(animate);
+
+})();
+</script>
+</body>
+</html>

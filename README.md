@@ -1,14 +1,24 @@
-# Hive Pitch Challenge // HiveKey Arena
+# HiveKey Arena // Pixel-Art 3D Sports Suite
 
-> A single-file HTML5 pixel-art 3D diorama soccer skill challenge game on a floating island club stadium. Built with **three.js r128** from cdnjs, inline WebGL GLSL shaders, zero external assets, and procedural audio.
+> Single-file HTML5 pixel-art 3D diorama sports challenges on floating voxel islands. Built with **three.js r128** from cdnjs, inline WebGL shaders, zero external assets, and procedural Web Audio.
 
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_Game-black?logo=vercel)](https://hive-style-lock.vercel.app)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_Arena-black?logo=vercel)](https://hive-style-lock.vercel.app)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-cornishlikeadam%2Fhive--style--lock-181717?logo=github)](https://github.com/cornishlikeadam/hive-style-lock)
 [![Three.js](https://img.shields.io/badge/three.js-r128-black?logo=three.js)](https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js)
-[![Color Space](https://img.shields.io/badge/OKLab-90--Color_Palette-2ea043)](#oklab-bayer-dither)
-[![Post-Process](https://img.shields.io/badge/Post--Process-Depth_Outlines-39b2de)](#depth-outlines)
 
 ---
+
+## 🏆 Arena Games
+
+| Sport | Title | Route | Description |
+|---|---|---|---|
+| ⚽ Soccer | **Hive Pitch Challenge** | [`/`](/) &middot; [`/pitch`](/pitch) | Penalty shootout (5 kicks), curling free-kick challenge, and 1v1 finish with realistic goalkeeper AI. |
+| 🥍 Lacrosse | **Hive Stick Challenge** | [`/lacrosse`](/lacrosse) | Shooting accuracy around crease, passing relay on routes, and 1v1 dodge & shoot vs defender and keeper. |
+| 🏊 Swimming | **Hive Lane Challenge** | [`/swim`](/swim) &middot; [`/lane`](/lane) | 50m sprint, 100m turn race, and stroke timing challenge in an Olympic pool with 7 AI rivals. |
+
+---
+
+## Hive Pitch Challenge (Soccer)
 
 ## Game Formats
 
