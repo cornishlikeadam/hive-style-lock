@@ -151,6 +151,16 @@ body[data-playmode="view"] #touch{display:none!important}
 #over p{color:var(--dim);margin:10px 0 16px;line-height:1.6;font-family:var(--mono);font-size:11px}
 #over .stars{font-size:28px;color:var(--gold);letter-spacing:4px;margin-bottom:6px}
 
+/* Mode selector (Match vs Drills) */
+#modeBar{position:fixed;top:12px;left:12px;z-index:12;display:flex;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel);box-shadow:0 4px 16px rgba(0,0,0,.45)}
+#modeBar button{padding:8px 14px;font:700 11px var(--mono);letter-spacing:1px;text-transform:uppercase;color:var(--dim);background:transparent;border:0;cursor:pointer;transition:all .15s}
+#modeBar button+button{border-left:1px solid var(--line)}
+#modeBar button:hover{color:var(--tx);background:rgba(255,255,255,.06)}
+#modeBar button.on{background:var(--acc);color:#0d1117}
+body[data-mode=match] .drillsOnly{display:none!important}
+body[data-mode=drills] .matchOnly{display:none!important}
+#mTeams{top:46px;left:12px;font-size:11px;color:var(--dim);background:rgba(9,13,20,.75);padding:4px 10px;border-radius:4px;letter-spacing:.5px}
+body[data-mode=drills] #mTeams{display:none}
 @media (max-width:768px){
   body[data-playmode="play"] #touch{display:block}
   #navPills{top:8px;left:8px;gap:3px}
@@ -169,6 +179,56 @@ body[data-playmode="view"] #touch{display:none!important}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style id="hk-theme">
+/* ===== SCAD Bee Olympics theme (shared) ===== */
+#hkIntro{position:fixed;inset:0;z-index:100000;background-color:#070604;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;transition:opacity .9s ease;cursor:pointer;touch-action:none}
+#hkIntro.fade{opacity:0;pointer-events:none}
+#hkIntroTr,#hkIntroCv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+#hkIntro .hk-scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,209,0,.07) 0 1px,transparent 1px 4px);mix-blend-mode:screen}
+#hkIntro .hk-scan::after{content:"";position:absolute;left:0;right:0;height:22%;top:-22%;background:linear-gradient(to bottom,transparent,rgba(255,209,0,.10),transparent);animation:hkBeam 3.2s linear infinite}
+@keyframes hkBeam{to{top:100%}}
+#hkIntro .hk-center{position:relative;text-align:center;font-family:"SF Mono","JetBrains Mono",Consolas,Menlo,monospace;display:flex;flex-direction:column;gap:14px;padding:0 16px}
+#hkIntro .hk-l1,#hkIntro .hk-l2{color:#FFD100;font-weight:800;text-transform:uppercase;opacity:0;transform:translateY(8px) scale(.98);letter-spacing:.5em;
+  text-shadow:0 0 14px rgba(255,209,0,.55),2px 0 rgba(255,60,90,.5),-2px 0 rgba(60,220,255,.45);transition:opacity .8s ease,transform .8s ease,letter-spacing 1.2s ease}
+#hkIntro .hk-l1{font-size:clamp(14px,2.2vw,26px)}
+#hkIntro .hk-l2{font-size:clamp(24px,5.4vw,64px);color:#fff4b0}
+#hkIntro .hk-l1.on,#hkIntro .hk-l2.on{opacity:1;transform:none;letter-spacing:.18em;animation:hkGlitch 2.6s steps(1) infinite}
+#hkIntro .hk-l2.on{animation-delay:.9s}
+@keyframes hkGlitch{0%,90%,100%{transform:translateX(0);clip-path:none}91%{transform:translateX(-4px);clip-path:inset(18% 0 52% 0)}93%{transform:translateX(4px);clip-path:inset(60% 0 8% 0)}95%{transform:translateX(0);clip-path:none}}
+#hkIntro .hk-skip{position:absolute;bottom:22px;left:0;right:0;text-align:center;font:600 12px "SF Mono",Consolas,monospace;letter-spacing:1.5px;color:rgba(255,209,0,.6)}
+
+#hkLogo{position:fixed;z-index:4;pointer-events:none;display:flex;align-items:center;gap:8px;opacity:.9;padding:4px 12px 4px 8px;background:rgba(10,9,7,.74);border:1px solid rgba(255,209,0,.38);border-radius:6px;
+  font:800 11px "SF Mono","JetBrains Mono",Consolas,Menlo,monospace;letter-spacing:2px;line-height:1.25;color:#FFD100;
+  filter:drop-shadow(0 0 8px rgba(255,209,0,.45));text-shadow:1px 0 rgba(255,70,70,.35),-1px 0 rgba(70,220,255,.3);animation:hkHolo 6s steps(1) infinite}
+#hkLogo::after{content:"";position:absolute;inset:-2px;pointer-events:none;background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(255,209,0,.12) 2px 3px);mix-blend-mode:screen}
+@keyframes hkHolo{0%,94%,100%{transform:none;opacity:.88}95%{transform:translateX(-2px);opacity:.55}97%{transform:translateX(2px);opacity:.95}}
+body[data-game=pitch] #hkLogo{top:78px;left:12px}
+body[data-game=lacrosse] #hkLogo{bottom:60px;left:16px}
+@media (max-width:768px){body[data-game=pitch] #hkLogo{display:none}body[data-game=lacrosse] #hkLogo{bottom:96px;left:8px}}
+@media (prefers-reduced-motion:reduce){#hkLogo,#hkIntro .hk-l1.on,#hkIntro .hk-l2.on,#hkIntro .hk-scan::after{animation:none}}
+
+/* pitch: yellow / black overrides */
+:root{--bg:#0a0907;--panel:rgba(12,10,6,.93);--line:rgba(255,209,0,.30);--acc:#FFD100;--acc-glow:rgba(255,209,0,.38);--cy:#FFD100;--gold:#FFD100;--tx:#f7efd6;--dim:#b3a272}
+#sbFmt{background:#FFD100;color:#0a0907}
+.seg button.on,.btn.on,#modeBar button.on{color:#0a0907;border-color:#ffe566}
+.btn.big{background:#14110a;border-color:#FFD100;color:#FFD100}
+.btn.big:hover{background:#FFD100;color:#0a0907}
+#powerFill{background:linear-gradient(90deg,#8a6d12,#FFD100 70%,#fff3a8)}
+#sweet{border-color:#FFD100;background:rgba(255,209,0,.2)}
+#feed li{border-left-color:#FFD100}
+#feed li.goal{border-color:#FFD100;color:#fff3a8}
+#feed li.save{border-color:#c29600;color:#FFD100}
+#toast.goal{color:#fff3a8}
+#over h2,#over .stars{color:#FFD100}
+#panel h1::before,#menuBtn::before{background:#FFD100;box-shadow:0 0 6px #FFD100}
+#hint{border:1px solid rgba(255,209,0,.25)}
+#modeBar button,#mTeams,.lbl,.keys,#stats{font-size:11px}
+#modeBar{top:46px}
+#mTeams{top:80px}
+body[data-game=pitch] #hkLogo{top:112px}
+.sport-pill.active{background:rgba(255,209,0,.18);border-color:#FFD100;box-shadow:0 0 10px rgba(255,209,0,.35)}
+.sport-pill.active::before{background:#FFD100;box-shadow:0 0 6px #FFD100}
+</style>
 </head>
 <body data-mode="match" data-playmode="play">
 <canvas id="c"></canvas>
@@ -332,19 +392,22 @@ const KEEPER = {
 };
 const FORMATS = { pen: { label: 'PENALTIES', kicks: 5 }, fk: { label: 'FREE KICKS', time: 60 }, ovo: { label: '1v1 FINISH', time: 30 } };
 const TOD = {
-  day:   { bg: '#8ec0f8', sun: 0xfff4e0, sunI: 1.15, sunDir: [-0.35, 1, 0.5],  sky: 0xbfd8ff, gnd: 0x3d4a36, hemiI: 0.55, flood: 0,   lamp: '#5c6d8f', win: 0.0, hour: 14 },
-  dusk:  { bg: '#371247', sun: 0xf06810, sunI: 0.95, sunDir: [-1, 0.32, 0.3],  sky: 0x8d37aa, gnd: 0x382415, hemiI: 0.45, flood: 0.9, lamp: '#ffeed1', win: 0.75, hour: 18.6 },
-  night: { bg: '#061124', sun: 0x6ba4f8, sunI: 0.35, sunDir: [0.4, 1, -0.3],   sky: 0x18396e, gnd: 0x090d14, hemiI: 0.3,  flood: 2.0, lamp: '#ffffff', win: 1.0, hour: 21.5 }
+  day:   { bg: '#f0d577', sun: 0xfff4e0, sunI: 1.15, sunDir: [-0.35, 1, 0.5],  sky: 0xfff3c9, gnd: 0x4a4224, hemiI: 0.55, flood: 0,   lamp: '#5c6d8f', win: 0.0, hour: 14 },
+  dusk:  { bg: '#b8530a', sun: 0xffa31a, sunI: 0.95, sunDir: [-1, 0.32, 0.3],  sky: 0xffb84d, gnd: 0x3a1d08, hemiI: 0.45, flood: 0.9, lamp: '#ffeed1', win: 0.75, hour: 18.6 },
+  night: { bg: '#0b0a06', sun: 0xffe9a8, sunI: 0.35, sunDir: [0.4, 1, -0.3],   sky: 0x8a7424, gnd: 0x0a0907, hemiI: 0.3,  flood: 2.0, lamp: '#ffffff', win: 1.0, hour: 21.5 }
 };
 
 /* ============ 90-COLOUR HIVEKEY OKLAB PALETTE ============ */
 const PAL90 = [
-  "#090d14","#131924","#1e2636","#2c364c","#414e6a","#5c6d8f","#7f90b3","#a8b8d8","#d1dcf0","#f4f7fc",
-  "#072412","#0d381c","#144f28","#1c6936","#258444","#2ea043","#3ebc56","#56d364","#7ee787","#133827","#1b4d37","#256549","#317f5d","#409b72","#55b98a","#96e3b8",
-  "#27130a","#3d1e10","#582b17","#763a1f","#964b28","#b75c32","#d96f3e","#e88554","#f49f75","#382415","#51351e","#6d4729","#8d5d36","#ae7445","#cf8d56","#ebd0ad",
-  "#061124","#0b1c3a","#112952","#18396e","#204a8c","#2a5eac","#3774cd","#4a8cef","#6ba4f8","#082d3f","#0e425c","#165a7b","#1f749c","#2a90be","#39b2de","#9ce5fb",
-  "#28080f","#400e19","#5c1525","#7c1e33","#9f2742","#c33353","#e04568","#ee6584","#f68da6","#230b2e","#371247","#501c64","#6d2785","#8d37aa","#b04ed0","#e097f5",
-  "#2e1c02","#472c03","#633e05","#825207","#a4690a","#c7810e","#ea9c13","#f5b32e","#fbca5b","#3b1602","#5a2203","#7c2f05","#a13e07","#c8500a","#f06810","#ffeed1"
+  "#0a0907","#14110a","#1d1810","#2a2316","#3a311f","#4d4229","#665837","#857347","#a69260","#c9b887",
+  "#e8dcb4","#f7efd6","#08140a","#0f2412","#17381b","#204f26","#2b6a32","#38853e","#4aa04d","#66bb63",
+  "#8fd18a","#1a2d12","#2a4519","#3d6125","#557f33","#79a54a","#2b2100","#3d2e00","#523d00","#6b5000",
+  "#856500","#a37d00","#c29600","#e0ad00","#FFD100","#ffdb33","#ffe566","#ffee99","#fff4c2","#fffbe6",
+  "#b8860b","#d9a521","#f0b429","#c49a1c","#8a6d12","#5c4709","#7a5a0e","#e6c04d","#f7d56a","#a38519",
+  "#cfae35","#dec253","#2a1608","#46250c","#663713","#8a4b18","#b0621f","#d47c2b","#f0993a","#f7b865",
+  "#33200f","#5a3a1a","#7d5527","#a37538","#c79a54","#e3bf86","#f2d9ae","#4d2e12","#28080f","#400e19",
+  "#5c1525","#7c1e33","#9f2742","#c33353","#e04568","#ee6584","#f68da6","#6b1a2a","#0b1c3a","#18396e",
+  "#2a5eac","#4a8cef","#6ba4f8","#165a7b","#39b2de","#9ce5fb","#fffdf5","#d9d3c3","#6e6a5e","#38352c"
 ];
 function toOklab(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -563,25 +626,25 @@ function renderGroundTexture(type) {
   const toV = z => ((z - PZ0) / (PZ1 - PZ0)) * h;
 
   // 1. Base island apron (Stone plaza, gravel run-off, track)
-  gctx.fillStyle = '#2c364c'; // Sideline basalt
+  gctx.fillStyle = '#14110a'; // Sideline basalt
   gctx.fillRect(0, 0, w, h);
 
   // Plaza around clubhouse
-  gctx.fillStyle = '#414e6a';
+  gctx.fillStyle = '#2a2316';
   gctx.fillRect(toU(PX0 + 4), toV(PZ0 + 2), toU(PX1 - 4) - toU(PX0 + 4), toV(-36) - toV(PZ0 + 2));
 
   // Running track / apron around pitch
-  gctx.fillStyle = type === 'clay' ? '#964b28' : '#763a1f'; // Terracotta track
+  gctx.fillStyle = type === 'clay' ? '#5a4516' : '#3a2f12'; // Terracotta track
   const trackPadX = 5, trackPadZ = 3.5;
   gctx.fillRect(toU(-GX - trackPadX), toV(-HW - trackPadZ), toU(GX + trackPadX) - toU(-GX - trackPadX), toV(HW + trackPadZ) - toV(-HW - trackPadZ));
 
   // Technical areas / dugouts
-  gctx.fillStyle = '#39b2de';
+  gctx.fillStyle = '#FFD100';
   gctx.fillRect(toU(-15), toV(-HW - 3.2), toU(-3) - toU(-15), toV(-HW - 0.5) - toV(-HW - 3.2));
   gctx.fillRect(toU(3), toV(-HW - 3.2), toU(15) - toU(3), toV(-HW - 0.5) - toV(-HW - 3.2));
 
   // Garden beds / green borders near clubhouse
-  gctx.fillStyle = '#1c6936';
+  gctx.fillStyle = '#1f4a1d';
   gctx.fillRect(toU(-45), toV(-48), toU(-25) - toU(-45), toV(-42) - toV(-48));
   gctx.fillRect(toU(25), toV(-48), toU(45) - toU(25), toV(-42) - toV(-48));
 
@@ -590,13 +653,13 @@ function renderGroundTexture(type) {
 
   let cPitch1, cPitch2;
   if (type === 'grass') {
-    cPitch1 = '#2ea043'; cPitch2 = '#3ebc56'; // Lush turf stripes
+    cPitch1 = '#2f6f2c'; cPitch2 = '#3a8034'; // Lush turf stripes
   } else if (type === 'clay') {
-    cPitch1 = '#d96f3e'; cPitch2 = '#b75c32'; // Roland Garros clay
+    cPitch1 = '#c9801f'; cPitch2 = '#b06d17'; // Roland Garros clay
   } else if (type === 'hard') {
-    cPitch1 = '#2a5eac'; cPitch2 = '#204a8c'; // US Open hard court
+    cPitch1 = '#2a2316'; cPitch2 = '#1d1810'; // US Open hard court
   } else { // carpet
-    cPitch1 = '#258444'; cPitch2 = '#1c6936'; // Indoor rapid turf
+    cPitch1 = '#2c6e2d'; cPitch2 = '#245c25'; // Indoor rapid turf
   }
 
   // Draw 18 alternating stripes along length
@@ -608,8 +671,8 @@ function renderGroundTexture(type) {
   }
 
   // 3. Regulation White Markings
-  gctx.strokeStyle = '#f4f7fc';
-  gctx.fillStyle = '#f4f7fc';
+  gctx.strokeStyle = '#FFD100';
+  gctx.fillStyle = '#FFD100';
   gctx.lineWidth = Math.max(2, (0.18 / (PX1 - PX0)) * w);
 
   // Touchlines & Goal lines
@@ -687,7 +750,7 @@ islandGroup.add(groundMesh);
 
 // Banded soil strata & voxel skirt under island
 const bedrockGroup = new THREE.Group();
-const strataColors = ['#1e2636', '#2c364c', '#582b17', '#3d1e10', '#131924'];
+const strataColors = ['#14110a', '#2a2316', '#3a2410', '#c29600', '#0a0907'];
 for (let i = 0; i < 5; i++) {
   const depth = 3.6 + i * 4.2;
   const inset = i * 2.2;
@@ -705,7 +768,7 @@ for (let i = 0; i < 5; i++) {
 // Tapering inverted stalactite points
 [-30, 0, 30].forEach(sx => {
   [-10, 10].forEach(sz => {
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(8.0, 18.0, 5), getMat('#090d14'));
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(8.0, 18.0, 5), getMat('#0a0907'));
     tip.rotation.x = Math.PI;
     tip.position.set(sx, -26.0, sz);
     bedrockGroup.add(tip);
@@ -716,12 +779,12 @@ islandGroup.add(bedrockGroup);
 // Floating satellite rocks
 const rocks = [];
 [[-68, -4, -30], [68, -6, 25], [-62, -8, 28], [64, -5, -28]].forEach(([rx, ry, rz], idx) => {
-  const rock = makeBox(4.8, 3.6, 4.8, '#2c364c', rx, ry, rz, islandGroup);
+  const rock = makeBox(4.8, 3.6, 4.8, '#2a2316', rx, ry, rz, islandGroup);
   rocks.push({ mesh: rock, baseY: ry, speed: 0.8 + idx * 0.3 });
 });
 
 // Waterfall over south rim with mist particles
-const waterfallMesh = makeBox(14.0, 24.0, 1.2, getMat('#39b2de', { opacity: 0.85, transparent: true }), 0, -12.0, PZ1 + 0.5, islandGroup, false);
+const waterfallMesh = makeBox(14.0, 24.0, 1.2, getMat('#e0ad00', { opacity: 0.85, transparent: true }), 0, -12.0, PZ1 + 0.5, islandGroup, false);
 
 const mistCount = 40;
 const mistGeo = new THREE.BufferGeometry();
@@ -732,11 +795,12 @@ for (let i = 0; i < mistCount; i++) {
   mistPos[i * 3 + 2] = PZ1 + rnd(1, 6);
 }
 mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
-const mistMat = new THREE.PointsMaterial({ color: 0x9ce5fb, size: 2.2, transparent: true, opacity: 0.6 });
+const mistMat = new THREE.PointsMaterial({ color: 0xffd100, size: 2.2, transparent: true, opacity: 0.6 });
 const mistParticles = new THREE.Points(mistGeo, mistMat);
 islandGroup.add(mistParticles);
 
 scene.add(islandGroup);
+const hkFx = window.hkSceneFx(THREE, scene, { cx: 0, cz: 0, rx: 70, rz: 42, y0: 6, y1: 18, scale: 1.6 });   // tiny voxel bees + light motes
 
 /* ============================ 3D STADIUM ASSETS & DOLL'S-HOUSE LIFTS ============================ */
 // Doll's House Lift Parents
@@ -752,7 +816,7 @@ scene.add(liftGoalsGroup);
 const standPistons = [], clubPistons = [], goalPistons = [];
 function addPistonSet(coords, parentArr) {
   coords.forEach(([px, pz]) => {
-    const base = makeBox(0.8, 2.4, 0.8, '#1e2636', px, 1.2, pz, islandGroup);
+    const base = makeBox(0.8, 2.4, 0.8, '#14110a', px, 1.2, pz, islandGroup);
     const rod = makeBox(0.4, 1.0, 0.4, '#d1dcf0', px, 2.4, pz, islandGroup);
     parentArr.push(rod);
   });
@@ -766,9 +830,9 @@ addPistonSet([[-32, standBaseZ], [32, standBaseZ], [-12, standBaseZ], [12, stand
 const standMesh = new THREE.Group();
 for (let tier = 0; tier < 4; tier++) {
   const stepH = 1.4, stepD = 2.4;
-  makeBox(68.0, stepH, stepD, '#414e6a', 0, tier * stepH + stepH / 2, standBaseZ - 4.0 + tier * stepD, standMesh);
+  makeBox(68.0, stepH, stepD, '#2a2316', 0, tier * stepH + stepH / 2, standBaseZ - 4.0 + tier * stepD, standMesh);
   // Spectator voxels
-  const crowdCols = ['#e04568', '#39b2de', '#f5b32e', '#f4f7fc', '#2ea043'];
+  const crowdCols = ['#FFD100', '#14110a', '#f7efd6', '#c29600', '#2a2316'];
   for (let c = -30; c <= 30; c += 2.2) {
     if (Math.abs(c) % 3 < 2) {
       makeBox(1.1, 1.2, 1.1, crowdCols[(Math.abs(Math.round(c)) + tier) % crowdCols.length], c, tier * stepH + stepH + 0.6, standBaseZ - 4.0 + tier * stepD, standMesh, false);
@@ -776,7 +840,9 @@ for (let tier = 0; tier < 4; tier++) {
   }
 }
 // Stand Canopy Roof
-makeBox(72.0, 0.8, 14.0, '#1e2636', 0, 7.8, standBaseZ, standMesh);
+makeBox(72.0, 0.8, 14.0, '#14110a', 0, 7.8, standBaseZ, standMesh);
+makeBox(72.4, 0.3, 14.4, '#FFD100', 0, 8.3, standBaseZ, standMesh, false);
+{ const hp = window.hkHexPanel(THREE, 71, 0.7, '#14110a', '#FFD100'); hp.position.set(0, 7.8, standBaseZ - 7.02); hp.rotation.y = Math.PI; standMesh.add(hp); }
 liftStandsGroup.add(standMesh);
 
 // 2. Clubhouse with Clock & Video Screen (North Plaza)
@@ -785,14 +851,17 @@ addPistonSet([[-16, clubBaseZ - 4], [16, clubBaseZ - 4], [-16, clubBaseZ + 4], [
 
 const clubMesh = new THREE.Group();
 // 1st Floor Hall
-makeBox(36.0, 5.0, 14.0, '#51351e', 0, 2.5, clubBaseZ, clubMesh);
+makeBox(36.0, 5.0, 14.0, '#1d1810', 0, 2.5, clubBaseZ, clubMesh);
+{ const hp = window.hkHexPanel(THREE, 33, 3.6, '#14110a', '#FFD100'); hp.position.set(0, 2.6, clubBaseZ + 7.05); clubMesh.add(hp); }
 // Porch Pillars
 [-15, -7.5, 0, 7.5, 15].forEach(colX => {
-  makeBox(0.8, 5.0, 0.8, '#f4f7fc', colX, 2.5, clubBaseZ + 7.4, clubMesh);
+  makeBox(0.8, 5.0, 0.8, '#FFD100', colX, 2.5, clubBaseZ + 7.4, clubMesh);
 });
 // 2nd Floor & Roof
-makeBox(38.0, 4.0, 16.0, '#382415', 0, 7.0, clubBaseZ, clubMesh);
-makeBox(40.0, 0.8, 18.0, '#27130a', 0, 9.4, clubBaseZ, clubMesh);
+makeBox(38.0, 4.0, 16.0, '#14110a', 0, 7.0, clubBaseZ, clubMesh);
+{ const hp = window.hkHexPanel(THREE, 35, 3.2, '#14110a', '#FFD100'); hp.position.set(0, 7.0, clubBaseZ + 8.05); clubMesh.add(hp); }
+makeBox(40.0, 0.8, 18.0, '#0a0907', 0, 9.4, clubBaseZ, clubMesh);
+makeBox(40.4, 0.3, 18.4, '#FFD100', 0, 9.9, clubBaseZ, clubMesh, false);
 
 // Clubhouse Analog Clock
 const clockDisc = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 0.2, 24), getMat('#ffeed1'));
@@ -801,7 +870,7 @@ clockDisc.position.set(0, 7.4, clubBaseZ + 8.1);
 clubMesh.add(clockDisc);
 
 const hourHand = makeBox(0.12, 0.8, 0.05, '#090d14', 0, 7.4, clubBaseZ + 8.25, clubMesh, false);
-const minHand  = makeBox(0.08, 1.2, 0.05, '#c8500a', 0, 7.4, clubBaseZ + 8.28, clubMesh, false);
+const minHand  = makeBox(0.08, 1.2, 0.05, '#FFD100', 0, 7.4, clubBaseZ + 8.28, clubMesh, false);
 
 // Jumbotron LED Video Screen on Clubhouse Roof
 const jumbotronCanvas = document.createElement('canvas');
@@ -821,7 +890,7 @@ liftClubGroup.add(clubMesh);
 addPistonSet([[GX, -GHW], [GX, GHW], [GX + NETD, -GHW], [GX + NETD, GHW]], goalPistons);
 
 const goalNetGroup = new THREE.Group();
-const goalPostMat = getMat('#f4f7fc');
+const goalPostMat = getMat('#FFD100');
 const netWireMat = getMat('#ffffff', { wireframe: true, transparent: true, opacity: 0.45 });
 
 // Target Goal (East, X = 52.5)
@@ -881,7 +950,7 @@ islandGroup.add(boardsGroup);
 // Corner Flags
 [[-GX, -HW], [GX, -HW], [-GX, HW], [GX, HW]].forEach(([fx, fz]) => {
   makeBox(0.08, 1.6, 0.08, '#f4f7fc', fx, 0.8, fz, islandGroup, false);
-  const flag = makeBox(0.5, 0.35, 0.04, '#e04568', fx + (fx > 0 ? -0.25 : 0.25), 1.45, fz, islandGroup, false);
+  const flag = makeBox(0.5, 0.35, 0.04, (fz > 0 ? '#FFD100' : '#14110a'), fx + (fx > 0 ? -0.25 : 0.25), 1.45, fz, islandGroup, false);
 });
 
 // 4 Corner Stadium Floodlight Masts
@@ -890,10 +959,10 @@ const mastCoords = [[-58, -38], [58, -38], [-58, 38], [58, 38]];
 mastCoords.forEach(([mx, mz]) => {
   const mast = new THREE.Group();
   mast.position.set(mx, 0, mz);
-  makeBox(1.0, 22.0, 1.0, '#2c364c', 0, 11.0, 0, mast);
-  const bank = makeBox(4.0, 2.2, 1.2, '#131924', 0, 21.0, 0, mast);
+  makeBox(1.0, 22.0, 1.0, '#2a2316', 0, 11.0, 0, mast);
+  const bank = makeBox(4.0, 2.2, 1.2, '#0a0907', 0, 21.0, 0, mast);
   
-  const spot = new THREE.SpotLight(0xd6f6ff, 0.0, 110.0, Math.PI / 3.5, 0.6, 1.0);
+  const spot = new THREE.SpotLight(0xffd070, 0.0, 110.0, Math.PI / 3.5, 0.6, 1.0);
   spot.position.set(0, 21.0, 0);
   spot.target.position.set(mx > 0 ? 30 : -30, 0, 0);
   mast.add(spot);
@@ -908,7 +977,7 @@ defWallGroup.visible = false;
 const defWallMeshes = [];
 for (let i = 0; i < 4; i++) {
   const defender = new THREE.Group();
-  makeBox(0.8, 1.85, 0.6, '#ae2442', 0, 0.92, 0, defender); // Red jersey
+  makeBox(0.8, 1.85, 0.6, '#14110a', 0, 0.92, 0, defender); // Black jersey
   makeBox(0.4, 0.45, 0.4, '#dcb07b', 0, 1.95, 0, defender);  // Head
   defender.position.set(0, 0, (i - 1.5) * 0.95);
   defWallGroup.add(defender);
@@ -918,7 +987,12 @@ scene.add(defWallGroup);
 
 /* ============================ BALL, PLAYERS & GOALKEEPER ============================ */
 // Soccer Ball
-const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(BALL_R, 12, 12), getMat('#f4f7fc'));
+const ballTexCv = document.createElement('canvas'); ballTexCv.width = 128; ballTexCv.height = 64;
+{ const bt = ballTexCv.getContext('2d'); bt.fillStyle = '#FFD100'; bt.fillRect(0, 0, 128, 64); bt.fillStyle = '#14110a';
+  for (let j = 0; j < 3; j++) for (let i = 0; i < 6; i++) { const cx = (i + (j & 1 ? 0.5 : 0)) * 21.3 + 10, cy = 8 + j * 24; bt.beginPath();
+    for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3, px = cx + Math.cos(a) * 7, py = cy + Math.sin(a) * 7; k ? bt.lineTo(px, py) : bt.moveTo(px, py); } bt.closePath(); bt.fill(); } }
+const ballTex = new THREE.CanvasTexture(ballTexCv); ballTex.magFilter = ballTex.minFilter = THREE.NearestFilter; ballTex.generateMipmaps = false;
+const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(BALL_R, 12, 12), new THREE.MeshLambertMaterial({ map: ballTex }));
 ballMesh.castShadow = true;
 scene.add(ballMesh);
 
@@ -938,6 +1012,7 @@ function buildHumanoidMesh({
   skin = '#dcb07b',
   hair = '#27130a',
   gloves = null,
+  badge = '#14110a',
   isKeeper = false
 }) {
   const root = new THREE.Group();
@@ -980,10 +1055,10 @@ function buildHumanoidMesh({
   // Striker chest stripe & number '10' patch
   if (!isKeeper) {
     makeBox(0.20, 0.44, 0.39, accent, 0, 0.26, 0.01, torso, false); // Center white stripe
-    makeBox(0.12, 0.16, 0.40, '#e04568', 0, 0.28, 0.02, torso, false); // Red #10 badge
+    makeBox(0.12, 0.16, 0.40, badge, 0, 0.28, 0.02, torso, false); // number badge
   } else {
     // Goalkeeper padded chest panel
-    makeBox(0.70, 0.18, 0.39, '#f06810', 0, 0.38, 0.01, torso, false);
+    makeBox(0.70, 0.18, 0.39, '#14110a', 0, 0.38, 0.01, torso, false);
   }
 
   // Neck collar
@@ -1036,14 +1111,14 @@ function buildHumanoidMesh({
 
 // Goalkeeper Rig (Always visible)
 const keeperRig = buildHumanoidMesh({
-  jersey: '#f5b32e', // Bright gold jersey
-  accent: '#f06810', // Orange accents
-  shorts: '#1e2636', // Slate shorts
-  socks: '#f5b32e',  // Gold socks
+  jersey: '#FFD100', // SCAD yellow jersey
+  accent: '#14110a', // Black details
+  shorts: '#14110a', // Black shorts
+  socks: '#FFD100',  // Yellow socks
   boots: '#090d14',
   skin: '#dcb07b',
   hair: '#131924',
-  gloves: '#39b2de', // Cyan padded gloves
+  gloves: '#14110a', // Black padded gloves
   isKeeper: true
 });
 const keeperGroup = keeperRig.root;
@@ -1061,10 +1136,10 @@ keeperRig.body.position.y = -0.04;
 
 // Striker Rig (Always visible)
 const strikerRig = buildHumanoidMesh({
-  jersey: '#204a8c', // Royal blue jersey
-  accent: '#f4f7fc', // White chest stripe & collar
-  shorts: '#f4f7fc', // White shorts
-  socks: '#204a8c',  // Royal blue socks
+  jersey: '#FFD100', // SCAD yellow jersey
+  accent: '#14110a', // Black chest stripe & collar
+  shorts: '#14110a', // Black shorts
+  socks: '#FFD100',  // Yellow socks
   boots: '#090d14',
   skin: '#dcb07b',
   hair: '#3d1e10',   // Brown hair
@@ -2612,21 +2687,13 @@ function updateLEDGraphics(time) {
   ledTex.offset.x = ledScroll;
 
   // Render LED Sponsor texture
-  ledCtx.fillStyle = '#090d14';
-  ledCtx.fillRect(0, 0, 1024, 64);
-  ledCtx.font = 'bold 24px "SF Mono", monospace';
-  ledCtx.fillStyle = '#39b2de';
-  ledCtx.fillText('★ HIVEKEY ARENA ★', 40, 42);
-  ledCtx.fillStyle = '#f5b32e';
-  ledCtx.fillText('PITCH CHALLENGE 2026', 360, 42);
-  ledCtx.fillStyle = '#7ee787';
-  ledCtx.fillText('GOALLL!!', 760, 42);
+  window.hkLed(ledCtx, 1024, 64, time * 0.001);   // rotating HiveKey Arena - Bee Olympics message
   ledTex.needsUpdate = true;
 
   // Jumbotron Video Screen
   jctx.fillStyle = '#090d14';
   jctx.fillRect(0, 0, 512, 128);
-  jctx.strokeStyle = '#39b2de';
+  jctx.strokeStyle = '#FFD100';
   jctx.strokeRect(4, 4, 504, 120);
 
   jctx.font = 'bold 22px "SF Mono", monospace';
@@ -2640,7 +2707,7 @@ function updateLEDGraphics(time) {
   // Animated equalizer bars on jumbotron right
   for (let i = 0; i < 10; i++) {
     const barH = 15 + Math.sin(time * 0.006 + i) * 35;
-    jctx.fillStyle = i % 2 === 0 ? '#39b2de' : '#e04568';
+    jctx.fillStyle = i % 2 === 0 ? '#FFD100' : '#c29600';
     jctx.fillRect(360 + i * 14, 105 - barH, 10, barH);
   }
   jumbotronTex.needsUpdate = true;
@@ -2697,6 +2764,7 @@ function animate(now) {
 
   // Jumbotron & LED updates
   updateLEDGraphics(now);
+  hkFx.update(now * 0.001);
 
   // Doll's-house hydraulic lift animation
   updateLifts(dt);
