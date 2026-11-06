@@ -55,8 +55,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #pausedTag{top:64px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;display:none}
 #hint{top:62px;left:50%;transform:translateX(-50%);font-size:10px;color:#fff;background:rgba(9,13,20,.75);padding:4px 12px;border-radius:4px;white-space:nowrap}
 
-/* Side controls panel */
-#panel{position:fixed;top:12px;right:12px;width:270px;max-height:calc(100% - 24px);overflow-y:auto;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;padding:12px;z-index:10;box-shadow:0 10px 32px rgba(0,0,0,.6)}
+/* Retractable Dashboard Panel */
+#menuBtn{position:fixed;top:12px;right:12px;z-index:12;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--tx);font:700 11px var(--mono);letter-spacing:.8px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:all .2s ease}
+#menuBtn:hover{background:rgba(22,32,50,.95);border-color:rgba(99,140,200,.5);transform:translateY(-1px)}
+#menuBtn::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc)}
+#menuBtn.active{background:rgba(22,32,50,.95);border-color:var(--acc);color:#fff}
+#menuBtn.active::before{background:var(--red);box-shadow:0 0 6px var(--red)}
+
+#panel{position:fixed;top:12px;right:12px;width:280px;max-height:calc(100% - 24px);overflow-y:auto;background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:8px;padding:12px 14px;z-index:15;box-shadow:0 12px 36px rgba(0,0,0,.7);transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none;transition:transform .26s cubic-bezier(.16,1,.3,1),opacity .18s ease}
+#panel.open{transform:translateX(0);opacity:1;pointer-events:auto}
+
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.close-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--dim);font:700 13px var(--mono);width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.close-btn:hover{background:rgba(224,69,104,.25);border-color:var(--red);color:#fff}
+
 #panel h1{font:700 13px var(--mono);letter-spacing:1.2px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
 #panel h1::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
 #panel .sub{color:var(--dim);font-size:10px;margin:3px 0 8px}
@@ -72,8 +84,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
 .keys{font:10px/1.6 var(--mono);color:var(--dim)}
 .keys b{color:var(--tx);background:rgba(255,255,255,.08);padding:0 4px;border-radius:3px;font-weight:600}
-
-#menuBtn{display:none;position:fixed;top:10px;right:10px;z-index:11;width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:#fff;font-size:18px;cursor:pointer}
 
 /* Touch controls */
 #touch{display:none;position:fixed;left:0;right:0;bottom:0;height:0;z-index:6}
@@ -96,10 +106,11 @@ body.touch #touch{display:block}
 #over .stars{font-size:28px;color:var(--gold);letter-spacing:4px;margin-bottom:6px}
 
 @media (max-width:768px){
-  #menuBtn{display:block}
-  #panel{top:auto;bottom:0;right:0;left:0;width:auto;max-height:64%;border-radius:12px 12px 0 0;transform:translateY(105%);transition:transform .25s;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
-  #panel.open{transform:none}
-  #score{top:8px;left:8px;transform:none;max-width:calc(100% - 64px)}
+  #menuBtn{top:8px;right:8px;padding:6px 10px;font-size:10px}
+  #sbDbg{display:none!important}
+  #panel{top:auto;bottom:0;right:0;left:0;width:auto;max-height:64%;border-radius:12px 12px 0 0;transform:translateY(105%);opacity:1;transition:transform .25s ease;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  #panel.open{transform:translateY(0)}
+  #score{top:8px;left:8px;transform:none;max-width:calc(100% - 110px)}
   #score span{padding:5px 8px}#sbMain{font-size:15px}#sbFmt{font-size:9px}#sbSub{font-size:10px}
   #stats{top:48px;bottom:auto;left:8px;transform:none;font-size:9px;padding:3px 8px;max-width:calc(100% - 16px);white-space:normal}
   #feed{top:74px;bottom:auto;left:8px;width:calc(100% - 16px);flex-direction:column}
@@ -117,7 +128,7 @@ body.touch #touch{display:block}
 
 <!-- Top HUD Scoreboard -->
 <div id="score" class="hud"><span id="sbFmt">PENALTIES</span><span id="sbMain">0</span><span id="sbSub">Kick 1/5</span><span id="sbDbg" style="background:#2ea043;color:#090d14;font-weight:700;padding:6px 10px;font-size:10px;border-left:1px solid var(--line)">Debug: Direct Render</span></div>
-<div id="hint" class="hud">Aim ←↑→↓ / Click goal · Hold SPACE to power, release to shoot · Q/E curl · C camera</div>
+<div id="hint" class="hud">Aim ←↑→↓ / Click goal · Hold SPACE to power · Q/E curl · C camera · Tab/Esc dashboard</div>
 <div id="stats" class="hud"></div>
 <ul id="feed" class="hud"></ul>
 
@@ -126,11 +137,14 @@ body.touch #touch{display:block}
 <div id="reticle" class="hud"></div>
 <div id="toast" class="hud"></div>
 <div id="pausedTag" class="hud">PAUSED</div>
-<button id="menuBtn" aria-label="Menu">☰</button>
+<button id="menuBtn" aria-label="Toggle Dashboard">☰ Dashboard</button>
 
 <!-- Side Control Dock -->
 <aside id="panel">
-  <h1>Hive Pitch Challenge</h1>
+  <div class="panel-head">
+    <h1>Hive Pitch Challenge</h1>
+    <button id="closePanelBtn" class="close-btn" title="Close (Tab / Esc)">✕</button>
+  </div>
   <div class="sub">HiveKey Arena · Hive Style Lock baseline</div>
   
   <div class="sec"><div class="lbl">Challenge Format</div>
@@ -162,7 +176,7 @@ body.touch #touch{display:block}
     <div class="row"><button class="btn on" id="bOutline">Depth Outlines</button><button class="btn on" id="bDither">OKLab+Dither</button></div></div>
   
   <div class="sec keys">
-    <b>←↑→↓</b>/<b>WASD</b> aim (1v1: move)<br><b>Space</b> hold power · release shoot<br><b>Q</b>/<b>E</b> curl · <b>Click</b> goal to aim<br><b>C</b> camera · <b>P</b> pause · <b>N</b> new challenge<br><b>1 2 3</b> format · <b>K</b> keeper · <b>G</b> surface<br><b>T</b> time · <b>L</b> lift all · <b>M</b> sound toggle
+    <b>←↑→↓</b>/<b>WASD</b> aim (1v1: move)<br><b>Space</b> hold power · release shoot<br><b>Q</b>/<b>E</b> curl · <b>Click</b> goal to aim<br><b>C</b> camera · <b>P</b> pause · <b>N</b> new challenge<br><b>Tab</b>/<b>Esc</b> toggle dashboard · <b>1 2 3</b> format<br><b>Click pitch</b> to close dashboard & aim
   </div>
 </aside>
 
@@ -1365,6 +1379,13 @@ window.addEventListener('keydown', e => {
   if (e.key === ' ' && !ball.inFlight && !isPaused) {
     isCharging = true;
   }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    toggleDashboard();
+  }
+  if (e.key === 'Escape') {
+    closeDashboard();
+  }
   if (e.key === 'c' || e.key === 'C') cycleCamera();
   if (e.key === 'p' || e.key === 'P') togglePause();
   if (e.key === 'n' || e.key === 'N') startNewChallenge();
@@ -1452,8 +1473,12 @@ function updateAimingReticle() {
   }
 }
 
-// Click to aim directly at goal face
+// Click to aim directly at goal face (or dismiss dashboard if open)
 canvas.addEventListener('pointerdown', e => {
+  if ($('panel').classList.contains('open')) {
+    closeDashboard();
+    return;
+  }
   if (e.target !== canvas || ball.inFlight) return;
   initAudio();
 
@@ -1753,7 +1778,39 @@ $('bSound').addEventListener('click', function() {
   if (soundOn) initAudio();
 });
 
-$('menuBtn').addEventListener('click', () => $('panel').classList.toggle('open'));
+function toggleDashboard() {
+  const panel = $('panel');
+  const btn = $('menuBtn');
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  btn.innerHTML = isOpen ? '✕ Close' : '☰ Dashboard';
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function closeDashboard() {
+  const panel = $('panel');
+  const btn = $('menuBtn');
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    btn.innerHTML = '☰ Dashboard';
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+$('menuBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  toggleDashboard();
+});
+
+$('closePanelBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  closeDashboard();
+});
+
+$('panel').addEventListener('pointerdown', e => {
+  e.stopPropagation();
+});
 
 // Mobile touch buttons
 const tShoot = $('tShoot');
