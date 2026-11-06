@@ -8,27 +8,48 @@
 <style>
 :root{
   --bg:#090d14;
-  --panel:rgba(14,20,32,.92);
-  --line:rgba(99,140,200,.28);
-  --acc:#2ea043;
-  --acc-glow:rgba(46,160,67,.55);
+  --panel:rgba(15,19,28,.94);
+  --line:rgba(245,179,46,.32);
+  --acc:#f5b32e;
+  --acc-glow:rgba(245,179,46,.55);
+  --green:#2ea043;
   --cyan:#39b2de;
   --gold:#f5b32e;
   --red:#e04568;
   --tx:#f4f7fc;
-  --dim:#7f90b3;
+  --dim:#8b9bb8;
   --mono:"SF Mono","JetBrains Mono",Menlo,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px}
+html,body{width:100%;max-width:100vw;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
 
 /* Multi-Sport Arena Switcher */
-#navPills{position:fixed;top:10px;left:12px;z-index:14;display:flex;gap:6px;align-items:center}
-.sport-pill{padding:5px 10px;border-radius:20px;font:700 11px var(--mono);text-decoration:none;color:var(--dim);background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all .18s ease;display:flex;align-items:center;gap:5px}
-.sport-pill:hover{color:#fff;border-color:var(--cyan);background:rgba(22,32,50,.95)}
-.sport-pill.active{color:#fff;background:rgba(46,160,67,.25);border-color:var(--acc);box-shadow:0 0 10px var(--acc-glow)}
-.sport-pill.active::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc)}
+#navPills{position:fixed;top:10px;left:12px;z-index:16;display:flex;gap:6px;align-items:center}
+.sport-pill{padding:6px 11px;border-radius:20px;font:800 11px var(--mono);text-decoration:none;color:var(--dim);background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all .18s ease;display:flex;align-items:center;gap:5px}
+.sport-pill:hover{color:#fff;border-color:var(--acc);background:rgba(26,32,46,.96)}
+.sport-pill.active{color:#090d14;background:var(--acc);border-color:#ffdb70;box-shadow:0 0 12px var(--acc-glow)}
+.sport-pill.active::before{content:"";width:6px;height:6px;border-radius:50%;background:#090d14}
+
+/* Persistent Mode & Lane Selector Bar (SCAD Yellow / Black) */
+#arenaBar{position:fixed;bottom:38px;left:50%;transform:translateX(-50%);z-index:18;display:flex;align-items:center;gap:8px;background:rgba(9,13,20,.95);border:1.5px solid var(--acc);border-radius:28px;padding:5px 10px;box-shadow:0 8px 28px rgba(0,0,0,.78),0 0 16px rgba(245,179,46,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none}
+#arenaBar::-webkit-scrollbar{display:none}
+.pm-switch{display:flex;background:#131924;border-radius:20px;padding:2px;border:1px solid rgba(245,179,46,.28);flex-shrink:0}
+.pm-btn{padding:7px 13px;border-radius:18px;border:none;background:transparent;color:var(--dim);font:800 11px var(--mono);letter-spacing:.6px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .16s ease;min-height:34px;white-space:nowrap}
+.pm-btn:hover{color:#fff}
+.pm-btn.active{background:var(--acc);color:#090d14;box-shadow:0 0 10px var(--acc-glow)}
+#pmBadge{font:800 9px var(--mono);padding:4px 8px;border-radius:10px;background:rgba(46,160,67,.22);color:#7ee787;border:1px solid #2ea043;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+#pmBadge.view{background:rgba(57,178,222,.2);color:#9ce5fb;border-color:#39b2de}
+.bar-sep{width:1px;height:22px;background:rgba(245,179,46,.25);flex-shrink:0}
+#playerSelectWrap{display:flex;align-items:center;gap:4px;flex-shrink:0}
+#playerSelectWrap .ps-lbl{font:800 9px var(--mono);color:var(--acc);letter-spacing:.6px;margin-right:2px;white-space:nowrap}
+.ppill{padding:6px 8px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:#161e2e;color:var(--tx);font:700 10px var(--mono);cursor:pointer;transition:all .14s;min-height:32px;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.ppill:hover{border-color:var(--acc);color:#fff}
+.ppill.active{background:var(--acc);color:#090d14;border-color:#fff;font-weight:900;box-shadow:0 0 8px var(--acc-glow)}
+
+/* Floating 3D "YOU" Tag over Controlled Swimmer */
+#youTag{position:fixed;pointer-events:none;z-index:12;transform:translate(-50%,-100%);font:900 10px var(--mono);color:#090d14;background:var(--acc);padding:2px 7px;border-radius:10px;border:1.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.65);letter-spacing:.6px;white-space:nowrap}
+#youTag::after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);border-width:5px 4px 0;border-style:solid;border-color:var(--acc) transparent transparent}
 
 /* HUD Elements */
 .hud{position:fixed;pointer-events:none;z-index:10;font-family:var(--mono)}
@@ -36,30 +57,31 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:no
 /* Top Scoreboard */
 #score{top:12px;left:50%;transform:translateX(-50%);display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.55);pointer-events:auto}
 #score span{padding:6px 14px;display:flex;align-items:center;white-space:nowrap}
-#sbFmt{background:rgba(255,255,255,.05);color:var(--cyan);font-weight:700;letter-spacing:1px;font-size:11px}
+#sbFmt{background:rgba(245,179,46,.12);color:var(--acc);font-weight:800;letter-spacing:1px;font-size:11px}
 #sbMain{font-size:18px;font-weight:800;color:var(--gold);min-width:96px;justify-content:center}
 #sbRank{font-size:14px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);padding:6px 12px}
 #sbDist{color:var(--tx);font-size:11px}
-#sbDbg{background:#2ea043;color:#090d14;font-weight:700;padding:6px 10px;font-size:10px;border-left:1px solid var(--line)}
+#sbDbg{background:var(--acc);color:#090d14;font-weight:800;padding:6px 10px;font-size:10px;border-left:1px solid var(--line)}
 
-#hint{top:62px;left:50%;transform:translateX(-50%);font-size:10px;color:#fff;background:rgba(9,13,20,.75);padding:4px 12px;border-radius:4px;white-space:nowrap}
-#stats{bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);background:rgba(9,13,20,.85);padding:4px 14px;border-radius:20px;border:1px solid var(--line);white-space:nowrap}
-#feed{bottom:44px;left:14px;width:240px;display:flex;flex-direction:column-reverse;gap:4px;list-style:none}
-#feed li{font-size:11px;color:var(--dim);background:rgba(9,13,20,.8);padding:4px 8px;border-radius:4px;border-left:3px solid var(--line);animation:fadeIn .25s ease}
+#hint{top:56px;left:50%;transform:translateX(-50%);font-size:10px;color:#fff;background:rgba(9,13,20,.78);padding:4px 12px;border-radius:4px;white-space:nowrap;border:1px solid rgba(245,179,46,.22)}
+#stats{bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);background:rgba(9,13,20,.88);padding:4px 14px;border-radius:20px;border:1px solid var(--line);white-space:nowrap}
+#feed{bottom:96px;left:14px;width:240px;display:flex;flex-direction:column-reverse;gap:4px;list-style:none}
+#feed li{font-size:11px;color:var(--dim);background:rgba(9,13,20,.82);padding:4px 8px;border-radius:4px;border-left:3px solid var(--line);animation:fadeIn .25s ease}
 #feed li.lead{border-color:var(--gold);color:var(--gold)}
 #feed li.turn{border-color:var(--cyan);color:var(--cyan)}
-#feed li.finish{border-color:var(--acc);color:#7ee787}
+#feed li.finish{border-color:var(--green);color:#7ee787}
 
 /* Stroke Timing Gauge & Sweet Spot */
-#strokeWrap{position:fixed;bottom:42px;left:50%;transform:translateX(-50%);width:280px;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:10;pointer-events:none}
-#strokeBar{width:100%;height:18px;background:rgba(9,13,20,.85);border:1px solid var(--line);border-radius:9px;overflow:hidden;position:relative;box-shadow:0 4px 16px rgba(0,0,0,.6)}
-#strokeSweet{position:absolute;top:0;bottom:0;left:64%;width:22%;background:rgba(46,160,67,.4);border-left:2px solid var(--acc);border-right:2px solid var(--acc)}
+#strokeWrap{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);width:280px;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:10;pointer-events:none}
+body[data-playmode="view"] #strokeWrap{display:none!important}
+#strokeBar{width:100%;height:18px;background:rgba(9,13,20,.88);border:1px solid var(--line);border-radius:9px;overflow:hidden;position:relative;box-shadow:0 4px 16px rgba(0,0,0,.6)}
+#strokeSweet{position:absolute;top:0;bottom:0;left:64%;width:22%;background:rgba(245,179,46,.42);border-left:2px solid var(--acc);border-right:2px solid var(--acc)}
 #strokeNeedle{position:absolute;top:0;bottom:0;width:4px;left:0%;background:#fff;border-radius:2px;box-shadow:0 0 8px #fff;transition:none}
-#strokeInd{font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:1px;text-transform:uppercase}
+#strokeInd{font-size:11px;font-weight:800;color:var(--acc);letter-spacing:1px;text-transform:uppercase}
 
 /* Surge / Stamina meter */
 #surgeWrap{width:180px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;position:relative}
-#surgeFill{height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),#7ee787);transition:width .1s linear}
+#surgeFill{height:100%;width:100%;background:linear-gradient(90deg,var(--acc),#7ee787);transition:width .1s linear}
 
 /* Toast announcements */
 #toast{top:34%;left:50%;transform:translate(-50%,-50%);font-size:46px;font-weight:900;letter-spacing:3px;color:#fff;text-shadow:0 4px 0 #090d14,0 0 24px rgba(0,0,0,.85);opacity:0;white-space:nowrap}
@@ -74,75 +96,82 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:no
 #pausedTag{top:64px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;display:none}
 
 /* Retractable Dashboard Panel */
-#menuBtn{position:fixed;top:12px;right:12px;z-index:12;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--tx);font:700 11px var(--mono);letter-spacing:.8px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:all .2s ease}
-#menuBtn:hover{background:rgba(22,32,50,.95);border-color:rgba(99,140,200,.5);transform:translateY(-1px)}
-#menuBtn::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc)}
-#menuBtn.active{background:rgba(22,32,50,.95);border-color:var(--acc);color:#fff}
-#menuBtn.active::before{background:var(--red);box-shadow:0 0 6px var(--red)}
+#menuBtn{position:fixed;top:10px;right:12px;z-index:20;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:8px 14px;border-radius:22px;border:1.5px solid var(--acc);background:rgba(9,13,20,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--acc);font:800 12px var(--mono);letter-spacing:.8px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.65);transition:all .2s ease}
+#menuBtn:hover{background:#182030;color:#fff;transform:translateY(-1px)}
+#menuBtn::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+#menuBtn.active{background:var(--acc);border-color:#fff;color:#090d14}
+#menuBtn.active::before{background:#090d14;box-shadow:none}
 
-#panel{position:fixed;top:12px;right:12px;width:280px;max-height:calc(100% - 24px);overflow-y:auto;background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:8px;padding:12px 14px;z-index:15;box-shadow:0 12px 36px rgba(0,0,0,.7);transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none;transition:transform .26s cubic-bezier(.16,1,.3,1),opacity .18s ease}
+#panel{position:fixed;top:62px;right:12px;width:284px;max-height:calc(100% - 76px);overflow-y:auto;background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;z-index:19;box-shadow:0 12px 36px rgba(0,0,0,.78);transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none;transition:transform .26s cubic-bezier(.16,1,.3,1),opacity .18s ease}
 #panel.open{transform:translateX(0);opacity:1;pointer-events:auto}
 
 .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
-.close-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--dim);font:700 13px var(--mono);width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.close-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--dim);font:800 13px var(--mono);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
 .close-btn:hover{background:rgba(224,69,104,.25);border-color:var(--red);color:#fff}
 
-#panel h1{font:700 13px var(--mono);letter-spacing:1.2px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+#panel h1{font:800 13px var(--mono);letter-spacing:1.2px;text-transform:uppercase;color:var(--acc);display:flex;align-items:center;gap:8px}
 #panel h1::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
 #panel .sub{color:var(--dim);font-size:10px;margin:3px 0 8px}
 .sec{border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-top:8px}
-.lbl{font:600 9px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;display:flex;justify-content:space-between}
+.lbl{font:700 9px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;display:flex;justify-content:space-between}
 .seg{display:flex;gap:4px;flex-wrap:wrap}
-.seg button,.btn{flex:1;min-width:0;padding:6px 4px;font:600 10px var(--mono);color:var(--tx);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s}
-.seg button:hover,.btn:hover{background:rgba(255,255,255,.12)}
-.seg button.on,.btn.on{background:var(--acc);border-color:#4cd864;color:#0d1117;box-shadow:0 0 8px var(--acc-glow)}
-.btn.big{display:block;width:100%;padding:9px;font-size:11px;background:#204a8c;border-color:#3774cd;margin-top:4px}
-.btn.big:hover{background:#2a5eac}
+.seg button,.btn{flex:1;min-width:0;padding:6px 4px;font:700 10px var(--mono);color:var(--tx);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.seg button:hover,.btn:hover{background:rgba(255,255,255,.14);border-color:var(--acc)}
+.seg button.on,.btn.on{background:var(--acc);border-color:#ffdb70;color:#090d14;font-weight:800;box-shadow:0 0 8px var(--acc-glow)}
+.btn.big{display:block;width:100%;padding:9px;font-size:11px;background:var(--acc);border-color:#ffdb70;color:#090d14;font-weight:900;margin-top:4px}
+.btn.big:hover{background:#ffca4b}
 .row{display:flex;gap:4px;margin-top:4px}
+select.sel-input{width:100%;padding:7px 8px;background:#131924;color:var(--tx);border:1px solid var(--line);border-radius:6px;font:700 11px var(--mono);outline:none;cursor:pointer}
 input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
 .keys{font:10px/1.6 var(--mono);color:var(--dim)}
-.keys b{color:var(--tx);background:rgba(255,255,255,.08);padding:0 4px;border-radius:3px;font-weight:600}
+.keys b{color:var(--acc);background:rgba(245,179,46,.12);padding:0 4px;border-radius:3px;font-weight:700}
 
-/* Mobile Touch controls */
-#touch{display:none;position:fixed;left:0;right:0;bottom:0;height:0;z-index:11}
+/* Mobile Touch controls - only visible in PLAY MODE */
+#touch{display:none;position:fixed;left:0;right:0;bottom:0;height:0;z-index:14}
 body.touch #touch{display:block}
-#touchBtns{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
-#tStroke{width:86px;height:86px;border-radius:50%;background:rgba(46,160,67,.75);border:2px solid #fff;color:#fff;font:800 13px var(--mono);box-shadow:0 6px 20px rgba(0,0,0,.6);cursor:pointer;touch-action:none}
-#tStroke.active{background:rgba(245,179,46,.95);transform:scale(.94)}
-#tSurge{width:64px;height:64px;border-radius:50%;background:rgba(57,178,222,.75);border:2px solid #fff;color:#fff;font:700 10px var(--mono);box-shadow:0 4px 16px rgba(0,0,0,.5);cursor:pointer;touch-action:none}
-#tCam{width:48px;height:48px;border-radius:50%;background:rgba(14,20,32,.85);border:1px solid var(--line);color:#fff;font:700 10px var(--mono);cursor:pointer}
+body[data-playmode="view"] #touch{display:none!important}
+#touchBtns{position:fixed;right:14px;bottom:calc(108px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
+#tStroke{width:82px;height:82px;border-radius:50%;background:rgba(245,179,46,.88);border:2px solid #fff;color:#090d14;font:900 13px var(--mono);box-shadow:0 6px 20px rgba(0,0,0,.6);cursor:pointer;touch-action:none}
+#tStroke.active{background:#fff;transform:scale(.94)}
+#tSurge{width:62px;height:62px;border-radius:50%;background:rgba(57,178,222,.82);border:2px solid #fff;color:#090d14;font:800 10px var(--mono);box-shadow:0 4px 16px rgba(0,0,0,.5);cursor:pointer;touch-action:none}
+#tCam{width:48px;height:48px;border-radius:50%;background:rgba(14,20,32,.9);border:1.5px solid var(--acc);color:var(--acc);font:800 10px var(--mono);cursor:pointer}
 
 /* Game over modal */
 #over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:30}
 #over.show{display:flex}
-#over .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 30px;text-align:center;min-width:320px;max-width:92vw;box-shadow:0 16px 48px rgba(0,0,0,.85)}
+#over .card{background:var(--panel);border:1.5px solid var(--acc);border-radius:12px;padding:24px 30px;text-align:center;min-width:320px;max-width:92vw;box-shadow:0 16px 48px rgba(0,0,0,.85)}
 #over h2{font:800 22px var(--mono);letter-spacing:2px;color:var(--gold)}
 #over .podium{font-size:36px;margin:8px 0;letter-spacing:6px}
 #over p{color:var(--dim);margin:10px 0 16px;line-height:1.6;font-family:var(--mono);font-size:12px}
 #over .splits{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(0,0,0,.3);padding:10px;border-radius:6px;margin-bottom:14px;font-size:11px}
 #over .splits div{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding:3px 0}
 #over .stamp{font:10px var(--mono);color:var(--dim);margin-bottom:14px;word-break:break-all}
-#over .stamp b{color:var(--cyan)}
+#over .stamp b{color:var(--acc)}
 
 @media (max-width:768px){
   #navPills{top:8px;left:8px;gap:4px}
-  .sport-pill{padding:4px 8px;font-size:9px}
-  #menuBtn{top:8px;right:8px;padding:6px 10px;font-size:10px}
+  .sport-pill{padding:5px 8px;font-size:10px}
+  #menuBtn{top:8px;right:8px;padding:7px 12px;font-size:11px;min-height:44px}
   #sbDbg{display:none!important}
-  #panel{top:auto;bottom:0;right:0;left:0;width:auto;max-height:64%;border-radius:12px 12px 0 0;transform:translateY(105%);opacity:1;transition:transform .25s ease;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  #panel{top:auto;bottom:0;right:0;left:0;width:100%;max-height:74vh;border-radius:16px 16px 0 0;transform:translateY(105%);opacity:1;transition:transform .26s cubic-bezier(.16,1,.3,1);padding-bottom:calc(18px + env(safe-area-inset-bottom))}
   #panel.open{transform:translateY(0)}
-  #score{top:42px;left:8px;transform:none;max-width:calc(100% - 16px)}
+  #score{top:56px;left:8px;transform:none;max-width:calc(100vw - 16px)}
   #score span{padding:4px 8px}#sbMain{font-size:15px}#sbFmt{font-size:9px}#sbRank{font-size:11px}
-  #stats{top:74px;bottom:auto;left:8px;transform:none;font-size:9px;padding:3px 8px;max-width:calc(100% - 16px);white-space:normal}
+  #stats{display:none}
   #feed{display:none}
-  #strokeWrap{bottom:calc(110px + env(safe-area-inset-bottom));width:220px}
+  #arenaBar{bottom:calc(8px + env(safe-area-inset-bottom));left:6px;right:6px;transform:none;width:calc(100vw - 12px);max-width:none;justify-content:space-between;padding:6px 8px;border-radius:14px;flex-wrap:wrap;gap:5px}
+  .pm-btn{padding:7px 10px;font-size:10px;min-height:36px}
+  #playerSelectWrap{width:100%;justify-content:space-between;border-top:1px solid rgba(245,179,46,.2);padding-top:5px;gap:3px}
+  #playerPills{flex:1;display:grid;grid-template-columns:repeat(8,1fr);gap:3px!important}
+  .ppill{justify-content:center;padding:5px 1px;font-size:9px;min-height:36px;border-radius:8px;flex-direction:column;gap:0;line-height:1.1}
+  #strokeWrap{bottom:calc(108px + env(safe-area-inset-bottom));left:14px;transform:none;width:170px}
   #toast{font-size:32px}
   #hint{display:none}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body>
+<body data-playmode="play">
 
 <!-- Multi-Sport Arena Header Switcher -->
 <nav id="navPills">
@@ -150,6 +179,32 @@ body.touch #touch{display:block}
   <a href="/lacrosse" class="sport-pill" title="Lacrosse Drills">🥍 Lacrosse</a>
   <a href="/swim" class="sport-pill active" title="Swimming Races">🏊 Swimming</a>
 </nav>
+
+<!-- Persistent View/Play Mode + 8-Lane Swimmer Selector Bar -->
+<div id="arenaBar">
+  <div class="pm-switch" role="group" aria-label="View or Play Mode">
+    <button id="btnViewMode" class="pm-btn" type="button" title="Spectator View Mode (AI swims all lanes)">👁 VIEW MODE</button>
+    <button id="btnPlayMode" class="pm-btn active" type="button" title="Active Play Mode (You control selected swimmer)">🎮 PLAY MODE</button>
+  </div>
+  <span id="pmBadge">PLAYING</span>
+  <div class="bar-sep"></div>
+  <div id="playerSelectWrap">
+    <span class="ps-lbl">PLAY AS:</span>
+    <div class="seg" id="playerPills" style="gap:4px">
+      <button class="ppill" data-lane="0" type="button"><b>L1</b><small>AUS</small></button>
+      <button class="ppill" data-lane="1" type="button"><b>L2</b><small>GBR</small></button>
+      <button class="ppill" data-lane="2" type="button"><b>L3</b><small>FRA</small></button>
+      <button class="ppill active" data-lane="3" type="button"><b>L4</b><small>HIVE</small></button>
+      <button class="ppill" data-lane="4" type="button"><b>L5</b><small>USA</small></button>
+      <button class="ppill" data-lane="5" type="button"><b>L6</b><small>JPN</small></button>
+      <button class="ppill" data-lane="6" type="button"><b>L7</b><small>ITA</small></button>
+      <button class="ppill" data-lane="7" type="button"><b>L8</b><small>CAN</small></button>
+    </div>
+  </div>
+</div>
+
+<!-- 3D Floating YOU Indicator -->
+<div id="youTag">YOU · L4 HIVE</div>
 
 <!-- Top HUD Scoreboard -->
 <div id="score" class="hud">
@@ -159,7 +214,7 @@ body.touch #touch{display:block}
   <span id="sbDist">0.0m / 50m</span>
   <span id="sbDbg">Debug: Direct Render</span>
 </div>
-<div id="hint" class="hud">Press SPACE on START beep to dive · Tap SPACE on rhythm sweet spot to stroke · SHIFT hydro surge · Tab/Esc dashboard</div>
+<div id="hint" class="hud">SPACE dive on beep / rhythm stroke · SHIFT hydro surge · V View/Play mode · 1-8 switch lane · Tab/Esc panel</div>
 <div id="stats" class="hud">[Debug: Direct Render] · CAM: TV · LANE 4 · STROKE: FREESTYLE · WATER: 27°C · FPS: 60</div>
 <ul id="feed" class="hud"></ul>
 
@@ -177,7 +232,7 @@ body.touch #touch{display:block}
 
 <div id="toast" class="hud"></div>
 <div id="pausedTag" class="hud">PAUSED</div>
-<button id="menuBtn" aria-label="Toggle Dashboard">☰ Dashboard</button>
+<button id="menuBtn" aria-label="Toggle Control Panel" aria-expanded="false">☰ Panel</button>
 
 <!-- Retractable Side Control Dock -->
 <aside id="panel">
@@ -185,7 +240,20 @@ body.touch #touch{display:block}
     <h1>Hive Lane Challenge</h1>
     <button id="closePanelBtn" class="close-btn" title="Close (Tab / Esc)">✕</button>
   </div>
-  <div class="sub">HiveKey Arena · Olympic Aquatics Baseline</div>
+  <div class="sub">HiveKey Arena · SCAD Olympic Aquatics</div>
+
+  <div class="sec"><div class="lbl"><span>Control Swimmer (8 Lanes)</span><span>Keys 1–8</span></div>
+    <select id="playerSelect" class="sel-input" aria-label="Control Swimmer">
+      <option value="0">Lane 1 — AUS (Green/Gold)</option>
+      <option value="1">Lane 2 — GBR (Navy)</option>
+      <option value="2">Lane 3 — FRA (Royal Blue)</option>
+      <option value="3" selected>Lane 4 — HIVE (SCAD Gold)</option>
+      <option value="4">Lane 5 — USA (Crimson)</option>
+      <option value="5">Lane 6 — JPN (White)</option>
+      <option value="6">Lane 7 — ITA (Emerald)</option>
+      <option value="7">Lane 8 — CAN (Ruby)</option>
+    </select>
+  </div>
   
   <div class="sec"><div class="lbl">Race Distance</div>
     <div class="seg" data-g="dist">
@@ -833,7 +901,28 @@ for (let i = 0; i < 8; i++) {
   sw.group.position.copy(sw.pos);
   swimmers.push(sw);
 }
-const player = swimmers[3]; // Lane 4 is player
+let selectedLaneIdx = 3;
+let player = swimmers[3]; // Lane 4 is default player
+let playMode = 'play';
+const LANE_LABELS = ['L1 AUS', 'L2 GBR', 'L3 FRA', 'L4 HIVE', 'L5 USA', 'L6 JPN', 'L7 ITA', 'L8 CAN'];
+
+// 3D SCAD Yellow highlight ring under the controlled swimmer
+const youRing = new THREE.Group();
+{
+  const r1 = new THREE.Mesh(
+    new THREE.RingGeometry(0.85, 1.15, 28),
+    new THREE.MeshBasicMaterial({ color: 0xf5b32e, side: THREE.DoubleSide, transparent: true, opacity: 0.92, depthWrite: false })
+  );
+  r1.rotation.x = -Math.PI / 2;
+  const r2 = new THREE.Mesh(
+    new THREE.RingGeometry(1.22, 1.34, 28),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.45, depthWrite: false })
+  );
+  r2.rotation.x = -Math.PI / 2;
+  youRing.add(r1, r2);
+  youRing.position.y = -0.02;
+  scene.add(youRing);
+}
 
 /* ============================ WATER SPLASH SYSTEM ============================ */
 const SPLASH_MAX = 180;
@@ -1025,7 +1114,7 @@ function startNewRace() {
       feed('GO! Clean start off the blocks!', 'lead');
 
       swimmers.forEach(sw => {
-        if (sw !== player) {
+        if (sw !== player || playMode === 'view') {
           setTimeout(() => {
             if (sw.state === 'BLOCK') executeDive(sw);
           }, sw.reactTime * 1000);
@@ -1146,7 +1235,7 @@ function updateSwimmer(sw, dt) {
   if (sw.state === 'SWIM') {
     sw.pos.y = -0.12;
 
-    if (sw !== player) {
+    if (sw !== player || playMode === 'view') {
       sw.strokePhase += (3.8 * sw.speedSkill) * dt;
       if (Math.sin(sw.strokePhase) > 0.92) {
         sw.vel.x += sw.dir * (1.1 + Math.random() * 0.25);
@@ -1161,7 +1250,7 @@ function updateSwimmer(sw, dt) {
     sw.pos.x += sw.vel.x * dt;
     sw.group.position.copy(sw.pos);
 
-    const cycle = sw === player ? (strokeRhythm * Math.PI * 2) : sw.strokePhase;
+    const cycle = (sw === player && playMode === 'play') ? (strokeRhythm * Math.PI * 2) : sw.strokePhase;
     if (strokeType === 'free') {
       sw.armL.rotation.z = Math.sin(cycle) * 1.6;
       sw.armR.rotation.z = Math.sin(cycle + Math.PI) * 1.6;
@@ -1195,7 +1284,7 @@ function updateSwimmer(sw, dt) {
       }
       if (sw.pos.x >= X_END - 3.2) {
         if (raceFormat === '100' && sw.lap === 1) {
-          if (sw === player) {
+          if (sw === player && playMode === 'play') {
             player.state = 'TURN_APPROACH';
             showToast('TURN! [SPACE/SHIFT]', 'turn');
           } else {
@@ -1397,23 +1486,105 @@ function resize() {
   setCameraMode(camMode);
 }
 
-function toggleDashboard() {
+function setDashboardOpen(isOpen, save = true) {
   const panel = $('panel');
   const btn = $('menuBtn');
-  const isOpen = panel.classList.toggle('open');
-  btn.classList.toggle('active', isOpen);
-  btn.innerHTML = isOpen ? '✕ Close' : '☰ Dashboard';
+  panel.classList.toggle('open', !!isOpen);
+  btn.classList.toggle('active', !!isOpen);
+  btn.innerHTML = isOpen ? '✕ Close' : '☰ Panel';
   btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  if (save) {
+    try { sessionStorage.setItem('hive_dashboard_open', isOpen ? '1' : '0'); } catch (_) {}
+  }
+}
+
+function toggleDashboard() {
+  setDashboardOpen(!$('panel').classList.contains('open'), true);
 }
 
 function closeDashboard() {
-  const panel = $('panel');
-  const btn = $('menuBtn');
-  if (panel.classList.contains('open')) {
-    panel.classList.remove('open');
-    btn.classList.remove('active');
-    btn.innerHTML = '☰ Dashboard';
-    btn.setAttribute('aria-expanded', 'false');
+  if ($('panel').classList.contains('open')) {
+    setDashboardOpen(false, true);
+  }
+}
+
+{
+  let saved = null;
+  try { saved = sessionStorage.getItem('hive_dashboard_open'); } catch (_) {}
+  setDashboardOpen(saved === '1', false);
+}
+
+function setPlayMode(mode) {
+  playMode = mode === 'view' ? 'view' : 'play';
+  document.body.dataset.playmode = playMode;
+  if ($('btnViewMode')) $('btnViewMode').classList.toggle('active', playMode === 'view');
+  if ($('btnPlayMode')) $('btnPlayMode').classList.toggle('active', playMode === 'play');
+  const badge = $('pmBadge');
+  if (badge) {
+    badge.textContent = playMode === 'view' ? 'SPECTATING' : 'PLAYING';
+    badge.classList.toggle('view', playMode === 'view');
+  }
+  if (playMode === 'view' && raceState === 'RACING') {
+    if (player.state === 'BLOCK') executeDive(player);
+    if (player.state === 'TURN_APPROACH') executeTurn(player);
+  }
+  showToast(playMode === 'view' ? 'SPECTATOR VIEW MODE' : 'PLAY MODE · ' + LANE_LABELS[selectedLaneIdx], playMode === 'view' ? 'great' : 'perfect');
+}
+
+function selectLane(idx) {
+  selectedLaneIdx = clamp(idx | 0, 0, 7);
+  player = swimmers[selectedLaneIdx];
+  player.group.visible = true;
+  document.querySelectorAll('#playerPills .ppill').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.lane, 10) === selectedLaneIdx);
+  });
+  const sel = $('playerSelect');
+  if (sel && parseInt(sel.value, 10) !== selectedLaneIdx) sel.value = String(selectedLaneIdx);
+  showToast('CONTROLLING ' + LANE_LABELS[selectedLaneIdx], 'perfect');
+}
+
+if ($('btnViewMode')) $('btnViewMode').addEventListener('click', () => setPlayMode('view'));
+if ($('btnPlayMode')) $('btnPlayMode').addEventListener('click', () => setPlayMode('play'));
+document.querySelectorAll('#playerPills .ppill').forEach(b => {
+  b.addEventListener('click', () => {
+    selectLane(parseInt(b.dataset.lane, 10));
+    if (playMode === 'view') setPlayMode('play');
+  });
+});
+if ($('playerSelect')) {
+  $('playerSelect').addEventListener('change', e => {
+    selectLane(parseInt(e.target.value, 10));
+    if (playMode === 'view') setPlayMode('play');
+    e.target.blur();
+  });
+}
+
+const youTagEl = $('youTag');
+const _youProj = new V3();
+function updateYouIndicator(now) {
+  if (!player || !player.group || !player.group.visible) {
+    youRing.visible = false;
+    if (youTagEl) youTagEl.style.display = 'none';
+    return;
+  }
+  youRing.visible = true;
+  youRing.position.x = player.pos.x;
+  youRing.position.z = player.pos.z;
+  const pulse = 1 + 0.08 * Math.sin(now * 0.006);
+  youRing.scale.set(pulse, 1, pulse);
+  if (youTagEl) {
+    _youProj.set(player.pos.x, Math.max(0.2, player.pos.y) + 1.35, player.pos.z);
+    _youProj.project(camera);
+    if (_youProj.z > 1) {
+      youTagEl.style.display = 'none';
+    } else {
+      youTagEl.style.display = 'block';
+      const sx = (_youProj.x * 0.5 + 0.5) * viewW;
+      const sy = (-_youProj.y * 0.5 + 0.5) * viewH;
+      youTagEl.style.left = sx + 'px';
+      youTagEl.style.top = sy + 'px';
+      youTagEl.textContent = (playMode === 'view' ? '👁 CAM · ' : 'YOU · ') + LANE_LABELS[selectedLaneIdx];
+    }
   }
 }
 
@@ -1422,18 +1593,28 @@ window.addEventListener('resize', resize);
 
 window.addEventListener('keydown', e => {
   initAudio();
+  if (e.key === 'v' || e.key === 'V') {
+    setPlayMode(playMode === 'play' ? 'view' : 'play');
+    return;
+  }
+  if (e.key >= '1' && e.key <= '8') {
+    selectLane(parseInt(e.key, 10) - 1);
+    return;
+  }
   if (e.key === ' ') {
     e.preventDefault();
-    triggerPlayerAction();
+    if (playMode === 'play') triggerPlayerAction();
   }
   if (e.key === 'Shift') {
     e.preventDefault();
-    if (player.state === 'SWIM' && player.surgeStamina > 0.1) {
-      player.vel.x += player.dir * 0.9;
-      player.surgeStamina -= 0.15;
-      triggerSplash(player.pos.x, -0.1, player.pos.z, 0.9);
-    } else {
-      triggerPlayerAction();
+    if (playMode === 'play') {
+      if (player.state === 'SWIM' && player.surgeStamina > 0.1) {
+        player.vel.x += player.dir * 0.9;
+        player.surgeStamina -= 0.15;
+        triggerSplash(player.pos.x, -0.1, player.pos.z, 0.9);
+      } else {
+        triggerPlayerAction();
+      }
     }
   }
   if (e.key === 'Tab') {
@@ -1446,9 +1627,6 @@ window.addEventListener('keydown', e => {
   if (e.key === 'c' || e.key === 'C') cycleCamera();
   if (e.key === 'p' || e.key === 'P') togglePause();
   if (e.key === 'n' || e.key === 'N') startNewRace();
-  if (e.key === '1') setDistance('50');
-  if (e.key === '2') setDistance('100');
-  if (e.key === '3') setDistance('stroke');
 });
 
 canvas.addEventListener('pointerdown', e => {
@@ -1456,7 +1634,7 @@ canvas.addEventListener('pointerdown', e => {
     closeDashboard();
     return;
   }
-  triggerPlayerAction();
+  if (playMode === 'play') triggerPlayerAction();
 });
 
 $('menuBtn').addEventListener('click', e => {
@@ -1672,6 +1850,7 @@ function animate(now) {
 
   updateLifts(dt);
   updateCamera(dt);
+  updateYouIndicator(now);
   updateJumbotron();
 
   if (isDirectRender) {

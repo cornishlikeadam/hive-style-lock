@@ -7,42 +7,79 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥍</text></svg>">
 <style>
   :root {
-    --bg: #0a0e17;
-    --panel: rgba(14, 20, 32, 0.88);
-    --border: rgba(99, 140, 200, 0.25);
-    --accent: #2ea043;
-    --glow: rgba(46, 160, 67, 0.4);
+    --bg: #090d14;
+    --panel: rgba(12, 16, 24, 0.94);
+    --border: rgba(245, 179, 46, 0.35);
+    --accent: #f5b32e;
+    --glow: rgba(245, 179, 46, 0.45);
+    --green: #2ea043;
     --cyan: #39b2de;
-    --amber: #f0ab07;
+    --amber: #f5b32e;
     --red: #e84d6e;
-    --text: #e6edf3;
-    --dim: #8b949e;
+    --text: #f4f7fc;
+    --dim: #9ba6b8;
     --mono: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 12px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; max-width: 100vw; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 12px; touch-action: none; }
   #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; }
-  .panel { position: absolute; background: var(--panel); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.4); z-index: 10; }
+  .panel { position: absolute; background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.6); z-index: 10; }
 
-  #brand { top: 16px; left: 16px; padding: 12px 14px; max-width: 300px; }
-  #brand h1 { font: 700 13px var(--mono); letter-spacing: 1.2px; text-transform: uppercase; color: #fff; display: flex; align-items: center; gap: 8px; }
-  #brand h1::before { content: ""; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
-  #brand p { margin-top: 4px; font-size: 11px; color: var(--dim); line-height: 1.4; }
+  /* Multi-Sport Arena Switcher */
+  #navPills { position: fixed; top: 10px; left: 12px; z-index: 18; display: flex; gap: 5px; align-items: center; }
+  .sport-pill { padding: 6px 10px; border-radius: 6px; font: 700 11px var(--mono); text-decoration: none; color: var(--dim); background: var(--panel); border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: all .16s ease; display: flex; align-items: center; gap: 5px; }
+  .sport-pill:hover { color: #fff; border-color: var(--amber); background: #161d2a; }
+  .sport-pill.active { color: #090d14; background: var(--amber); border-color: #fbca5b; box-shadow: 0 0 12px var(--glow); font-weight: 800; }
+
+  /* Persistent SCAD Yellow/Black Mode & 6v6 Player Control Bar */
+  #arenaBar { position: fixed; top: 48px; left: 12px; z-index: 18; display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 28px rgba(0,0,0,.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); max-width: 380px; }
+  .ab-row { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+  .pm-switch { display: flex; flex: 1; background: #090d14; border: 1px solid rgba(245,179,46,.35); border-radius: 6px; overflow: hidden; }
+  .pm-btn { flex: 1; min-height: 36px; padding: 6px 10px; font: 800 11px var(--mono); letter-spacing: .6px; color: var(--dim); background: transparent; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all .15s; }
+  .pm-btn:hover { color: #fff; background: rgba(255,255,255,.06); }
+  .pm-btn.on { background: var(--amber); color: #090d14; box-shadow: 0 0 12px var(--glow); }
+  #pmBadge { font: 800 9px var(--mono); padding: 4px 7px; border-radius: 4px; background: rgba(245,179,46,.15); color: var(--amber); border: 1px solid var(--amber); white-space: nowrap; letter-spacing: .6px; }
+  body[data-playmode="view"] #pmBadge { background: rgba(57,178,222,.16); color: var(--cyan); border-color: var(--cyan); }
+
+  #quickModeBar { display: flex; background: #090d14; border: 1px solid rgba(255,255,255,.15); border-radius: 6px; overflow: hidden; }
+  #quickModeBar button { padding: 6px 9px; font: 700 10px var(--mono); letter-spacing: .5px; text-transform: uppercase; color: var(--dim); background: transparent; border: 0; cursor: pointer; transition: all .15s; }
+  #quickModeBar button+button { border-left: 1px solid rgba(255,255,255,.12); }
+  #quickModeBar button.on { background: #263147; color: var(--amber); }
+
+  /* 6v6 Player Selection Bar */
+  #playerBar { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 6px; }
+  body[data-mode="drills"] #playerBar, body[data-mode="drills"] .matchOnly { display: none !important; }
+  .pb-head { display: flex; align-items: center; justify-content: space-between; font: 700 10px var(--mono); color: var(--amber); letter-spacing: .6px; }
+  .pb-head span { color: var(--text); font-weight: 600; }
+  .p-list { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .p-pill { min-height: 36px; padding: 4px 2px; border-radius: 5px; background: #131924; border: 1px solid rgba(255,255,255,.16); color: var(--text); font: 700 10px var(--mono); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; transition: all .14s; }
+  .p-pill small { font-size: 8px; color: var(--dim); font-weight: 600; }
+  .p-pill:hover { border-color: var(--amber); background: #1b2436; }
+  .p-pill.on { background: var(--amber); color: #090d14; border-color: #fff; box-shadow: 0 0 10px var(--glow); font-weight: 800; }
+  .p-pill.on small { color: #090d14; font-weight: 800; }
+  select.p-select { width: 100%; padding: 7px 8px; border-radius: 5px; background: #090d14; color: var(--text); border: 1px solid var(--amber); font: 700 11px var(--mono); outline: none; cursor: pointer; margin-bottom: 4px; }
+
+  /* Floating YOU Badge */
+  #youTag { position: fixed; z-index: 9; pointer-events: none; transform: translate(-50%, -100%); background: var(--amber); color: #090d14; font: 800 10px var(--mono); padding: 3px 7px; border-radius: 4px; border: 1.5px solid #090d14; box-shadow: 0 3px 10px rgba(0,0,0,.65); white-space: nowrap; letter-spacing: .5px; }
+  #youTag::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border: 5px solid transparent; border-top-color: var(--amber); }
+  body[data-playmode="view"] #youTag { background: #131924; color: var(--amber); border-color: var(--amber); }
+
+  #brand { display: none; }
   .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
   .badge { padding: 2px 6px; font: 11px var(--mono); border-radius: 4px; background: rgba(255,255,255,.08); color: var(--dim); border: 1px solid rgba(255,255,255,.1); }
-  .badge.on { background: rgba(46,160,67,.15); color: #7ee787; border-color: rgba(46,160,67,.35); }
-  .keys { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 11px; color: var(--dim); }
-  kbd { font: 600 11px var(--mono); padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: var(--text); white-space: nowrap; }
+  .badge.on { background: rgba(245,179,46,.18); color: var(--amber); border-color: rgba(245,179,46,.45); }
+  .keys { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 10px; color: var(--dim); }
+  kbd { font: 700 10px var(--mono); padding: 1px 5px; border-radius: 3px; background: rgba(245,179,46,.14); border: 1px solid rgba(245,179,46,.3); color: var(--amber); white-space: nowrap; }
 
-  #scoreboard { top: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; padding: 6px; }
-  .sb { min-width: 84px; padding: 4px 10px; text-align: center; border-radius: 5px; background: rgba(0,0,0,.35); }
-  .sb small { display: block; font: 600 11px var(--mono); letter-spacing: 1px; color: var(--dim); text-transform: uppercase; }
-  .sb b { display: block; font: 700 22px var(--mono); color: #fff; line-height: 1.15; }
+  #scoreboard { top: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; padding: 6px; z-index: 14; }
+  .sb { min-width: 80px; padding: 4px 10px; text-align: center; border-radius: 5px; background: rgba(0,0,0,.45); }
+  .sb small { display: block; font: 600 10px var(--mono); letter-spacing: 1px; color: var(--dim); text-transform: uppercase; }
+  .sb b { display: block; font: 700 20px var(--mono); color: #fff; line-height: 1.15; }
   .sb.clock b { color: var(--amber); }
   .sb.clock.warn b { color: var(--red); }
-  #drill-name { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); font: 600 11px var(--mono); letter-spacing: 1.4px; color: var(--cyan); text-transform: uppercase; z-index: 9; pointer-events: none; text-shadow: 0 1px 4px #000; }
+  #drill-name { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); font: 700 11px var(--mono); letter-spacing: 1.4px; color: var(--amber); text-transform: uppercase; z-index: 9; pointer-events: none; text-shadow: 0 1px 4px #000; }
   #toast { position: absolute; top: 118px; left: 50%; transform: translateX(-50%); font: 800 26px var(--mono); letter-spacing: 2px; color: var(--amber);
     text-shadow: 0 2px 0 #000, 0 0 18px rgba(240,171,7,.5); opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 12; white-space: nowrap; }
   #toast.show { opacity: 1; }
@@ -51,44 +88,75 @@
   #power { position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%); width: 260px; height: 12px; border-radius: 6px; background: rgba(0,0,0,.55);
     border: 1px solid var(--border); overflow: hidden; z-index: 11; opacity: 0; transition: opacity .15s; pointer-events: none; }
   #power.show { opacity: 1; }
+  body[data-playmode="view"] #power, body[data-playmode="view"] #power-label { display: none !important; }
   #power i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2ea043, #f0ab07 70%, #e84d6e); }
   #power-label { position: absolute; bottom: 74px; left: 50%; transform: translateX(-50%); font: 600 11px var(--mono); letter-spacing: 1px; color: var(--dim); z-index: 11; pointer-events: none; opacity: 0; }
   #power.show + #power-label { opacity: 1; }
 
-  #dock { top: 16px; right: 16px; width: 280px; padding: 14px; max-height: calc(100vh - 32px); overflow-y: auto; }
-  .sec { margin-bottom: 13px; padding-bottom: 11px; border-bottom: 1px solid rgba(255,255,255,.07); }
+  /* Retractable Dashboard Toggle & Panel */
+  #panelToggleBtn { position: fixed; top: 10px; right: 12px; z-index: 25; min-height: 44px; min-width: 112px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border-radius: 7px; border: 1.5px solid var(--amber); background: var(--panel); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: var(--amber); font: 800 12px var(--mono); letter-spacing: .8px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,0,0,.6); transition: all .18s ease; }
+  #panelToggleBtn:hover { background: var(--amber); color: #090d14; transform: translateY(-1px); }
+  #panelToggleBtn.active { background: var(--amber); border-color: #fff; color: #090d14; box-shadow: 0 0 14px var(--glow); }
+
+  #dock { position: fixed; top: 60px; right: 12px; width: 296px; padding: 14px; max-height: calc(100vh - 74px); overflow-y: auto; z-index: 24; transform: translateX(calc(100% + 28px)); opacity: 0; pointer-events: none; transition: transform .26s cubic-bezier(.16,1,.3,1), opacity .18s ease; }
+  #dock.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+  .dock-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(245,179,46,.22); }
+  .dock-head h1 { font: 800 13px var(--mono); letter-spacing: 1.2px; text-transform: uppercase; color: var(--amber); display: flex; align-items: center; gap: 8px; }
+  .dock-head h1::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .close-btn { background: #161f2e; border: 1px solid var(--border); color: var(--amber); font: 800 13px var(--mono); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; }
+  .close-btn:hover { background: var(--red); border-color: var(--red); color: #fff; }
+
+  .sec { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
   .sec:last-child { margin: 0; padding: 0; border: 0; }
-  .st { font: 600 11px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center; }
+  .st { font: 700 10px var(--mono); color: var(--amber); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center; }
   .row { display: flex; gap: 6px; margin-bottom: 6px; }
-  .btn { flex: 1; padding: 6px 8px; font: 600 11px var(--mono); color: var(--text); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  .btn { flex: 1; min-height: 32px; padding: 6px 8px; font: 700 10px var(--mono); color: var(--text); background: #151c28; border: 1px solid rgba(255,255,255,.14);
     border-radius: 5px; cursor: pointer; transition: all .15s; text-align: center; }
-  .btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.25); }
-  .btn.active { background: var(--accent); border-color: #4cd864; color: #0d1117; box-shadow: 0 0 10px var(--glow); }
+  .btn:hover { background: #1f293a; border-color: var(--amber); }
+  .btn.active { background: var(--amber); border-color: #fbca5b; color: #090d14; box-shadow: 0 0 10px var(--glow); font-weight: 800; }
   .btn.cy { background: rgba(57,178,222,.15); border-color: rgba(57,178,222,.35); color: var(--cyan); }
   .sl { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 5px 0 0; font-size: 11px; }
   .sl span:last-child { font: 11px var(--mono); color: var(--dim); min-width: 40px; text-align: right; }
   input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,.15); border-radius: 2px; outline: none; margin: 6px 0; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--text); cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--amber); cursor: pointer; }
   .tg { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: 11px; cursor: pointer; }
   .tg input { display: none; }
   .tg i { position: relative; width: 32px; height: 18px; background: rgba(255,255,255,.15); border-radius: 9px; transition: background .2s; }
   .tg i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .2s; }
-  .tg input:checked + i { background: var(--accent); }
-  .tg input:checked + i::after { transform: translateX(14px); }
+  .tg input:checked + i { background: var(--amber); }
+  .tg input:checked + i::after { transform: translateX(14px); background: #090d14; }
 
-  #telemetry { bottom: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 6px 14px;
-    font: 11px var(--mono); color: var(--dim); background: rgba(14,20,32,.75); pointer-events: none; }
+  #telemetry { bottom: 12px; left: 16px; right: 16px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 6px 14px;
+    font: 11px var(--mono); color: var(--dim); background: rgba(9,13,20,.88); pointer-events: none; }
   #telemetry span { color: var(--text); }
+
+  /* Mobile Touch Controls (only shown in Play Mode) */
+  #touch { display: none; position: fixed; left: 0; right: 0; bottom: 0; height: 0; z-index: 15; }
+  body.touch[data-playmode="play"] #touch { display: block; }
+  body[data-playmode="view"] #touch { display: none !important; }
+  #dpad { position: fixed; left: 12px; bottom: calc(108px + env(safe-area-inset-bottom)); width: 132px; height: 132px; }
+  #dpad button, #tbtns button { position: absolute; border: 1.5px solid rgba(245,179,46,.55); background: rgba(9,13,20,.85); color: #fff; font: 800 12px var(--mono); border-radius: 10px; touch-action: none; box-shadow: 0 4px 12px rgba(0,0,0,.5); }
+  #dpad button:active, #tbtns button:active { background: var(--amber); color: #090d14; }
+  #dpad button { width: 44px; height: 44px; }
+  #dpad [data-k=KeyW] { left: 44px; top: 0; }
+  #dpad [data-k=KeyS] { left: 44px; top: 88px; }
+  #dpad [data-k=KeyA] { left: 0; top: 44px; }
+  #dpad [data-k=KeyD] { left: 88px; top: 44px; }
+  #tbtns { position: fixed; right: 12px; bottom: calc(108px + env(safe-area-inset-bottom)); width: 154px; height: 132px; }
+  #tShoot { right: 0; bottom: 0; width: 82px; height: 82px; border-radius: 50% !important; background: rgba(245,179,46,.88) !important; color: #090d14 !important; border: 2px solid #fff !important; font-size: 11px !important; }
+  #tPass { left: 0; bottom: 44px; width: 64px; height: 40px; font-size: 10px !important; background: rgba(57,178,222,.85) !important; color: #090d14 !important; }
+  #tDodge { right: 0; top: 0; width: 82px; height: 38px; font-size: 10px !important; }
+  #tCam { left: 0; bottom: 0; width: 64px; height: 38px; font-size: 10px !important; }
 
   .overlay { position: absolute; inset: 0; background: rgba(4,7,14,.78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 50; }
   .overlay.show { display: flex; }
-  .card { width: 760px; max-width: 94vw; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.7); max-height: 94vh; overflow-y: auto; }
+  .card { width: 760px; max-width: 94vw; background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.7); max-height: 94vh; overflow-y: auto; }
   .card h2 { font: 800 20px var(--mono); letter-spacing: 2px; text-transform: uppercase; color: #fff; }
   .card h2 em { font-style: normal; color: var(--amber); }
   .card .sub { color: var(--dim); margin: 6px 0 16px; font-size: 12px; line-height: 1.5; }
   .drills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .drill { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); border-radius: 8px; padding: 12px; cursor: pointer; transition: all .15s; }
-  .drill:hover { border-color: var(--accent); background: rgba(46,160,67,.1); transform: translateY(-2px); }
+  .drill:hover { border-color: var(--amber); background: rgba(245,179,46,.1); transform: translateY(-2px); }
   .drill b { display: block; font: 700 12px var(--mono); color: #fff; margin-bottom: 4px; letter-spacing: .5px; }
   .drill p { font-size: 11px; color: var(--dim); line-height: 1.45; }
   .drill small { display: block; margin-top: 8px; font: 600 11px var(--mono); color: var(--cyan); }
@@ -103,47 +171,78 @@
   #pal-note { margin-top: 12px; font-size: 11px; color: var(--dim); }
 
   [hidden] { display: none !important; }
-  #hud2d { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10; image-rendering: pixelated; display: none; pointer-events: none; filter: drop-shadow(0 6px 14px rgba(0,0,0,.45)); }
+  #hud2d { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 14; image-rendering: pixelated; display: none; pointer-events: none; filter: drop-shadow(0 6px 14px rgba(0,0,0,.45)); }
   .tabs { display: flex; gap: 6px; margin: 14px 0 12px; }
   .tab { flex: 1; padding: 10px; font: 700 12px var(--mono); letter-spacing: 1px; text-transform: uppercase; color: var(--dim); background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; cursor: pointer; }
-  .tab.active { color: #0d1117; background: var(--accent); border-color: #4cd864; }
-  .matchcard { border: 1px solid var(--accent); background: rgba(46,160,67,.1); border-radius: 8px; padding: 16px; display: flex; gap: 18px; align-items: center; }
+  .tab.active { color: #090d14; background: var(--amber); border-color: #fbca5b; }
+  .matchcard { border: 1px solid var(--amber); background: rgba(245,179,46,.1); border-radius: 8px; padding: 16px; display: flex; gap: 18px; align-items: center; }
   .matchcard b { display: block; font: 700 15px var(--mono); color: #fff; margin-bottom: 6px; }
   .matchcard p { font-size: 12px; color: var(--dim); line-height: 1.5; }
   .matchcard .btn { flex: 0 0 150px; padding: 14px 10px; font-size: 13px; }
-  @media (max-width: 900px) {
-    #dock { width: 230px; right: 8px; top: 8px; }
-    #brand { max-width: 200px; left: 8px; top: 8px; }
-    #brand { display: none; }
-    #hud2d { width: 300px; height: auto; top: 8px; }
-    #scoreboard { top: auto; bottom: 60px; }
+  @media (max-width: 768px) {
+    body[data-playmode="play"] #touch { display: block; }
+    #navPills { top: 8px; left: 8px; gap: 3px; }
+    .sport-pill { padding: 5px 7px; font-size: 10px; }
+    #panelToggleBtn { top: 8px; right: 8px; min-height: 42px; min-width: 96px; padding: 0 12px; font-size: 11px; }
+    #brand, #telemetry, #drill-name { display: none !important; }
+    #hud2d { width: 280px; height: auto; top: 52px; }
+    #scoreboard { top: 52px; bottom: auto; padding: 4px; }
+    .sb { min-width: 64px; padding: 3px 6px; }
+    .sb b { font-size: 16px; }
+    #arenaBar { top: auto; bottom: 0; left: 0; right: 0; max-width: 100%; border-radius: 12px 12px 0 0; border-left: 0; border-right: 0; border-bottom: 0; border-top: 2px solid var(--amber); padding: 7px 10px calc(8px + env(safe-area-inset-bottom)); gap: 6px; }
+    .pm-btn { min-height: 38px; font-size: 11px; }
+    .p-pill { min-height: 38px; font-size: 10px; }
+    #dock { top: auto; bottom: 0; right: 0; left: 0; width: 100%; max-height: 76vh; border-radius: 16px 16px 0 0; border-top: 2px solid var(--amber); transform: translateY(105%); opacity: 1; transition: transform .25s ease; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+    #dock.open { transform: translateY(0); }
     .drills { grid-template-columns: 1fr; }
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body>
+<body data-mode="match" data-playmode="play">
 <canvas id="gl"></canvas>
 
-<div class="panel" id="brand">
-  <div style="display:flex;gap:6px;margin-bottom:10px">
-    <a href="/pitch" style="padding:3px 8px;border-radius:12px;font:700 10px var(--mono);text-decoration:none;color:var(--dim);background:rgba(255,255,255,.08);border:1px solid var(--border)">⚽ Soccer</a>
-    <a href="/lacrosse" style="padding:3px 8px;border-radius:12px;font:700 10px var(--mono);text-decoration:none;color:#fff;background:rgba(46,160,67,.25);border:1px solid var(--accent)">🥍 Lacrosse</a>
-    <a href="/swim" style="padding:3px 8px;border-radius:12px;font:700 10px var(--mono);text-decoration:none;color:var(--dim);background:rgba(255,255,255,.08);border:1px solid var(--border)">🏊 Swimming</a>
+<!-- Multi-Sport Arena Switcher -->
+<nav id="navPills">
+  <a href="/pitch" class="sport-pill">⚽ Soccer</a>
+  <a href="/lacrosse" class="sport-pill active">🥍 Lacrosse</a>
+  <a href="/swim" class="sport-pill">🏊 Swimming</a>
+</nav>
+
+<!-- Persistent SCAD Yellow/Black Mode & 6v6 Player Control Bar -->
+<div id="arenaBar">
+  <div class="ab-row">
+    <div class="pm-switch" role="group" aria-label="View or Play Mode">
+      <button type="button" class="pm-btn" id="btnViewMode" data-pm="view">👁 VIEW MODE</button>
+      <button type="button" class="pm-btn on" id="btnPlayMode" data-pm="play">🎮 PLAY MODE</button>
+    </div>
+    <span id="pmBadge">PLAYING</span>
+    <div id="quickModeBar">
+      <button type="button" id="qmMatch" class="on">6v6</button>
+      <button type="button" id="qmDrills">Drills</button>
+    </div>
   </div>
+  <div id="playerBar">
+    <div class="pb-head"><span>PLAY AS (6v6 HIVE):</span><b id="ctrlLabel">#1 Attack (YOU)</b></div>
+    <div class="p-list" id="playerPills">
+      <button type="button" class="p-pill on" data-pidx="0"><b>#1</b><small>ATK</small></button>
+      <button type="button" class="p-pill" data-pidx="1"><b>#2</b><small>ATK</small></button>
+      <button type="button" class="p-pill" data-pidx="2"><b>#3</b><small>MID</small></button>
+      <button type="button" class="p-pill" data-pidx="3"><b>#4</b><small>DEF</small></button>
+      <button type="button" class="p-pill" data-pidx="4"><b>#5</b><small>DEF</small></button>
+      <button type="button" class="p-pill" data-pidx="5"><b>#0</b><small>GK</small></button>
+    </div>
+  </div>
+</div>
+
+<div id="youTag">YOU · #1 ATK</div>
+<button id="panelToggleBtn" aria-label="Toggle Control Panel" aria-expanded="false">☰ Panel</button>
+
+<div class="panel" id="brand">
   <h1>Hive Stick Challenge</h1>
-  <p>HiveKey Arena lacrosse drills on a floating voxel island. Hive Style Lock look: 2&nbsp;px low-res target, depth outlines, 90-colour OKLab + Bayer.</p>
   <div class="badges">
     <span class="badge on">three.js r128</span><span class="badge">Iso 850m</span><span class="badge">90-OKLab</span><span class="badge">Bayer 4&times;4</span>
     <span class="badge" id="b-surface">TURF</span>
-  </div>
-  <div class="keys">
-    <kbd>WASD</kbd><span>Run (screen-relative)</span>
-    <kbd>Mouse</kbd><span>Aim &nbsp;<kbd>Arrows</kbd> aim by keys</span>
-    <kbd>Click / Space</kbd><span>Hold to charge &middot; release to shoot. No ball: check</span>
-    <kbd>F / Right-click</kbd><span>Pass to the teammate nearest the cursor</span>
-    <kbd>Shift</kbd><span>Dodge (beats a check)</span>
-    <kbd>Q E</kbd><span>Rotate view &nbsp;<kbd>R</kbd> restart &nbsp;<kbd>P</kbd> pause</span>
   </div>
 </div>
 
@@ -158,9 +257,47 @@
 <div id="toast"></div>
 <div id="power"><i id="power-fill"></i></div><div id="power-label">POWER</div>
 
+<!-- Mobile Touch Controls (only visible in Play Mode) -->
+<div id="touch">
+  <div id="dpad">
+    <button data-k="KeyW">▲</button>
+    <button data-k="KeyA">◀</button>
+    <button data-k="KeyD">▶</button>
+    <button data-k="KeyS">▼</button>
+  </div>
+  <div id="tbtns">
+    <button id="tPass">PASS</button>
+    <button id="tDodge">DODGE</button>
+    <button id="tCam">ROT</button>
+    <button id="tShoot">SHOOT</button>
+  </div>
+</div>
+
 <div class="panel" id="dock">
+  <div class="dock-head">
+    <h1>Hive Stick Challenge</h1>
+    <button id="closePanelBtn" class="close-btn" title="Close (Tab / Esc)">✕</button>
+  </div>
   <div class="sec">
-    <div class="st"><span>Mode</span><span class="badge" id="drill-badge">MATCH</span></div>
+    <div class="st"><span>Interaction Mode</span><span class="badge on" id="pm-dock-badge">PLAY</span></div>
+    <div class="row">
+      <button class="btn" data-pm-btn="view">👁 View Mode</button>
+      <button class="btn active" data-pm-btn="play">🎮 Play Mode</button>
+    </div>
+  </div>
+  <div class="sec matchOnly">
+    <div class="st"><span>Control Player (6v6)</span><span class="badge" id="dock-player-tag">#1 ATK</span></div>
+    <select id="playerSelect" class="p-select" aria-label="Select 6v6 player to control">
+      <option value="0">#1 — Attack (Left Crease)</option>
+      <option value="1">#2 — Attack (Right Wing)</option>
+      <option value="2">#3 — Midfield (Center)</option>
+      <option value="3">#4 — Defense (Left Point)</option>
+      <option value="4">#5 — Defense (Right Point)</option>
+      <option value="5">#0 — Goalie (Crease Keeper)</option>
+    </select>
+  </div>
+  <div class="sec">
+    <div class="st"><span>Game Format</span><span class="badge" id="drill-badge">MATCH</span></div>
     <div class="row"><button class="btn active" data-drill="match">Match 6v6</button><button class="btn" id="drills-btn">Drills &#9656;</button></div>
     <div class="row"><button class="btn" data-drill="shoot">Shooting</button><button class="btn" data-drill="pass">Passing</button><button class="btn" data-drill="duel">1v1</button></div>
     <div class="row"><button class="btn cy" id="restart-btn">Restart (R)</button><button class="btn" id="menu-btn">Menu</button></div>
@@ -832,10 +969,32 @@ function makeChar(o){
   return c;
 }
 const TEAM = { jersey:'#c7810e', helmet:'#fbca5b', pants:'#1e2636', head:'#fbca5b', trim:'#f4f7fc' };
-const player = makeChar(TEAM);
+const drillPlayer = makeChar(TEAM);
+let player = drillPlayer;
+let playMode = 'play';
+let selectedPlayerIdx = 0;
+const PLAYER_LABELS = ['#1 ATK', '#2 ATK', '#3 MID', '#4 DEF', '#5 DEF', '#0 GK'];
 const defender = makeChar({ jersey:'#9f2742', helmet:'#5c1525', pants:'#28080f', head:'#e04568', trim:'#fbca5b' });
 const keeper = makeChar({ jersey:'#2a5eac', helmet:'#112952', pants:'#0b1c3a', head:'#9ce5fb', trim:'#f4f7fc', wide:true, scale:1.05 });
 const mates = [0,1,2].map(() => makeChar({ jersey:'#2a90be', helmet:'#9ce5fb', pants:'#0e425c', head:'#39b2de' }));
+
+// 3D SCAD Yellow highlight ring under the controlled player
+const youRing = new THREE.Group();
+{
+  const r1 = new THREE.Mesh(
+    new THREE.RingGeometry(0.95, 1.32, 28),
+    new THREE.MeshBasicMaterial({ color: 0xf5b32e, side: THREE.DoubleSide, transparent: true, opacity: 0.92, depthWrite: false })
+  );
+  r1.rotation.x = -Math.PI / 2;
+  const r2 = new THREE.Mesh(
+    new THREE.RingGeometry(1.42, 1.56, 28),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.45, depthWrite: false })
+  );
+  r2.rotation.x = -Math.PI / 2;
+  youRing.add(r1, r2);
+  youRing.position.y = GROUND + 0.05;
+  scene.add(youRing);
+}
 
 const SWING_DUR = 0.22, REL_AT = 0.45;
 function poseStick(c){
@@ -1026,20 +1185,32 @@ const CHARGE_TIME = 0.75;
 
 addEventListener('keydown', e => {
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+  if(e.code === 'Tab'){ e.preventDefault(); if(window.toggleDashboard) window.toggleDashboard(); return; }
+  if(e.code === 'Escape'){ if(window.closeDashboard) window.closeDashboard(); return; }
   if(e.repeat) return;
+  if(e.code === 'KeyV'){ setPlayMode(playMode === 'play' ? 'view' : 'play'); return; }
+  if(MATCH.active && ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6'].includes(e.code)){
+    selectPlayer(parseInt(e.code.slice(5), 10) - 1);
+    return;
+  }
   keys[e.code] = true;
-  if(e.code === 'Space') beginCharge();
-  if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') tryDodge();
+  if(playMode === 'play'){
+    if(e.code === 'Space') beginCharge();
+    if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') tryDodge();
+    if(e.code === 'KeyF') userPass();
+  }
   if(e.code === 'KeyR') restartDrill();
-  if(e.code === 'KeyF') userPass();
   if(e.code === 'KeyP') togglePause();
   if(e.code === 'KeyQ') rotateView(-1);
   if(e.code === 'KeyE') rotateView(1);
   if(e.code.startsWith('Arrow')) pointer.active = false;
 });
-addEventListener('keyup', e => { keys[e.code] = false; if(e.code === 'Space') endCharge(); });
-canvas.addEventListener('pointerdown', e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; if(e.button === 0) beginCharge(); else if(e.button === 2) userPass(); });
-addEventListener('pointerup', e => { if(e.button === 0) endCharge(); });
+addEventListener('keyup', e => { keys[e.code] = false; if(e.code === 'Space' && playMode === 'play') endCharge(); });
+canvas.addEventListener('pointerdown', e => {
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true;
+  if(playMode === 'play'){ if(e.button === 0) beginCharge(); else if(e.button === 2) userPass(); }
+});
+addEventListener('pointerup', e => { if(e.button === 0 && playMode === 'play') endCharge(); });
 addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; if(e.target === canvas) pointer.active = true; });
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('blur', () => { for(const k in keys) keys[k] = false; if(charging) cancelCharge(); });
@@ -1195,6 +1366,10 @@ const keeperAI = { react:0, tz:0, ty:1.2, active:false };
 
 function startDrill(id){
   drill = { id, mode: DRILLS[id].mode, def: DRILLS[id] };
+  player = drillPlayer;
+  document.body.dataset.mode = 'drills';
+  if($('qmMatch')) $('qmMatch').classList.remove('on');
+  if($('qmDrills')) $('qmDrills').classList.add('on');
   MATCH.active = false; MATCH.state = 'off'; setCam('iso');
   Object.assign(G, { state:'playing', phase:'hold', score:0, att:0, hit:0, streak:0, best:0, beaten:0, timeLeft:drill.def.time, clock:drill.def.clock, spotIdx:Math.floor(rnd()*6), nextFeed:0, endAt:0 });
   shotRec = passRec = null; events.length = 0; paused = false;
@@ -1374,7 +1549,7 @@ function updatePlayer(dt){
   }
   p.x += player.vel.x*dt; p.z += player.vel.z*dt;
   p.x = clamp(p.x, -HALF_L-2, HALF_L+2); p.z = clamp(p.z, -HALF_W-1.2, HALF_W+1.2);
-  avoidCrease(p); p.y = GROUND;
+  if(!player.isGK) avoidCrease(p); p.y = GROUND;
   if(charging){
     chargeT += dt; if(player.sMode !== 'windup') player.sMode = 'windup';
     player.charge = clamp(chargeT/CHARGE_TIME,0,1); $('power-fill').style.width = (player.charge*100).toFixed(0)+'%';
@@ -1501,8 +1676,12 @@ function startMatch(){
   MATCH.active = true; MATCH.score = [0,0]; MATCH.time = MATCH_TIME; MATCH.overtime = false; MATCH.over = false;
   MATCH.shots = [0,0]; MATCH.saves = [0,0]; MATCH.userGoals = 0; MATCH.userShots = 0;
   drill = { id:'match', mode:'match', def:DRILLS.match };
+  player = selectedPlayerIdx === 5 ? TM.gk[0] : TM.teams[0][selectedPlayerIdx];
+  document.body.dataset.mode = 'match';
+  if($('qmMatch')) $('qmMatch').classList.add('on');
+  if($('qmDrills')) $('qmDrills').classList.remove('on');
   Object.assign(G, { state:'playing', phase:'hold', score:0, att:0, hit:0 }); paused = false; shotRec = passRec = null; events.length = 0;
-  player.dodgeCD = 0; player.sMode = 'carry';
+  player.dodgeCD = 0; player.sMode = player.isGK ? 'catch' : 'carry';
   $('menu').classList.remove('show'); $('result').classList.remove('show');
   document.querySelectorAll('[data-drill]').forEach(b => b.classList.toggle('active', b.dataset.drill === 'match'));
   $('drill-name').textContent = DRILLS.match.name; $('drill-badge').textContent = 'MATCH';
@@ -1769,18 +1948,19 @@ function separate(){
 }
 function matchAI(dt){
   if(G.state !== 'playing') return;
-  if(MATCH.state !== 'play'){ for(const c of TM.all) if(c !== player){ c.vel.set(0,0,0); } return; }
+  const u = playMode === 'play' ? player : null;
+  if(MATCH.state !== 'play'){ for(const c of TM.all) if(c !== u){ c.vel.set(0,0,0); } return; }
   const holder = ball.holder, ctx = { chaser:[null,null], press:[null,null] };
   if(!holder){
     for(let t=0;t<2;t++){ let best = 1e9;
-      for(const c of TM.teams[t]){ if(c === player || c.ai.stun > 0 || T < c.noCatchUntil) continue;
+      for(const c of TM.teams[t]){ if(c === u || c.ai.stun > 0 || T < c.noCatchUntil) continue;
         const d = Math.hypot(c.root.position.x-ball.pos.x, c.root.position.z-ball.pos.z); if(d < best){ best = d; ctx.chaser[t] = c; } } }
   } else if(!holder.isGK){
     const t = 1-holder.team; let best = 1e9;
-    for(const c of TM.teams[t]){ if(c === player || c.ai.stun > 0) continue;
+    for(const c of TM.teams[t]){ if(c === u || c.ai.stun > 0) continue;
       const d = Math.hypot(c.root.position.x-holder.root.position.x, c.root.position.z-holder.root.position.z); if(d < best){ best = d; ctx.press[t] = c; } }
   }
-  for(const c of TM.all){ if(c === player) continue; if(c.isGK) aiKeeper(c, dt); else aiField(c, dt, ctx); }
+  for(const c of TM.all){ if(c === u) continue; if(c.isGK) aiKeeper(c, dt); else aiField(c, dt, ctx); }
   separate();
 }
 
@@ -1885,10 +2065,12 @@ function applyCamera(dt){
   let want, rate = 4;
   if(cam.follow){
     const pp = player.root.position;
-    if(MATCH.active){          // broadcast follow: stay on the ball carrier (or loose ball), leaning toward the attack
+    if(MATCH.active){          // broadcast follow: blend selected player with ball carrier
       const ref = ball.holder ? ball.holder.root.position : ball.pos;
       const lead = ball.holder ? (ball.holder.team === 0 ? -3 : 3) : 0;
-      want = tB.set(clamp(ref.x + lead, -34, 34), 0, clamp(ref.z*0.8, -14, 14)); rate = 3;
+      const bx = lerp(ref.x + lead, pp.x, 0.55);
+      const bz = lerp(ref.z * 0.8, pp.z, 0.55);
+      want = tB.set(clamp(bx, -34, 34), 0, clamp(bz, -14, 14)); rate = 3.5;
     }
     else if(drill.id === 'pass'){ want = tB.set(pp.x*0.65 + (-26)*0.35, 0, pp.z*0.65); }
     else want = tB.set(lerp(pp.x, GOAL_X, 0.32), 0, pp.z*0.7);
@@ -1954,6 +2136,10 @@ function updateHUD(dt){
    ========================================================================= */
 const trajPos = trajGeo.attributes.position;
 function updateReticles(){
+  if(playMode === 'view'){
+    shotRet.visible = false; passRet.visible = false; traj.visible = false;
+    return;
+  }
   const holding = ball.state === 'held' && ball.holder === player && G.state === 'playing';
   const mHold = MATCH.active && holding && MATCH.state === 'play', passTgt = mHold ? pickPassTarget() : null;
   shotRet.visible = MATCH.active ? mHold : (drill.mode !== 'pass' && G.state === 'playing');
@@ -1977,14 +2163,59 @@ function updateReticles(){
     r.material.color.set(act ? '#fbca5b' : '#414e6a'); r.material.opacity = act ? 1 : 0.5; r.scale.setScalar(act ? pulse : 0.8);
   });
 }
+const youTagEl = $('youTag');
+const _youProj = new V3();
+function updateYouIndicator(now){
+  if(!player || !player.root || !player.root.visible || G.state === 'menu'){
+    youRing.visible = false;
+    if(youTagEl) youTagEl.style.display = 'none';
+    return;
+  }
+  youRing.visible = true;
+  youRing.position.x = player.root.position.x;
+  youRing.position.z = player.root.position.z;
+  const pulse = 1 + 0.08 * Math.sin(now * 6);
+  youRing.scale.set(pulse, 1, pulse);
+  if(youTagEl){
+    _youProj.set(player.root.position.x, player.root.position.y + 3.0, player.root.position.z);
+    _youProj.project(camera);
+    if(_youProj.z > 1){
+      youTagEl.style.display = 'none';
+    } else {
+      youTagEl.style.display = 'block';
+      const sx = (_youProj.x * 0.5 + 0.5) * innerWidth;
+      const sy = (-_youProj.y * 0.5 + 0.5) * innerHeight;
+      youTagEl.style.left = sx + 'px';
+      youTagEl.style.top = sy + 'px';
+      const lbl = MATCH.active ? PLAYER_LABELS[selectedPlayerIdx] : '#9 ATTACK';
+      youTagEl.textContent = (playMode === 'view' ? '👁 CAM · ' : 'YOU · ') + lbl;
+    }
+  }
+}
+
 let postOn = false;   // direct render by default; the Style Lock post-process is opt-in (checkbox or ?post=1)
 let last = performance.now(), fpsAcc = 0, fpsN = 0, tAbs = 0;
 function step(dt){
   tAbs += dt;
   if(!paused){
     T += dt;
-    updateAim(dt);
-    updatePlayer(dt);
+    if(playMode === 'play'){
+      updateAim(dt);
+      updatePlayer(dt);
+    } else if(!MATCH.active && G.state === 'playing'){
+      // Spectator auto-play in drills mode
+      player.vel.set(0, 0, 0);
+      if(ball.state === 'held' && ball.holder === player && G.phase === 'hold' && player.sMode !== 'swing' && G.clock < drill.def.clock - 1.2){
+        if(drill.mode === 'pass'){
+          const m = mates[Math.floor(rnd()*mates.length)];
+          aimWorld.set(m.root.position.x, GROUND+1.5, m.root.position.z);
+        } else {
+          aimWorld.set(GOAL_X, GROUND + 0.8 + rnd()*1.6, (rnd()-0.5)*2.4);
+        }
+        startSwing(player, ch => launchPlayerThrow(aimWorld.clone(), 0.72, 0.018));
+        G.phase = 'releasing';
+      }
+    }
     if(drill.id === 'duel' && G.state === 'playing'){ updateDefender(dt); updateKeeper(dt); }
     else if(drill.id === 'duel'){ updateKeeper(dt); }
     if(drill.id === 'pass') updateMates(dt, T);
@@ -2001,6 +2232,7 @@ function step(dt){
   clouds.forEach(c => { c.position.x += c.userData.sp*dt; if(c.position.x > 150) c.position.x = -150; });
   adTex.offset.x = (tAbs*0.03) % 1;
   applyCamera(dt);
+  updateYouIndicator(tAbs);
   updateHUD(dt);
 }
 function frame(now){
@@ -2017,8 +2249,126 @@ function frame(now){
 }
 
 /* =========================================================================
-   18. UI WIRING
+   18. UI WIRING (Dashboard Toggle, View/Play Mode, 6v6 Player Selector, Touch)
    ========================================================================= */
+function setPlayMode(mode){
+  playMode = mode === 'view' ? 'view' : 'play';
+  document.body.dataset.playmode = playMode;
+  const vBtn = $('btnViewMode'), pBtn = $('btnPlayMode'), badge = $('pmBadge'), dBadge = $('pm-dock-badge');
+  if(vBtn) vBtn.classList.toggle('on', playMode === 'view');
+  if(pBtn) pBtn.classList.toggle('on', playMode === 'play');
+  document.querySelectorAll('[data-pm-btn]').forEach(b => b.classList.toggle('active', b.dataset.pmBtn === playMode));
+  if(badge){
+    badge.textContent = playMode === 'view' ? 'SPECTATING' : 'PLAYING';
+    badge.classList.toggle('view', playMode === 'view');
+  }
+  if(dBadge) dBadge.textContent = playMode === 'view' ? 'VIEW' : 'PLAY';
+  if(playMode === 'view' && charging) cancelCharge();
+  toast(playMode === 'view' ? 'SPECTATOR VIEW MODE (AI ACTIVE)' : 'PLAY MODE · CONTROLLING ' + (MATCH.active ? PLAYER_LABELS[selectedPlayerIdx] : 'ATTACKER'), '', 1200);
+}
+const PLAYER_FULL = ['#1 Attack (YOU)', '#2 Attack (YOU)', '#3 Midfield (YOU)', '#4 Defense (YOU)', '#5 Defense (YOU)', '#0 Goalie (YOU)'];
+function selectPlayer(idx){
+  selectedPlayerIdx = clamp(idx|0, 0, 5);
+  if(MATCH.active){
+    if(charging) cancelCharge();
+    player = selectedPlayerIdx === 5 ? TM.gk[0] : TM.teams[0][selectedPlayerIdx];
+  }
+  document.querySelectorAll('#playerPills .p-pill').forEach(b => {
+    b.classList.toggle('on', parseInt(b.dataset.pidx, 10) === selectedPlayerIdx);
+  });
+  if($('ctrlLabel')) $('ctrlLabel').textContent = PLAYER_FULL[selectedPlayerIdx];
+  if($('dock-player-tag')) $('dock-player-tag').textContent = PLAYER_LABELS[selectedPlayerIdx];
+  const sel = $('playerSelect');
+  if(sel && parseInt(sel.value, 10) !== selectedPlayerIdx) sel.value = String(selectedPlayerIdx);
+  toast('CONTROLLING ' + PLAYER_LABELS[selectedPlayerIdx], 'good', 1000);
+}
+if($('btnViewMode')) $('btnViewMode').onclick = () => setPlayMode('view');
+if($('btnPlayMode')) $('btnPlayMode').onclick = () => setPlayMode('play');
+document.querySelectorAll('[data-pm-btn]').forEach(b => b.addEventListener('click', () => setPlayMode(b.dataset.pmBtn)));
+if($('qmMatch')) $('qmMatch').onclick = () => startMatch();
+if($('qmDrills')) $('qmDrills').onclick = () => startDrill(drill.id === 'match' ? 'shoot' : drill.id);
+document.querySelectorAll('#playerPills .p-pill').forEach(b => {
+  b.addEventListener('click', () => {
+    selectPlayer(parseInt(b.dataset.pidx, 10));
+    if(playMode === 'view') setPlayMode('play');
+  });
+});
+if($('playerSelect')){
+  $('playerSelect').addEventListener('change', e => {
+    selectPlayer(parseInt(e.target.value, 10));
+    if(playMode === 'view') setPlayMode('play');
+    e.target.blur();
+  });
+}
+
+// Expandable / Retractable Dashboard with sessionStorage persistence
+const dockEl = $('dock');
+const panelToggleBtn = $('panelToggleBtn');
+const closePanelBtn = $('closePanelBtn');
+function setDashboardOpen(isOpen, save = true){
+  dockEl.classList.toggle('open', !!isOpen);
+  if(panelToggleBtn){
+    panelToggleBtn.classList.toggle('active', !!isOpen);
+    panelToggleBtn.innerHTML = isOpen ? '✕ Close' : '☰ Panel';
+    panelToggleBtn.setAttribute('aria-expanded', String(!!isOpen));
+  }
+  if(save){
+    try { sessionStorage.setItem('hive_dashboard_open', isOpen ? '1' : '0'); } catch(_){}
+  }
+}
+window.toggleDashboard = () => setDashboardOpen(!dockEl.classList.contains('open'), true);
+window.closeDashboard = () => setDashboardOpen(false, true);
+if(panelToggleBtn) panelToggleBtn.addEventListener('click', () => window.toggleDashboard());
+if(closePanelBtn) closePanelBtn.addEventListener('click', () => window.closeDashboard());
+{
+  let saved = null;
+  try { saved = sessionStorage.getItem('hive_dashboard_open'); } catch(_){}
+  setDashboardOpen(saved === '1', false);
+}
+
+// Mobile Touch D-Pad + Action Buttons
+{
+  const dpad = $('dpad');
+  let touchId = null;
+  const clearDpad = () => { keys.KeyW = keys.KeyS = keys.KeyA = keys.KeyD = false; };
+  const updateDpad = (cx, cy) => {
+    const r = dpad.getBoundingClientRect();
+    const dx = cx - (r.left + r.width/2), dy = cy - (r.top + r.height/2);
+    const dead = 12;
+    keys.KeyD = dx > dead; keys.KeyA = dx < -dead;
+    keys.KeyS = dy > dead; keys.KeyW = dy < -dead;
+  };
+  if(dpad){
+    dpad.addEventListener('touchstart', e => { e.preventDefault(); const t = e.changedTouches[0]; touchId = t.identifier; updateDpad(t.clientX, t.clientY); }, { passive:false });
+    dpad.addEventListener('touchmove', e => { e.preventDefault(); for(const t of e.changedTouches) if(t.identifier === touchId) updateDpad(t.clientX, t.clientY); }, { passive:false });
+    const endDpad = e => { for(const t of e.changedTouches) if(t.identifier === touchId){ touchId = null; clearDpad(); } };
+    dpad.addEventListener('touchend', endDpad); dpad.addEventListener('touchcancel', endDpad);
+  }
+  const tShoot = $('tShoot'), tPass = $('tPass'), tDodge = $('tDodge'), tCam = $('tCam');
+  if(tShoot){
+    tShoot.addEventListener('touchstart', e => { e.preventDefault(); if(playMode === 'play') beginCharge(); }, { passive:false });
+    tShoot.addEventListener('touchend', e => { e.preventDefault(); if(playMode === 'play') endCharge(); }, { passive:false });
+    tShoot.addEventListener('mousedown', e => { e.preventDefault(); if(playMode === 'play') beginCharge(); });
+    tShoot.addEventListener('mouseup', e => { e.preventDefault(); if(playMode === 'play') endCharge(); });
+  }
+  if(tPass){
+    tPass.addEventListener('touchstart', e => { e.preventDefault(); if(playMode === 'play') userPass(); }, { passive:false });
+    tPass.addEventListener('click', e => { e.preventDefault(); if(playMode === 'play') userPass(); });
+  }
+  if(tDodge){
+    tDodge.addEventListener('touchstart', e => { e.preventDefault(); if(playMode === 'play') tryDodge(); }, { passive:false });
+    tDodge.addEventListener('click', e => { e.preventDefault(); if(playMode === 'play') tryDodge(); });
+  }
+  if(tCam){
+    const camOrder = ['broadcast', 'iso', 'over'];
+    tCam.addEventListener('click', e => {
+      e.preventDefault();
+      const idx = (camOrder.indexOf(cam.mode) + 1) % camOrder.length;
+      setCam(camOrder[idx]);
+    });
+  }
+}
+
 function setActive(sel, pred){ document.querySelectorAll(sel).forEach(b => b.classList.toggle('active', pred(b))); }
 document.querySelectorAll('[data-start]').forEach(el => el.addEventListener('click', () => startMode(el.dataset.start)));
 document.querySelectorAll('[data-drill]').forEach(b => b.addEventListener('click', () => { startMode(b.dataset.drill); b.blur(); }));
@@ -2051,7 +2401,7 @@ placeChar(player, -22, 0, -Math.PI/2); placeChar(keeper, GOAL_X+0.9, 0, Math.PI/
 defender.root.visible = keeper.root.visible = false; mates.forEach(m => m.root.visible = false); markers.forEach(m => m.visible = false);
 giveBall(player);
 requestAnimationFrame(frame);
-window.HSC = { G, ball, player, defender, keeper, mates, cam, aim, duelAI, TM, MATCH, step, giveBall, startDrill, startMatch, get T(){ return T; }, aimWorld, post, THREE };
+window.HSC = { G, ball, get player(){ return player; }, drillPlayer, defender, keeper, mates, cam, aim, duelAI, TM, MATCH, step, giveBall, startDrill, startMatch, setPlayMode, selectPlayer, get playMode(){ return playMode; }, get selectedPlayerIdx(){ return selectedPlayerIdx; }, get T(){ return T; }, aimWorld, post, THREE };
 const qs = new URLSearchParams(location.search);
 if(qs.get('surface') === 'grass') document.querySelector('[data-surface=grass]').click();
 if(qs.get('tod')) { const b = document.querySelector('[data-tod='+qs.get('tod')+']'); if(b) b.click(); }
