@@ -30,18 +30,18 @@
   #brand h1::before { content: ""; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
   #brand p { margin-top: 4px; font-size: 11px; color: var(--dim); line-height: 1.4; }
   .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-  .badge { padding: 2px 6px; font: 9px var(--mono); border-radius: 4px; background: rgba(255,255,255,.08); color: var(--dim); border: 1px solid rgba(255,255,255,.1); }
+  .badge { padding: 2px 6px; font: 11px var(--mono); border-radius: 4px; background: rgba(255,255,255,.08); color: var(--dim); border: 1px solid rgba(255,255,255,.1); }
   .badge.on { background: rgba(46,160,67,.15); color: #7ee787; border-color: rgba(46,160,67,.35); }
-  .keys { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 10.5px; color: var(--dim); }
-  kbd { font: 600 9.5px var(--mono); padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: var(--text); white-space: nowrap; }
+  .keys { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 11px; color: var(--dim); }
+  kbd { font: 600 11px var(--mono); padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: var(--text); white-space: nowrap; }
 
   #scoreboard { top: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; padding: 6px; }
   .sb { min-width: 84px; padding: 4px 10px; text-align: center; border-radius: 5px; background: rgba(0,0,0,.35); }
-  .sb small { display: block; font: 600 8.5px var(--mono); letter-spacing: 1px; color: var(--dim); text-transform: uppercase; }
+  .sb small { display: block; font: 600 11px var(--mono); letter-spacing: 1px; color: var(--dim); text-transform: uppercase; }
   .sb b { display: block; font: 700 22px var(--mono); color: #fff; line-height: 1.15; }
   .sb.clock b { color: var(--amber); }
   .sb.clock.warn b { color: var(--red); }
-  #drill-name { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); font: 600 10px var(--mono); letter-spacing: 1.4px; color: var(--cyan); text-transform: uppercase; z-index: 9; pointer-events: none; text-shadow: 0 1px 4px #000; }
+  #drill-name { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); font: 600 11px var(--mono); letter-spacing: 1.4px; color: var(--cyan); text-transform: uppercase; z-index: 9; pointer-events: none; text-shadow: 0 1px 4px #000; }
   #toast { position: absolute; top: 118px; left: 50%; transform: translateX(-50%); font: 800 26px var(--mono); letter-spacing: 2px; color: var(--amber);
     text-shadow: 0 2px 0 #000, 0 0 18px rgba(240,171,7,.5); opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 12; white-space: nowrap; }
   #toast.show { opacity: 1; }
@@ -51,21 +51,21 @@
     border: 1px solid var(--border); overflow: hidden; z-index: 11; opacity: 0; transition: opacity .15s; pointer-events: none; }
   #power.show { opacity: 1; }
   #power i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2ea043, #f0ab07 70%, #e84d6e); }
-  #power-label { position: absolute; bottom: 74px; left: 50%; transform: translateX(-50%); font: 600 9px var(--mono); letter-spacing: 1px; color: var(--dim); z-index: 11; pointer-events: none; opacity: 0; }
+  #power-label { position: absolute; bottom: 74px; left: 50%; transform: translateX(-50%); font: 600 11px var(--mono); letter-spacing: 1px; color: var(--dim); z-index: 11; pointer-events: none; opacity: 0; }
   #power.show + #power-label { opacity: 1; }
 
   #dock { top: 16px; right: 16px; width: 280px; padding: 14px; max-height: calc(100vh - 32px); overflow-y: auto; }
   .sec { margin-bottom: 13px; padding-bottom: 11px; border-bottom: 1px solid rgba(255,255,255,.07); }
   .sec:last-child { margin: 0; padding: 0; border: 0; }
-  .st { font: 600 10px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center; }
+  .st { font: 600 11px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center; }
   .row { display: flex; gap: 6px; margin-bottom: 6px; }
-  .btn { flex: 1; padding: 6px 8px; font: 600 10px var(--mono); color: var(--text); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  .btn { flex: 1; padding: 6px 8px; font: 600 11px var(--mono); color: var(--text); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
     border-radius: 5px; cursor: pointer; transition: all .15s; text-align: center; }
   .btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.25); }
   .btn.active { background: var(--accent); border-color: #4cd864; color: #0d1117; box-shadow: 0 0 10px var(--glow); }
   .btn.cy { background: rgba(57,178,222,.15); border-color: rgba(57,178,222,.35); color: var(--cyan); }
   .sl { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 5px 0 0; font-size: 11px; }
-  .sl span:last-child { font: 10px var(--mono); color: var(--dim); min-width: 40px; text-align: right; }
+  .sl span:last-child { font: 11px var(--mono); color: var(--dim); min-width: 40px; text-align: right; }
   input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,.15); border-radius: 2px; outline: none; margin: 6px 0; }
   input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--text); cursor: pointer; }
   .tg { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: 11px; cursor: pointer; }
@@ -76,7 +76,7 @@
   .tg input:checked + i::after { transform: translateX(14px); }
 
   #telemetry { bottom: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 6px 14px;
-    font: 10px var(--mono); color: var(--dim); background: rgba(14,20,32,.75); pointer-events: none; }
+    font: 11px var(--mono); color: var(--dim); background: rgba(14,20,32,.75); pointer-events: none; }
   #telemetry span { color: var(--text); }
 
   .overlay { position: absolute; inset: 0; background: rgba(4,7,14,.78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 50; }
@@ -90,16 +90,16 @@
   .drill:hover { border-color: var(--accent); background: rgba(46,160,67,.1); transform: translateY(-2px); }
   .drill b { display: block; font: 700 12px var(--mono); color: #fff; margin-bottom: 4px; letter-spacing: .5px; }
   .drill p { font-size: 11px; color: var(--dim); line-height: 1.45; }
-  .drill small { display: block; margin-top: 8px; font: 600 9.5px var(--mono); color: var(--cyan); }
+  .drill small { display: block; margin-top: 8px; font: 600 11px var(--mono); color: var(--cyan); }
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
   .stat { background: rgba(0,0,0,.3); border-radius: 6px; padding: 8px; text-align: center; }
-  .stat small { display: block; font: 600 8.5px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+  .stat small { display: block; font: 600 11px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
   .stat b { display: block; font: 700 22px var(--mono); color: #fff; }
   .grade { font: 800 64px var(--mono); color: var(--amber); text-align: center; line-height: 1; margin: 6px 0; text-shadow: 0 0 24px rgba(240,171,7,.4); }
-  .stamp { font: 10px var(--mono); color: var(--dim); text-align: center; margin: 4px 0 14px; word-break: break-all; }
+  .stamp { font: 11px var(--mono); color: var(--dim); text-align: center; margin: 4px 0 14px; word-break: break-all; }
   .stamp b { color: var(--cyan); }
   .stamp-note { opacity: .7; }
-  #pal-note { margin-top: 12px; font-size: 10.5px; color: var(--dim); }
+  #pal-note { margin-top: 12px; font-size: 11px; color: var(--dim); }
 
   @media (max-width: 900px) {
     #dock { width: 230px; right: 8px; top: 8px; }
