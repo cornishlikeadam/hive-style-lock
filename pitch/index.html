@@ -804,24 +804,151 @@ penSpotMarker.position.set(GX - 11.0, 0.02, 0);
 penSpotMarker.receiveShadow = true;
 scene.add(penSpotMarker);
 
-// Goalkeeper 3D Voxel Rig (Always visible)
-const keeperGroup = new THREE.Group();
-const keeperBody = makeBox(0.9, 1.9, 0.6, '#f5b32e', 0, 0.95, 0, keeperGroup); // Gold jersey
-const keeperHead = makeBox(0.45, 0.45, 0.45, '#dcb07b', 0, 2.05, 0, keeperGroup);
-// Gloves
-const leftGlove = makeBox(0.35, 0.35, 0.35, '#39b2de', 0.55, 1.1, 0, keeperGroup);
-const rightGlove = makeBox(0.35, 0.35, 0.35, '#39b2de', -0.55, 1.1, 0, keeperGroup);
+/* ============================ VOXEL HUMANOID FACTORY ============================ */
+function buildHumanoidMesh({
+  jersey = '#204a8c',
+  accent = '#f4f7fc',
+  shorts = '#f4f7fc',
+  socks = '#204a8c',
+  boots = '#090d14',
+  skin = '#dcb07b',
+  hair = '#27130a',
+  gloves = null,
+  isKeeper = false
+}) {
+  const root = new THREE.Group();
+  const body = new THREE.Group();
+  root.add(body);
+
+  // 1. LEGS (Thighs + Shins + Cleats)
+  const legX = 0.22;
+  const leftLeg = new THREE.Group();
+  leftLeg.position.set(legX, 0.88, 0);
+  body.add(leftLeg);
+
+  const rightLeg = new THREE.Group();
+  rightLeg.position.set(-legX, 0.88, 0);
+  body.add(rightLeg);
+
+  [leftLeg, rightLeg].forEach(leg => {
+    // Upper leg (shorts sleeve)
+    makeBox(0.24, 0.38, 0.24, shorts, 0, -0.19, 0, leg);
+    // Knee skin peek
+    makeBox(0.20, 0.08, 0.20, skin, 0, -0.42, 0, leg);
+    // High sock
+    makeBox(0.22, 0.36, 0.22, socks, 0, -0.62, 0, leg);
+    // Boot / Cleat (cleat base + white studs/toe)
+    makeBox(0.24, 0.12, 0.36, boots, 0, -0.82, 0.05, leg);
+    makeBox(0.20, 0.04, 0.34, '#f4f7fc', 0, -0.86, 0.05, leg, false); // White sole
+  });
+
+  // 2. HIPS & SHORTS WAIST
+  makeBox(0.64, 0.20, 0.36, shorts, 0, 0.96, 0, body);
+
+  // 3. TORSO
+  const torso = new THREE.Group();
+  torso.position.set(0, 1.06, 0);
+  body.add(torso);
+
+  // Jersey torso block
+  makeBox(0.68, 0.52, 0.38, jersey, 0, 0.26, 0, torso);
+
+  // Striker chest stripe & number '10' patch
+  if (!isKeeper) {
+    makeBox(0.20, 0.44, 0.39, accent, 0, 0.26, 0.01, torso, false); // Center white stripe
+    makeBox(0.12, 0.16, 0.40, '#e04568', 0, 0.28, 0.02, torso, false); // Red #10 badge
+  } else {
+    // Goalkeeper padded chest panel
+    makeBox(0.70, 0.18, 0.39, '#f06810', 0, 0.38, 0.01, torso, false);
+  }
+
+  // Neck collar
+  makeBox(0.28, 0.08, 0.28, accent, 0, 0.54, 0, torso);
+
+  // 4. HEAD & HAIR
+  const head = new THREE.Group();
+  head.position.set(0, 1.66, 0);
+  body.add(head);
+
+  // Face / head block
+  makeBox(0.38, 0.36, 0.36, skin, 0, 0.18, 0, head);
+  // Hair cap
+  makeBox(0.42, 0.14, 0.40, hair, 0, 0.33, -0.01, head); // Top
+  makeBox(0.42, 0.24, 0.14, hair, 0, 0.20, -0.12, head); // Back
+  makeBox(0.42, 0.10, 0.10, hair, 0, 0.26, 0.12, head);  // Fringe
+  // Eyes
+  makeBox(0.08, 0.04, 0.02, '#131924', -0.10, 0.18, 0.19, head, false);
+  makeBox(0.08, 0.04, 0.02, '#131924',  0.10, 0.18, 0.19, head, false);
+
+  // 5. ARMS (Upper + Forearm + Hands/Gloves)
+  const armX = 0.45;
+  const leftArm = new THREE.Group();
+  leftArm.position.set(armX, 1.50, 0);
+  body.add(leftArm);
+
+  const rightArm = new THREE.Group();
+  rightArm.position.set(-armX, 1.50, 0);
+  body.add(rightArm);
+
+  [leftArm, rightArm].forEach(arm => {
+    // Upper arm (jersey sleeve)
+    makeBox(0.18, 0.24, 0.18, jersey, 0, -0.12, 0, arm);
+    // Forearm (skin tone)
+    makeBox(0.16, 0.24, 0.16, skin, 0, -0.34, 0, arm);
+
+    if (isKeeper) {
+      // Big padded goalkeeper glove
+      makeBox(0.26, 0.24, 0.24, gloves || '#39b2de', 0, -0.52, 0.02, arm);
+      makeBox(0.22, 0.20, 0.04, '#f4f7fc', 0, -0.52, 0.14, arm, false); // White padded palm
+    } else {
+      // Wristband & hand
+      makeBox(0.18, 0.06, 0.18, '#f4f7fc', 0, -0.46, 0, arm);
+      makeBox(0.16, 0.14, 0.16, skin, 0, -0.54, 0, arm);
+    }
+  });
+
+  return { root, body, torso, head, leftLeg, rightLeg, leftArm, rightArm };
+}
+
+// Goalkeeper Rig (Always visible)
+const keeperRig = buildHumanoidMesh({
+  jersey: '#f5b32e', // Bright gold jersey
+  accent: '#f06810', // Orange accents
+  shorts: '#1e2636', // Slate shorts
+  socks: '#f5b32e',  // Gold socks
+  boots: '#090d14',
+  skin: '#dcb07b',
+  hair: '#131924',
+  gloves: '#39b2de', // Cyan padded gloves
+  isKeeper: true
+});
+const keeperGroup = keeperRig.root;
 keeperGroup.position.set(GX - 0.2, 0, 0);
-keeperGroup.rotation.y = -Math.PI / 2;
+keeperGroup.rotation.y = -Math.PI / 2; // Facing penalty spot (-X)
 keeperGroup.visible = true;
 scene.add(keeperGroup);
 
-// Striker 3D Voxel Rig (Visible by default on startup)
-const strikerGroup = new THREE.Group();
-const strikerBody = makeBox(0.85, 1.85, 0.6, '#204a8c', 0, 0.92, 0, strikerGroup); // Royal blue jersey
-const strikerHead = makeBox(0.42, 0.42, 0.42, '#dcb07b', 0, 1.95, 0, strikerGroup);
+// Initial goalkeeper alert stance
+keeperRig.leftArm.rotation.z = -0.38;
+keeperRig.leftArm.rotation.x = 0.32;
+keeperRig.rightArm.rotation.z = 0.38;
+keeperRig.rightArm.rotation.x = 0.32;
+keeperRig.body.position.y = -0.04;
+
+// Striker Rig (Always visible)
+const strikerRig = buildHumanoidMesh({
+  jersey: '#204a8c', // Royal blue jersey
+  accent: '#f4f7fc', // White chest stripe & collar
+  shorts: '#f4f7fc', // White shorts
+  socks: '#204a8c',  // Royal blue socks
+  boots: '#090d14',
+  skin: '#dcb07b',
+  hair: '#3d1e10',   // Brown hair
+  isKeeper: false
+});
+const strikerGroup = strikerRig.root;
 strikerGroup.position.set(GX - 13.2, 0, 0);
-strikerGroup.rotation.y = Math.PI / 2;
+strikerGroup.rotation.y = Math.PI / 2; // Facing target goal (+X)
 strikerGroup.visible = true;
 scene.add(strikerGroup);
 
@@ -927,7 +1054,21 @@ function resetBallForShot() {
   keeper.vel.set(0, 0, 0);
   keeper.pos.set(GX - 0.2, 0, 0);
   keeperGroup.position.copy(keeper.pos);
-  keeperGroup.rotation.z = 0;
+  keeperGroup.rotation.set(0, -Math.PI / 2, 0);
+  keeperRig.body.position.set(0, -0.04, 0);
+  keeperRig.leftArm.rotation.set(0.32, 0, -0.38);
+  keeperRig.rightArm.rotation.set(0.32, 0, 0.38);
+  keeperRig.leftLeg.rotation.set(0, 0, 0);
+  keeperRig.rightLeg.rotation.set(0, 0, 0);
+  keeperRig.head.rotation.set(0, 0, 0);
+
+  strikerRig.body.position.set(0, 0, 0);
+  strikerRig.torso.rotation.set(0, 0, 0);
+  strikerRig.leftLeg.rotation.set(0, 0, 0);
+  strikerRig.rightLeg.rotation.set(0, 0, 0);
+  strikerRig.leftArm.rotation.set(0, 0, 0);
+  strikerRig.rightArm.rotation.set(0, 0, 0);
+  strikerRig.head.rotation.set(0, 0, 0);
 
   defWallGroup.position.y = 0;
 
@@ -973,6 +1114,14 @@ function kickBall(aimZ, aimY, powerFrac, curl) {
   if (ball.inFlight) return;
   initAudio();
   playSound('kick');
+
+  // Striker kick leg animation
+  strikerRig.rightLeg.rotation.x = -0.75;
+  strikerRig.torso.rotation.x = -0.12;
+  setTimeout(() => {
+    strikerRig.rightLeg.rotation.x = 0;
+    strikerRig.torso.rotation.x = 0;
+  }, 350);
 
   ball.inFlight = true;
   ball.isGoal = false;
@@ -1421,8 +1570,8 @@ function showToast(text, type = '') {
 
 // Broadcast camera target & position tracking
 let camMode = 'tv'; // tv, island, close
-const tvCamTarget = new V3(46.5, 1.2, 0);
-const tvCamPos = new V3(46.5 - 30.0, 24.0, 32.0);
+const tvCamTarget = new V3(46.0, 1.1, 0);
+const tvCamPos = new V3(46.0 - 24.0, 18.0, 26.0);
 
 function setCameraMode(mode) {
   camMode = mode;
@@ -1443,12 +1592,12 @@ function setCameraMode(mode) {
     camera.updateProjectionMatrix();
   } else if (mode === 'tv') {
     // Focused on penalty box action: ball, striker, penalty spot, goalkeeper
-    tvCamTarget.set(46.5, 1.2, 0);
-    tvCamPos.set(46.5 - 30.0, 24.0, 32.0);
+    tvCamTarget.set(46.0, 1.1, 0);
+    tvCamPos.set(46.0 - 24.0, 18.0, 26.0);
     camera.position.copy(tvCamPos);
     camera.lookAt(tvCamTarget);
 
-    const frustum = 44.0;
+    const frustum = 28.0;
     camera.left = -frustum * aspect / 2;
     camera.right = frustum * aspect / 2;
     camera.top = frustum / 2;
@@ -1475,16 +1624,16 @@ function updateCamera(dt) {
     const trackX = ball.inFlight ? ball.pos.x : (currentFormat === 'ovo' ? striker.pos.x : ball.pos.x);
     const trackZ = ball.inFlight ? ball.pos.z : (currentFormat === 'ovo' ? striker.pos.z : ball.pos.z);
 
-    const targetLook = new V3(trackX * 0.5 + GX * 0.5, 1.2, trackZ * 0.5);
+    const targetLook = new V3(trackX * 0.5 + GX * 0.5, 1.1, trackZ * 0.5);
     tvCamTarget.lerp(targetLook, Math.min(1.0, dt * 5.0));
 
-    const targetCam = new V3(tvCamTarget.x - 30.0, 24.0, tvCamTarget.z + 32.0);
+    const targetCam = new V3(tvCamTarget.x - 24.0, 18.0, tvCamTarget.z + 26.0);
     tvCamPos.lerp(targetCam, Math.min(1.0, dt * 4.0));
 
     camera.position.copy(tvCamPos);
     camera.lookAt(tvCamTarget);
 
-    const frustum = 44.0;
+    const frustum = 28.0;
     camera.left = -frustum * aspect / 2;
     camera.right = frustum * aspect / 2;
     camera.top = frustum / 2;
@@ -1722,6 +1871,32 @@ function animate(now) {
     updateKeeper(dt);
     updateStriker(dt);
   }
+
+  // Humanoid Idle Motions
+  const idleT = now * 0.003;
+
+  // 1. Goalkeeper side-to-side weight shift on goal line
+  if (keeper.state === 'idle' && !ball.inFlight) {
+    const kShift = Math.sin(idleT * 1.8);
+    keeperRig.body.position.x = kShift * 0.22; // Side-to-side weight shift
+    keeperRig.body.position.y = -0.04 + Math.abs(Math.sin(idleT * 3.6)) * 0.025; // Light ready bounce
+    keeperRig.leftArm.rotation.z = -0.42 + kShift * 0.12;
+    keeperRig.rightArm.rotation.z = 0.42 + kShift * 0.12;
+    keeperRig.leftArm.rotation.x = 0.32 + Math.cos(idleT * 2.2) * 0.08;
+    keeperRig.rightArm.rotation.x = 0.32 - Math.cos(idleT * 2.2) * 0.08;
+    keeperRig.head.rotation.y = -kShift * 0.18; // Keep eyes tracking ball
+  }
+
+  // 2. Striker ready stance bounce behind the ball
+  if (!ball.inFlight && currentFormat !== 'ovo') {
+    const sBounce = Math.sin(idleT * 2.5);
+    strikerRig.body.position.y = Math.max(0, sBounce * 0.035);
+    strikerRig.torso.rotation.x = 0.04 + sBounce * 0.02;
+    strikerRig.leftArm.rotation.x = -sBounce * 0.1;
+    strikerRig.rightArm.rotation.x = sBounce * 0.1;
+    strikerRig.head.rotation.y = Math.sin(idleT * 0.9) * 0.08;
+  }
+
   updateAimingReticle();
   updateScoreboard(dt);
   updateCamera(rawDt);
