@@ -4,9 +4,22 @@ Single-file HiveKey Arena sport built on the **Hive Style Lock** look. Lives at 
 
 - **File:** [`index.html`](./index.html), three.js r128 from cdnjs, everything else inline, no assets
 - **Run:** open the file, or `python3 -m http.server` from the repo root and visit `/lacrosse/`
-- **URL params:** `?drill=shoot|pass|duel`, `?surface=turf|grass`, `?tod=day|dusk|night`
+- **URL params:** `?drill=match|shoot|pass|duel`, `?mode=drills` (open the drills menu), `?surface=turf|grass`, `?tod=day|dusk|night`, `?post=1` (Style Lock post-process on)
+- **Rendering:** direct render by default (stable). The Style Lock pixel post-process is one checkbox in the dock (or `?post=1`).
 
-## Drills
+## Match mode (default): 6v6 field lacrosse
+
+The page opens straight into a match with all 12 players on the field. Pick **Match** or **Drills** from the dock (Mode section) or the Menu.
+
+- **Teams:** Hive (amber: you + 4 AI field players + keeper) vs Rivals (crimson: 5 AI + keeper). You control one attacker.
+- **Format:** first to 3 goals or 90 s. A tie at the buzzer goes to sudden death. After every goal, a face-off at centre with a 3-2-1 countdown.
+- **Ball:** carried in the stick pocket (cradle), passed, shot, bounced, picked up off the ground (scoop), intercepted in the air.
+- **AI:** carriers shoot inside ~17 m when the lane is clear, pass to the most open teammate, or dodge; defenders mark goal-side, the nearest one presses and telegraphs a stick check (0.3 s wind-up), keepers read shots with a reaction delay and a probabilistic save.
+- **You:** `Click/Space` shoots (hold to charge). With no ball, `Click/Space` is a check. `F` or right-click passes to the teammate nearest the cursor. `Shift` dodges (beats a check).
+- **Camera:** Broadcast (default, follows the ball carrier, leans toward the attack), Iso Lock (Style Lock angle) or Overview.
+- **HUD:** on-canvas scoreboard (score + clock) and an in-world LED scoreboard behind the goal.
+
+## Drills (secondary)
 
 | Drill | Time | Clock | Rules |
 |---|---|---|---|
